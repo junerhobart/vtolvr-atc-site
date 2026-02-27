@@ -8,6 +8,24 @@
     <meta name="description" content="Flight Charts - View and select various airport charts.">
     <meta name="keywords" content="Flight Charts, Airport Charts, Aviation, Flight Planning, Navigation Charts,Vtol vr">
     <title>Map Charts</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', async() => {
+            if (window.OpenKneeboard) {
+                document.body.classList.add("OpenKneeboard");
+                await OpenKneeboard.EnableExperimentalFeature(
+                    'GraphicsTabletInfo',
+                    2025012901);
+                var info = await OpenKneeboard.GetGraphicsTabletInfo();
+                await OpenKneeboard.SetPreferredPixelSize(
+                info.SuggestedPixelSize.Width,
+                info.SuggestedPixelSize.Height)
+            }
+            
+
+
+            
+        });
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/IDMNYU/p5.js-speech@0.0.3/lib/p5.speech.js"></script>
     
@@ -370,16 +388,7 @@
         // Initialize
         loadCharts();
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.OpenKneeboard) {
-                document.body.classList.add("OpenKneeboard");
-                window.OpenKneeboard.SetPreferredSize(600, 1300);
-            }
-            
-
-
-            
-        });
+        
     </script>
     
 </body>
