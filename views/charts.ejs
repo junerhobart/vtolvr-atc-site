@@ -317,7 +317,7 @@
                 // Fallback: If no images found, show placeholder
                 setTimeout(() => {
                     if (charts.length === 0) {
-                        chartList.innerHTML = '<p style="color: #999;">No charts found in assets folder</p>';
+                        chartList.parentElement.innerHTML = '<p style="color: #999;">No charts found in assets folder</p>';
                     }
                 }, 2000);
 
