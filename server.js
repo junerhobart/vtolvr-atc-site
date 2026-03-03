@@ -191,7 +191,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
           "embeds": [{
 
               title: `New Application for ${application.type} position`,
-              description: `An application has been submitted by ${application.name} for the ${application.type} position. Please review the application in the admin panel.`,
+              description: `An application has been submitted by ${application.name} for the ${application.type} position. Please review the application in the [admin panel](https://atc-vtolvr.site/admin/applications/admin).`,
               color: 0x00FF00,
           }],
           timestamp: new Date().toISOString()
@@ -267,7 +267,40 @@ app.get ("/applications", (req, res) => {
       }
       application.status = 'approved';
       await application.save();
+      //send a DM to the applicant notifying them of their acceptance and next steps
       sendDM(application.discordId, `Congratulations ${application.name}! Your application for the ${application.type} position has been approved. We will be in touch with you soon regarding the next steps. Welcome to the team!`);
+      //send a webhook to the admin channel notifying them of the approved application
+      const embedBody = {
+        content: `<@&1462572777092546743> <@&1474154308873486528> Application Approved`, // Empty content field
+        "embeds": [{
+
+            title: `Application Approved for ${application.type} position`,
+            description: `The application submitted by ${application.name} for the ${application.type} position has been approved. Please reach out to the applicant to coordinate next steps.`,
+            color: 0x0000FF,
+        }],
+        timestamp: new Date().toISOString()
+    };
+    const body = JSON.stringify(embedBody);
+
+    const webhookURL =process.env.DISCORD_WEBHOOK_URL_ADMIN;
+    fetch(webhookURL, {
+        method: 'POST',
+        headers: {
+
+            'Content-Type': 'application/json'
+        },
+        body:body
+    }).then(response => {
+
+
+        if (!response.ok) {
+            return response.text().then(errorText => {
+                console.error('Error:', errorText);
+                throw new Error('Failed to send webhook notification');
+            });
+          }
+    })
+    
       res.json({ message: 'Application approved successfully' });
     } catch (error) {
       console.error('Error approving application:', error);
@@ -283,7 +316,40 @@ app.get ("/applications", (req, res) => {
       }
       application.status = 'rejected';
       await application.save();
+      //!SECTION send a DM to the applicant notifying them of their rejection
       sendDM(application.discordId, `Hello ${application.name}, we regret to inform you that your application for the ${application.type} position has been rejected. Thank you for your interest and we encourage you to apply again in the future.`);
+      //send a webhook to the admin channel notifying them of the rejected application
+      const embedBody = {
+        content: `<@&1462572777092546743> <@&1474154308873486528> Application Rejected`, // Empty content field
+        "embeds": [{
+
+            title: `Application Rejected for ${application.type} position`,
+            description: `The application submitted by ${application.name} for the ${application.type} position has been rejected. Please reach out to the applicant if you would like to provide feedback or encourage them to reapply in the future.`,
+            color: 0xFF0000,
+        }],
+        timestamp: new Date().toISOString()
+    };
+    const body = JSON.stringify(embedBody);
+    
+
+    const webhookURL =process.env.DISCORD_WEBHOOK_URL_ADMIN;
+    fetch(webhookURL, {
+        method: 'POST',
+        headers: {
+
+            'Content-Type': 'application/json'
+        },
+        body:body
+    }).then(response => {
+
+
+        if (!response.ok) {
+            return response.text().then(errorText => {
+                console.error('Error:', errorText);
+                throw new Error('Failed to send webhook notification');
+            });
+          }
+    })
       res.json({ message: 'Application rejected successfully' });
     } catch (error) {
       console.error('Error rejecting application:', error);
