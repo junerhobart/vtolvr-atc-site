@@ -206,7 +206,7 @@ app.get("/applications/admin", (req, res) => {
 }
 );
 app.get ("/applications", (req, res) => {
-  res.render('application', {
+  res.render('applications', {
     title: 'Application',
     message: 'Apply to become an ATC or Enforcer'
   });
