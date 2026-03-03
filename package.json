@@ -28,6 +28,7 @@
     "express": "^5.2.1",
     "grapesjs": "^0.22.14",
     "grapesjs-ai-agent": "^1.0.11",
+    "grapesjs-custom-code": "^1.0.2",
     "grapesjs-table": "^1.0.8"
   }
 }
