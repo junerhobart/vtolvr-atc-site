@@ -175,7 +175,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
         name: data.Username,
         type: data.type,
         callsign: data.callsign,
-        discordHandle: data.discordHandle,
+        discordHandle: data.discord,
         discordId: data.discordId,
         experience: data.experience,
         whyJoin: data.whyJoin

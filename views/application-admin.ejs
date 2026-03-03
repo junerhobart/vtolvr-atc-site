@@ -470,8 +470,8 @@
                     <div class="application-actions">
                         <button class="action-btn view-btn" onclick="openApplicationModal('${app._id || app.id}')">View Full</button>
                         ${app.status === 'pending' ? `
-                            <button class="action-btn approve-btn">Approve</button>
-                            <button class="action-btn reject-btn">Reject</button>
+                            <button class="action-btn approve-btn" onclick="approveApplication('${app._id || app.id}')">Approve</button>
+                            <button class="action-btn reject-btn" onclick="rejectApplication('${app._id || app.id}')">Reject</button>
                         ` : ''}
                     </div>
                 </div>
@@ -538,6 +538,52 @@
 
         function closeModal() {
             document.getElementById('applicationModal').classList.remove('show');
+        }
+
+        function approveApplication(appId) {
+            if (confirm('Are you sure you want to approve this application?')) {
+                fetch('/api/applications/' + appId + '/approve', {
+                    method: 'POST'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to approve application');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    alert('Application approved successfully');
+                    closeModal();
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error approving application:', error);
+                    alert('Error approving application: ' + error.message);
+                });
+            }
+        }
+
+        function rejectApplication(appId) {
+            if (confirm('Are you sure you want to reject this application?')) {
+                fetch('/api/applications/' + appId + '/reject', {
+                    method: 'POST'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to reject application');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    alert('Application rejected successfully');
+                    closeModal();
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error rejecting application:', error);
+                    alert('Error rejecting application: ' + error.message);
+                });
+            }
         }
 
         window.onclick = function(event) {
