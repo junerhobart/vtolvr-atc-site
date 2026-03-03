@@ -183,6 +183,41 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
 
       }).then(application => {
         console.log('Application submitted:', application);
+        //send a DM to the applicant confirming receipt of their application
+        sendDM(application.discordId, `Hello ${application.name}, thank you for submitting your application for the ${application.type} position. We have received your application and will review it shortly. You will receive a DM with the outcome of your application once it has been processed. We appreciate your interest in joining our team!`);
+        //send a webhook to the admin channel notifying them of a new application
+        const embedBody = {
+          content: '<@&1474153893872009339> New ATC Application Submitted', // Empty content field
+          "embeds": [{
+
+              title: `New Application for ${application.type} position`,
+              description: `An application has been submitted by ${application.name} for the ${application.type} position. Please review the application in the admin panel.`,
+              color: 0x00FF00,
+          }],
+          timestamp: new Date().toISOString()
+      };
+      const body = JSON.stringify(embedBody);
+
+      const webhookURL =process.env.DISCORD_WEBHOOK_URL_ADMIN;
+      fetch(webhookURL, {
+          method: 'POST',
+          headers: {
+
+              'Content-Type': 'application/json'
+          },
+          body:body
+      }).then(response => {
+
+          if (!response.ok) {
+              return response.text().then(errorText => {
+                  console.error('Error:', errorText);
+                  throw new Error('Failed to send webhook notification');
+              });
+          }
+        }).catch(error => {
+          console.error('Error sending webhook notification:', error);
+          // Don't throw an error here since the application was still created successfully
+        });
         res.json({ message: 'Application submitted successfully' });
       }).catch(error => {
         console.error('Error creating application:', error);
@@ -197,6 +232,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
         res.status(500).json({ error: 'Failed to submit application' });
       }
   });
+
 
 app.get("/applications/admin", (req, res) => {
   res.render('application-admin', {
