@@ -151,11 +151,11 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
     const data = req.body;
     console.log('Received application data:', data);
     // check if application is for ATC or Enforcer and validate required fields make a new application object based on the schema
-    if (data.type === 'ATC') {
+    if (data.type === 'atc') {
       if (!data.callsign) {
         return res.status(400).json({ error: 'Callsign is required for ATC applications' });
       }
-    } else if (data.type === 'Enforcer') {
+    } else if (data.type === 'enforcer') {
       if (!data.discordHandle) {
         return res.status(400).json({ error: 'Discord handle is required for Enforcer applications' });
       }
