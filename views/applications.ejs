@@ -525,7 +525,7 @@
             console.log('Application submitted:', formData);
             
             // Send to server
-            fetch('/api/applications', {
+            fetch('/api/applications/submit', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
