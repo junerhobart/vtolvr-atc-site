@@ -17,6 +17,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/layoutSidebarButtons/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/youtubeAssetProvider/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/lightGalleryComponent/index.umd.js"></script>
+    <script src="https://unpkg.com/grapesjs-tabs@latest/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/grapesjs-custom-code"></script>
     <link rel="stylesheet" href="https://unpkg.com/@grapesjs/studio-sdk/dist/style.css"/>
   </head>
   <body>
@@ -83,7 +85,9 @@
           autosaveIntervalMs: 10000
         },
         plugins: [
-          StudioSdkPlugins_rteTinyMce.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/rte/tinymce */ }),
+
+          "grapesjs-tabs",
+            "grapesjs-custom-code",
           StudioSdkPlugins_flexComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/flex */ }),
           StudioSdkPlugins_canvasFullSize.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/canvas/full-size */ }),
           StudioSdkPlugins_canvasGridMode.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/canvas/grid-mode */ }),
