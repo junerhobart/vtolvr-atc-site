@@ -197,6 +197,14 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
         res.status(500).json({ error: 'Failed to submit application' });
       }
   });
+
+app.get("/applications/admin", (req, res) => {
+  res.render('application-admin', {
+    title: 'Admin Applications',
+    message: 'Review and manage applications here'
+  });
+}
+);
 app.get ("/applications", (req, res) => {
   res.render('application', {
     title: 'Application',
