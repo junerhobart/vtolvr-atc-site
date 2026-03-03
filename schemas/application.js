@@ -15,16 +15,16 @@ const schema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['ATC', 'Enforcer'],
+    enum: ['atc', 'enforcer'],
     required: true
   },
   callsign: {
     type: String,
-    required: function() { return this.type === 'ATC'; }
+    required: function() { return this.type === 'atc'; }
   },
   discordHandle: {
     type: String,
-    required: function() { return this.type === 'Enforcer'; }
+    required: function() { return this.type === 'enforcer'; }
   },
   discordId: {
     type: String,
