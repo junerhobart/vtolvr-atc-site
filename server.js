@@ -244,7 +244,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ userId, message })
                 });
 
     if (!response.ok) {
