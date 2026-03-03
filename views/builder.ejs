@@ -7,8 +7,6 @@
 <script src="https://unpkg.com/grapesjs-chartjs-plugin"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/grapesjs-custom-code"></script>
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-<script src="https://app.grapesjs.com/plugins/rte/tinymce.min.js"></script>
 <script src="https://unpkg.com/grapesjs-blocks-basic"></script>
 <script src="https://unpkg.com/grapesjs-navbar"></script>
 <script src="https://unpkg.com/grapesjs-preset-webpage"></script>
@@ -28,8 +26,8 @@
 <script src="https://unpkg.com/grapesjs-tabs"></script>
 <script src="https://unpkg.com/grapesjs-cat"></script>
 <script src="https://unpkg.com/grapesjs-backbone.undo"></script>
-<script src="https://unpkg.com/grapesjs-indexeddb"></script>
-<script src="https://unpkg.com/grapesjs-firestore"></script>
+
+
 
 
 
@@ -41,12 +39,41 @@
   height: '100%',
   fromElement: true,
   storageManager: false,
-  plugins: ['grapesjs-user-blocks', 'grapesjs-templates', 'grapesjs-chartjs-plugin', 'grapesjs-custom-code', 'grapesjs-rte-tinymce', 'grapesjs-blocks-basic', 'grapesjs-navbar', 'grapesjs-preset-webpage', 'grapesjs-tui-image-editor', 'grapesjs-typed', 'grapesjs-style-gradient', 'grapesjs-plugin-forms', 'grapesjs-lory-slider', 'grapesjs-countdown', 'grapesjs-tooltip', 'grapesjs-gi', 'grapesjs-storage-redirect', 'grapesjs-component-countdown', 'grapesjs-plugin-export', 'grapesjs-touch', 'grapesjs-parser-postcss', 'grapesjs-tabs', 'grapesjs-cat', 'grapesjs-backbone.undo', 'grapesjs-indexeddb', 'grapesjs-firestore'],
+  plugins: ['grapesjs-user-blocks', 'grapesjs-templates', 'grapesjs-chartjs-plugin', 'grapesjs-custom-code',  'grapesjs-blocks-basic', 'grapesjs-navbar', 'grapesjs-preset-webpage', 'grapesjs-tui-image-editor', 'grapesjs-typed', 'grapesjs-style-gradient', 'grapesjs-plugin-forms', 'grapesjs-lory-slider', 'grapesjs-countdown', 'grapesjs-tooltip', 'grapesjs-gi', 'grapesjs-storage-redirect', 'grapesjs-component-countdown', 'grapesjs-plugin-export', 'grapesjs-touch', 'grapesjs-parser-postcss', 'grapesjs-tabs', 'grapesjs-cat', 'grapesjs-backbone.undo'],
   pluginsOpts: {
     'grapesjs-templates': { 
       templates: 'http://localhost:3000/templates',
       projects: 'http://localhost:3000/projects',
     }
-  }
+    ,'grapesjs-chartjs-plugin': {
+      charts: 'http://localhost:3000/charts'
+    },
+        'grapesjs-preset-webpage': {
+        modalImportTitle: 'Import Template',
+        modalImportLabel: '',
+        modalImportContent: function(editor) {
+            return editor.getHtml() + '<style>'+editor.getCss()+'</style>';
+        },
+        importViewerOptions: {},
+        }
+
+        ,"grapesjs-tui-image-editor": {
+          script: 'https://uicdn.toast.com/tui-image-editor/latest/tui-image-editor.min.js',
+          style: 'https://uicdn.toast.com/tui-image-editor/latest/tui-image-editor.min.css',
+        }
+        ,"grapesjs-gi": {
+          script: 'https://unpkg.com/grapesjs-gi/dist/grapesjs-gi.min.js',
+          style: 'https://unpkg.com/grapesjs-gi/dist/grapesjs-gi.min.css',
+        }
+        ,"grapesjs-plugin-export": {
+          btnLabel: 'Export',
+          filenamePfx: 'grapesjs',
+        }
+        ,"grapesjs-backbone.undo": {
+          script: 'https://unpkg.com/grapesjs-backbone.undo/dist/grapesjs-backbone.undo.min.js',
+          style: 'https://unpkg.com/grapesjs-backbone.undo/dist/grapesjs-backbone.undo.min.css',
+
+        }
+    }
   });
 </script>
