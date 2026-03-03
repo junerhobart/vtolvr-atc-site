@@ -399,8 +399,8 @@
             .then(result => {
                 console.log('Applications fetched:', result);
                 const applications = result.data || result || [];
-                const atcApplications = applications.filter(app => app.type === 'ATC');
-                const enforcerApplications = applications.filter(app => app.type === 'Enforcer');
+                const atcApplications = applications.filter(app => app.type === 'atc');
+                const enforcerApplications = applications.filter(app => app.type === 'enforcer');
                 
                 renderApplications(atcApplications, 'atcList', 'ATC');
                 renderApplications(enforcerApplications, 'enforcerList', 'Enforcer');
