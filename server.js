@@ -187,7 +187,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
         sendDM(application.discordId, `Hello ${application.name}, thank you for submitting your application for the ${application.type} position. We have received your application and will review it shortly. You will receive a DM with the outcome of your application once it has been processed. We appreciate your interest in joining our team!`);
         //send a webhook to the admin channel notifying them of a new application
         const embedBody = {
-          content: '<@&1474153893872009339> New ATC Application Submitted', // Empty content field
+          content: '<@&1462572777092546743> <@&1474154308873486528> New ATC Application Submitted', // Empty content field
           "embeds": [{
 
               title: `New Application for ${application.type} position`,
