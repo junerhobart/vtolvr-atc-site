@@ -1,6 +1,10 @@
 const express = require('express');
 const path = require('path');
 require('dotenv').config();
+const Mongo = require('./functions/MongoHandler');
+const Application = require('./schemas/application');
+const { render } = require('ejs');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -140,8 +144,103 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
       message: 'GrapesJS Builder'
     });
   });
+  
+
+
+  app.post("/api/applications/submit", async (req, res) => {
+    const data = req.body;
+
+    // check if application is for ATC or Enforcer and validate required fields make a new application object based on the schema
+    if (data.type === 'ATC') {
+      if (!data.callsign) {
+        return res.status(400).json({ error: 'Callsign is required for ATC applications' });
+      }
+    } else if (data.type === 'Enforcer') {
+      if (!data.discordHandle) {
+        return res.status(400).json({ error: 'Discord handle is required for Enforcer applications' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid application type' });
+    }
+
+    const applicationData = {
+      name: data.name,
+      type: data.type,
+      callsign: data.callsign || null,
+      discordHandle: data.discordHandle || null
+    };
+
+    try {
+      
+      const application = new Application(applicationData);
+      await application.save();
+      res.json({ message: 'Application submitted successfully' });
+    }
+      catch (error) {
+        console.error('Error submitting application:', error);
+        res.status(500).json({ error: 'Failed to submit application' });
+      }
+  });
+
+  app.get("/applications", async (req, res) => {
+    try {
+      const applications = await Application.find().sort({ date: -1 });
+      res.render('applications', {
+        title: 'Applications',
+        message: 'View and manage applications',
+        applications: applications
+      });
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      res.status(500).send('Failed to fetch applications');
+    }
+  });
+
+  //endpoints for approving/rejecting applications
+  app.post("/api/applications/:id/approve", async (req, res) => {
+    const applicationId = req.params.id;
+    try {
+      const application = await Application.findById(applicationId);
+      if (!application) {
+        return res.status(404).json({ error: 'Application not found' });
+      }
+      application.status = 'approved';
+      await application.save();
+      res.json({ message: 'Application approved successfully' });
+    } catch (error) {
+      console.error('Error approving application:', error);
+      res.status(500).json({ error: 'Failed to approve application' });
+    }
+  });
+  app.post("/api/applications/:id/reject", async (req, res) => {
+    const applicationId = req.params.id;
+    try {
+      const application = await Application.findById(applicationId);
+      if (!application) {
+        return res.status(404).json({ error: 'Application not found' });
+      }
+      application.status = 'rejected';
+      await application.save();
+      res.json({ message: 'Application rejected successfully' });
+    } catch (error) {
+      console.error('Error rejecting application:', error);
+      res.status(500).json({ error: 'Failed to reject application' });
+    }
+  });
+
+
+  app.get("/test", async (req, res) => {
+    res.render('test', {
+      title: 'Test',
+      message: 'This is a test page'
+    });
+  });
+
+    
+      
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await Mongo();
   console.log(`Server is running on http://localhost:${PORT}`);
 });
