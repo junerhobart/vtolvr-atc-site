@@ -172,7 +172,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
     try {
       
       Application.create({
-        name: data.name,
+        name: data.Username,
         type: data.type,
         callsign: data.callsign,
         discordHandle: data.discordHandle,
