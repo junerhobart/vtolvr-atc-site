@@ -7,22 +7,30 @@
 <script src="https://unpkg.com/grapesjs-chartjs-plugin"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/grapesjs-custom-code"></script>
-<script src="https://unpkg.com/@grapesjs/studio-sdk/dist/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/rteTinyMce/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/flexComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/canvasFullSize/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/canvasGridMode/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/tableComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/swiperComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/canvasEmptyState/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/iconifyComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/accordionComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/listPagesComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/fsLightboxComponent/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/layoutSidebarButtons/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/youtubeAssetProvider/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@grapesjs/studio-sdk-plugins@latest/dist/lightGalleryComponent/index.umd.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@grapesjs/studio-sdk/dist/style.css"/>
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://app.grapesjs.com/plugins/rte/tinymce.min.js"></script>
+<script src="https://unpkg.com/grapesjs-blocks-basic"></script>
+<script src="https://unpkg.com/grapesjs-navbar"></script>
+<script src="https://unpkg.com/grapesjs-preset-webpage"></script>
+<script src="https://unpkg.com/grapesjs-tui-image-editor"></script>
+<script src="https://unpkg.com/grapesjs-typed"></script>
+<script src="https://unpkg.com/grapesjs-style-gradient"></script>
+<script src="https://unpkg.com/grapesjs-plugin-forms"></script>
+<script src="https://unpkg.com/grapesjs-lory-slider"></script>
+<script src="https://unpkg.com/grapesjs-countdown"></script>
+<script src="https://unpkg.com/grapesjs-tooltip"></script>
+<script src="https://unpkg.com/grapesjs-gi"></script>
+<script src="https://unpkg.com/grapesjs-storage-redirect"></script>
+<script src="https://unpkg.com/grapesjs-component-countdown"></script>
+<script src="https://unpkg.com/grapesjs-plugin-export"></script>
+<script src="https://unpkg.com/grapesjs-touch"></script>
+<script src="https://unpkg.com/grapesjs-parser-postcss"></script>
+<script src="https://unpkg.com/grapesjs-tabs"></script>
+<script src="https://unpkg.com/grapesjs-cat"></script>
+<script src="https://unpkg.com/grapesjs-backbone.undo"></script>
+<script src="https://unpkg.com/grapesjs-indexeddb"></script>
+<script src="https://unpkg.com/grapesjs-firestore"></script>
+
 
 
 <div id="gjs"></div>
@@ -33,21 +41,7 @@
   height: '100%',
   fromElement: true,
   storageManager: false,
-  plugins: ['grapesjs-user-blocks', 'grapesjs-templates', 'grapesjs-chartjs-plugin', 'grapesjs-custom-code', StudioSdkPlugins_rteTinyMce.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/rte/tinymce */ }),
-          StudioSdkPlugins_flexComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/flex */ }),
-          StudioSdkPlugins_canvasFullSize.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/canvas/full-size */ }),
-          StudioSdkPlugins_canvasGridMode.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/canvas/grid-mode */ }),
-          StudioSdkPlugins_tableComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/table */ }),
-          StudioSdkPlugins_swiperComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/swiper */ }),
-          StudioSdkPlugins_canvasEmptyState.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/canvas/emptyState */ }),
-          StudioSdkPlugins_iconifyComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/iconify */ }),
-          StudioSdkPlugins_accordionComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/accordion */ }),
-          StudioSdkPlugins_listPagesComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/listPages */ }),
-          StudioSdkPlugins_fsLightboxComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/fslightbox */ }),
-          StudioSdkPlugins_layoutSidebarButtons.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/layout/sidebar-buttons */ }),
-          StudioSdkPlugins_youtubeAssetProvider.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/asset-providers/youtube-asset-provider */ }),
-          StudioSdkPlugins_lightGalleryComponent.init({ /* Plugin options: https://app.grapesjs.com/docs-sdk/plugins/components/lightGallery */ })
-          ],
+  plugins: ['grapesjs-user-blocks', 'grapesjs-templates', 'grapesjs-chartjs-plugin', 'grapesjs-custom-code', 'grapesjs-rte-tinymce', 'grapesjs-blocks-basic', 'grapesjs-navbar', 'grapesjs-preset-webpage', 'grapesjs-tui-image-editor', 'grapesjs-typed', 'grapesjs-style-gradient', 'grapesjs-plugin-forms', 'grapesjs-lory-slider', 'grapesjs-countdown', 'grapesjs-tooltip', 'grapesjs-gi', 'grapesjs-storage-redirect', 'grapesjs-component-countdown', 'grapesjs-plugin-export', 'grapesjs-touch', 'grapesjs-parser-postcss', 'grapesjs-tabs', 'grapesjs-cat', 'grapesjs-backbone.undo', 'grapesjs-indexeddb', 'grapesjs-firestore'],
   pluginsOpts: {
     'grapesjs-templates': { 
       templates: 'http://localhost:3000/templates',
