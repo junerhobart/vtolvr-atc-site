@@ -29,7 +29,16 @@ const schema = new mongoose.Schema({
   discordId: {
     type: String,
     required: true
+  },
+  experience: {
+    type: String,
+    required: function() { return this.type === 'ATC'; }
+  },
+  whyJoin: {
+    type: String,
+    required: function() { return this.type === 'Enforcer'; }
   }
+    
 
 });
 module.exports = mongoose.model('application', schema);

@@ -167,21 +167,21 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
       return res.status(400).json({ error: 'Invalid application type' });
     }
 
-    const applicationData = {
-      
-      username: data.Username,
-      discord: data.discord,
-      callsign: data.callsign || null,
-      experience: data.experience,
-      whyJoin: data.whyJoin,
-      submittedAt: data.submittedAt,
-      type: data.type,
-      discordId: data.discordId
-    };
+    
 
     try {
       
-      Application.create(applicationData).then(application => {
+      Application.create({
+        name: data.name,
+        type: data.type,
+        callsign: data.callsign,
+        discordHandle: data.discordHandle,
+        discordId: data.discordId,
+        experience: data.experience,
+        whyJoin: data.whyJoin
+        
+
+      }).then(application => {
         console.log('Application submitted:', application);
         res.json({ message: 'Application submitted successfully' });
       }).catch(error => {
