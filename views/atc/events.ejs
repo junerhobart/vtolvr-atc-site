@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="author" content="Aviation Realism Network">
+    <meta name="description" content="Plan and manage ATC events for VTOL VR sessions">
+    <meta name="keywords" content="ATC, Events, Planning, VTOL VR, Aviation">
+    <title>ATC Events</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section, .events-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #e0e0e0;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px;
+            background-color: #333;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 1em;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #7f9eff;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #888;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-top: 15px;
+        }
+
+        .submit-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .event-card {
+            background: #333;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .event-card:hover {
+            background: #3a3a3a;
+            transform: translateX(5px);
+        }
+
+        .event-card.active {
+            border-left-color: #4CAF50;
+        }
+
+        .event-card.upcoming {
+            border-left-color: #2196F3;
+        }
+
+        .event-card.completed {
+            border-left-color: #ff9800;
+        }
+
+        .event-title {
+            color: #e0e0e0;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-status {
+            font-size: 0.8em;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .status-upcoming {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .status-completed {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .event-details {
+            color: #b0b0b0;
+            font-size: 0.95em;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            gap: 10px;
+        }
+
+        .detail-label {
+            color: #888;
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 40px 20px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .error {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: #2a2a2a;
+            border-right: 1px solid #444;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-logo {
+            width: 120px;
+            height: 120px;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #2a2a2a;
+        }
+
+        .sidebar-logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .sidebar-title {
+            text-align: center;
+            color: #e0e0e0;
+            font-size: 1.3em;
+            font-weight: bold;
+            line-height: 1.3;
+        }
+
+        .sidebar-title a {
+            color: #e0e0e0;
+            text-decoration: none;
+        }
+
+        .sidebar-title a:hover {
+            color: #667eea;
+        }
+
+        .sidebar-menu {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .sidebar-menu-item {
+            padding: 12px 16px;
+            color: #b0b0b0;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 0.95em;
+        }
+
+        .sidebar-menu-item:hover {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .sidebar-menu-item.active {
+            background-color: #667eea;
+            color: #ffffff;
+        }
+
+        .sidebar-login-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            margin-top: auto;
+            transition: all 0.2s;
+        }
+
+        .sidebar-login-btn:hover {
+            background-color: #5569d8;
+        }
+
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .main-wrapper {
+            margin-left: 280px;
+            flex: 1;
+            width: calc(100% - 280px);
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 15px;
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
+        <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
+        <div class="sidebar-menu">
+            <a class="sidebar-menu-item" href="/profile">Profile</a>
+            <a class="sidebar-menu-item" href="/announcements">Announcements</a>
+            <a class="sidebar-menu-item" href="/pilots">Pilots</a>
+            <a class="sidebar-menu-item" href="/applications">Applications</a>
+            <a class="sidebar-menu-item active" href="/atc/events">ATC Events</a>
+            <a class="sidebar-menu-item" href="/information">Information</a>
+        </div>
+        <a href="/logout" class="sidebar-login-btn">Logout</a>
+    </div>
+
+    <div class="main-wrapper">
+    <div class="container">
+        <header>
+            <h1>ATC Events Planning</h1>
+            <p>Create and manage VTOL VR ATC events</p>
+        </header>
+
+        <div class="content-wrapper">
+            <div class="form-section">
+                <h2 class="section-title">Create New Event</h2>
+                
+                <div id="successMessage" class="message success"></div>
+                <div id="errorMessage" class="message error"></div>
+
+                <form id="eventForm" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label class="form-label">Event Name</label>
+                        <input type="text" class="form-input" id="eventName" placeholder="e.g., Flight Training Session" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Airport/Location</label>
+                        <input type="text" class="form-input" id="airport" placeholder="e.g., KJFK" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Timezone</label>
+                        <select class="form-select" id="timezone" required>
+                            <option value="">Select timezone...</option>
+                            <option value="UTC">UTC</option>
+                            <option value="EST">Eastern (EST)</option>
+                            <option value="CST">Central (CST)</option>
+                            <option value="MST">Mountain (MST)</option>
+                            <option value="PST">Pacific (PST)</option>
+                            <option value="GMT">GMT</option>
+                            <option value="CET">Central European (CET)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Duration (hours)</label>
+                        <input type="number" class="form-input" id="duration" placeholder="e.g., 2" min="0.5" step="0.5" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Start Date & Time</label>
+                            <input type="datetime-local" class="form-input" id="startTime" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">End Date & Time</label>
+                            <input type="datetime-local" class="form-input" id="endTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Expected Pilots</label>
+                        <input type="number" class="form-input" id="pilots" placeholder="Number of expected pilots" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description/Notes</label>
+                        <textarea class="form-textarea" id="description" placeholder="Add any additional notes or instructions for pilots..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Create Event</button>
+                </form>
+            </div>
+
+            <div class="events-section">
+                <h2 class="section-title">Upcoming Events</h2>
+                
+                <div class="events-list" id="eventsList">
+                    <div class="empty-state">
+                        <p>Loading events...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Populate end time when start time and duration change
+        document.getElementById('startTime').addEventListener('change', calculateEndTime);
+        document.getElementById('duration').addEventListener('change', calculateEndTime);
+
+        function calculateEndTime() {
+            const startInput = document.getElementById('startTime');
+            const durationInput = document.getElementById('duration');
+            const endInput = document.getElementById('endTime');
+
+            if (startInput.value && durationInput.value) {
+                const start = new Date(startInput.value);
+                const duration = parseFloat(durationInput.value);
+                const end = new Date(start.getTime() + duration * 60 * 60 * 1000);
+                
+                // Format for datetime-local input
+                const year = end.getFullYear();
+                const month = String(end.getMonth() + 1).padStart(2, '0');
+                const day = String(end.getDate()).padStart(2, '0');
+                const hours = String(end.getHours()).padStart(2, '0');
+                const minutes = String(end.getMinutes()).padStart(2, '0');
+                
+                endInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            const eventData = {
+                name: document.getElementById('eventName').value,
+                airport: document.getElementById('airport').value,
+                timezone: document.getElementById('timezone').value,
+                duration: parseFloat(document.getElementById('duration').value),
+                startTime: new Date(document.getElementById('startTime').value),
+                endTime: new Date(document.getElementById('endTime').value),
+                pilots: parseInt(document.getElementById('pilots').value),
+                description: document.getElementById('description').value
+            };
+
+            // Validate dates
+            if (eventData.startTime >= eventData.endTime) {
+                showError('End time must be after start time');
+                return;
+            }
+
+            // Submit to API
+            fetch('/api/events/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create event');
+                }
+                return response.json();
+            })
+            .then(data => {
+                showSuccess('Event created successfully!');
+                document.getElementById('eventForm').reset();
+                setTimeout(() => {
+                    loadEvents();
+                }, 1500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Error creating event: ' + error.message);
+            });
+        }
+
+        function loadEvents() {
+            fetch('/api/events')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch events');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const events = data.data || [];
+                    renderEvents(events);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('eventsList').innerHTML = '<div class="empty-state"><p>Failed to load events</p></div>';
+                });
+        }
+
+        function renderEvents(events) {
+            const container = document.getElementById('eventsList');
+
+            if (events.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No events scheduled yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = events.map(event => {
+                const status = event.status || 'upcoming';
+                const statusClass = `status-${status}`;
+                const cardClass = `event-card ${status}`;
+                
+                const startDate = new Date(event.startTime);
+                const endDate = new Date(event.endTime);
+                const formattedStart = startDate.toLocaleString();
+                const formattedEnd = endDate.toLocaleString();
+
+                return `
+                    <div class="${cardClass}">
+                        <div class="event-title">
+                            <span>${event.name}</span>
+                            <span class="event-status ${statusClass}">${status}</span>
+                        </div>
+                        <div class="event-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Location:</span>
+                                <span>${event.airport}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Timezone:</span>
+                                <span>${event.timezone}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Start:</span>
+                                <span>${formattedStart}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">End:</span>
+                                <span>${formattedEnd}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Expected Pilots:</span>
+                                <span>${event.pilots || 'N/A'}</span>
+                            </div>
+                            ${event.description ? `<div class="detail-item">
+                                <span class="detail-label">Notes:</span>
+                                <span>${event.description}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showSuccess(message) {
+            const messageEl = document.getElementById('successMessage');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            setTimeout(() => messageEl.classList.remove('show'), 4000);
+        }
+
+        function showError(message) {
+            const messageEl = document.getElementById('errorMessage');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            setTimeout(() => messageEl.classList.remove('show'), 4000);
+        }
+
+        // Load events on page load
+        loadEvents();
+
+        // Refresh events every 30 seconds
+        setInterval(loadEvents, 30000);
+    </script>
+</body>
+</html>

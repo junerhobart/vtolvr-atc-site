@@ -6,6 +6,11 @@ const eventSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  timezone: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   airport: {
     type: String,
     required: true,
@@ -42,6 +47,10 @@ const eventSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
+  },
+    description: {
+    type: String,
+    trim: true,
   },
 });
 

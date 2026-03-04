@@ -4,6 +4,7 @@ require('dotenv').config();
 const Mongo = require('./functions/MongoHandler');
 const Application = require('./schemas/application');
 const Users = require('./schemas/users');
+const Events = require('./schemas/events');
 const authHandler = require('./functions/AuthHandler');
 const { render } = require('ejs');
 
@@ -157,7 +158,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
   });
   
 
-
+//application endpoints
   app.post("/api/applications/submit", async (req, res) => {
     const data = req.body;
     console.log('Received application data:', data);
@@ -398,6 +399,69 @@ function sendDM(userId, message) {
       message: 'This is a test page'
     });
   });
+//events endpoints 
+app.get("/api/events", (req, res) => {
+
+  Events.find().then(events => {
+    res.json({ data: events });
+  }).catch(error => {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ error: 'Failed to fetch events' });
+  });
+});
+
+// a interval checks every minute for events that have a start time in the past and an end time in the future and updates their status to active, and if the end time is in the past it updates their status to completed
+setInterval(() => {
+
+  //ajust event statuses based on current time and time zones
+  Events.find().then(events => {
+    const now = new Date();
+    events.forEach(event => {
+      const eventStart = new Date(event.startTime);
+      const eventEnd = new Date(event.endTime);
+      if (eventStart <= now && eventEnd >= now) {
+        if (event.status !== 'active') {
+          event.status = 'active';
+          event.save();
+        }
+      } else if (eventEnd < now) {
+        if (event.status !== 'completed') {
+          event.status = 'completed';
+          event.save();
+        }
+      } else if (eventStart > now) {
+        if (event.status !== 'upcoming') {
+          event.status = 'upcoming';
+          event.save();
+        }
+      }
+    });
+  }).catch(error => {
+    console.error('Error updating event statuses:', error);
+  });
+
+}, 60000);
+
+
+// event creation endpoint for atcs
+app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
+  const data = req.body;
+  Events.create({
+    name: data.name,
+    airport: data.airport,
+    timezone: data.timezone,
+    pilots: data.pilots,
+    duration: data.duration,
+    startTime: data.startTime,
+    endTime: data.endTime,
+    description: data.description
+  }).then(event => {
+    res.json({ message: 'Event created successfully', event });
+  }).catch(error => {
+    console.error('Error creating event:', error);
+    res.status(500).json({ error: 'Failed to create event' });
+  });
+});
 
 
 

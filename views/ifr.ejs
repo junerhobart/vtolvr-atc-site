@@ -37,10 +37,84 @@
 
   <title>VFR Flight Planning Sheet</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+      
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+    }
+
+    nav {
+      max-width: 1200px;
+      max-height: 100%;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+    }
+
+    .logo {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #667eea;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo img {
+      height: 50px;
+      width: 50px;
+      object-fit: contain;
+      margin-right: 10px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: #e0e0e0;
+      text-decoration: none;
+      transition: color 0.3s;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: #667eea;
+    }
+
+    main {
+      padding: 20px;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #1e1e1e;
       color: #e0e0e0;
     }
@@ -202,8 +276,23 @@
     }
   </style>
 </head>
-<body id="capture-area">
+ <header>
+    
   <div class="container">
+    <nav>
+      <a href="/" class="logo"><img src="https://atc-vtolvr.site/assets/logo.png" alt="ARN Logo">ARN</a>
+      <ul class="nav-links">
+        <li><a href="/profile">Profile</a></li>
+        <li><a href="/sessions">Sessions</a></li>
+        <li><a href="/charts">Charts</a></li>
+        <li><a href="/announcements">Announcements</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+<body id="capture-area">
+ 
     <h1>IFR Flight Planning Sheet</h1>
     <!-- General Session Section -->
      <div class="section">

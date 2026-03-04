@@ -100,12 +100,34 @@ function restrict(req, res, next) {
   }
 }
 
+function ATCOnly(req, res, next) {
+
+    console.info('checking atc access for user', {user: req.session.user ? req.session.user.Username : 'unknown'});
+    console.info('user roles', {roles: req.session.user ? req.session.user.role : 'unknown'});  
+    if (req.session.user && req.session.user.role.includes('atc')) {
+        return next();
+    }
+    res.status(403).json({ message: 'Forbidden' });
+
+}
+
+function EnforcerOnly(req, res, next) {
+     console.info('checking enforcer access for user', {user: req.session.user ? req.session.user.Username : 'unknown'});
+    console.info('user roles', {roles: req.session.user ? req.session.user.role : 'unknown'});  
+    if (req.session.user && req.session.user.role.includes('enforcer')) {
+        return next();
+    }
+    res.status(403).json({ message: 'Forbidden' });
+
+}
+
 
 
 module.exports = {
     authenticate,
     register,
     AdminOnly,
-    restrict
-
+    restrict,
+    ATCOnly,
+    EnforcerOnly
 };
