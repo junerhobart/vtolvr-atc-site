@@ -38,21 +38,24 @@ app.use(session({
 app.get('/', (req, res) => {
   res.render('index', { 
     title: 'Aviation Realism Network',
-    message: 'Welcome to the Aviation Realism Network Website'
+    message: 'Welcome to the Aviation Realism Network Website',
+    user: req.session.user
   });
 });
 
 app.get('/sessions', (req, res) => {
   res.render('sessions', { 
     title: 'Sessions',
-    message: 'Manage your VTOL VR sessions here'
+    message: 'Manage your VTOL VR sessions here',
+    user: req.session.user  
   });
 });
 
 app.get("/ifr", (req, res) => {
   res.render('ifr', {
     title: 'IFR',
-    message: 'IFR Flight Planning and Tracking'
+    message: 'IFR Flight Planning and Tracking',
+    user: req.session.user
   });
 });
 app.get("/discord", (req, res) => {
@@ -62,7 +65,8 @@ app.get("/discord", (req, res) => {
 app.get("/charts", (req, res) => {
   res.render('charts', {
     title: 'Charts',
-    message: 'VTOL VR Maps and Charts'
+    message: 'VTOL VR Maps and Charts',
+    user: req.session.user
   });
 });
 app.get("/api/sessions", (req, res) => {
