@@ -431,7 +431,8 @@ app.post("/api/auth/login", async (req, res) => {
     req.session.user = {
       id: user._id,
       username: user.Username,
-      role: user.Role
+      role: user.Role,
+      flighthours: user.Flighthours
     };
     res.json({ message: 'Login successful', user: req.session.user });
   })
