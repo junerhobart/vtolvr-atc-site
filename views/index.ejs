@@ -351,12 +351,12 @@
                     const sessionsList = document.getElementById('sessionsList');
                     sessionsList.innerHTML = '';
                     
-                    if (data.length === 0) {
+                    if (data.data.length === 0) {
                         sessionsList.innerHTML = '<p>No sessions available at this time.</p>';
                         return;
                     }
                     
-                    data.slice(0, 3).forEach(session => {
+                    data.data.slice(0, 3).forEach(session => {
                         const statusClass = session.status === 'active' ? 'status-active' : 'status-upcoming';
                         const sessionHTML = `
                             <div class="session-card">
