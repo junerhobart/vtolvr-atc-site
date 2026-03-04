@@ -434,6 +434,7 @@ app.post("/api/auth/login", async (req, res) => {
       role: user.Role,
       flighthours: user.Flighthours
     };
+    console.log('User logged in:', req.session.user);
     res.json({ message: 'Login successful', user: req.session.user });
   })
 }catch(err){

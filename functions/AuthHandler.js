@@ -27,12 +27,17 @@ function authenticate(name, pass, fn) {
   hash({ password: pass, salt: user.Salt }, function (err, pass, salt, hash) {
     if (err) return fn(err);
     if (hash === user.Hash) {
-      
-      return fn(null, user) }
-    fn(null, null)
+      return fn(null, user);
+    }
+    return fn(null, null);
   });
-});}catch(err){
+  }).catch(err => {
+    console.error('issue with authenticating user', {msg: err});
+    fn(err);
+  });
+  }catch(err){
  console.error('issue with authenticating user', {msg: err});
+ fn(err);
 }
 };
 
