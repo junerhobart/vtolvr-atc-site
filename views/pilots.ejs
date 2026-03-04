@@ -407,7 +407,7 @@
 
         async function fetchPilots() {
             try {
-                const response = await fetch('/api/admin/users');
+                const response = await fetch('/api/users');
                 const data = await response.json();
                 allPilots = data.data || [];
                 displayPilots(allPilots);

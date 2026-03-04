@@ -556,6 +556,7 @@ app.get("/admin", authHandler.AdminOnly, (req, res) => {
 app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
   try {
     const users = await Users.find();
+   
     res.json({ data: users });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -563,6 +564,28 @@ app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
   }
   
 });
+
+app.get("/api//users", async (req, res) => {
+  try {
+    const users = await Users.find();
+    var userList = []
+    for (let user of users) {
+      userList.push({
+        id: user._id,
+        username: user.Username,
+        flighthours: user.Flighthours,
+        role: user.Role,
+       
+      });
+    }
+    res.json({ data: userList });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+  
+});
+
 
 app.get("/pilots", (req, res) => {
   res.render('pilots', {
