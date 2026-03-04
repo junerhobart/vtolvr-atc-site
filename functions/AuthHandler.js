@@ -68,6 +68,9 @@ async function register(username, password, email, role) {
 
 
 function AdminOnly(req, res, next) {
+
+    console.info('checking admin access for user', {user: req.user ? req.user.Username : 'unknown'});
+    console.info('user roles', {roles: req.user ? req.user.role : 'unknown'});
     if (req.user && req.user.role.includes('admin')) {
         return next();
     }
