@@ -410,7 +410,7 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
   try{
- await authHandler.login(username, password, function(err, user){
+ await authHandler.authenticate(username, password, function(err, user){
   
     if (err) {
       console.error('Error during login:', err);
