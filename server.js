@@ -564,6 +564,13 @@ app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
   
 });
 
+app.get("/pilots", (req, res) => {
+  res.render('pilots', {
+    title: 'Pilots',
+    message: 'View all registered pilots here'
+  });
+})
+
 //!SECTION Endpoint for updating a user's role
 app.post("/api/admin/users/:id/updateRole", authHandler.AdminOnly, async (req, res) => {
   const userId = req.params.id;
