@@ -640,10 +640,7 @@
                         <input type="text" class="form-input" id="discordId" placeholder="Enter your Discord ID">
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">New Password (leave blank to keep current)</label>
-                        <input type="password" class="form-input" id="password" placeholder="Enter new password">
-                    </div>
+                    
 
                     <div class="button-group">
                         <button type="button" class="btn-save" onclick="saveProfileChanges()">Save Changes</button>
@@ -673,14 +670,14 @@
             const callsign = document.getElementById('callsign').value.trim();
             const email = document.getElementById('email').value.trim();
             const discordId = document.getElementById('discordId').value.trim();
-            const password = document.getElementById('password').value;
+            
 
             // Build the request body with only non-empty fields
             const body = {};
             if (callsign) body.callsign = callsign;
             if (email) body.email = email;
             if (discordId) body.discordId = discordId;
-            if (password) body.password = password;
+           
 
             // If nothing is filled, show error
             if (Object.keys(body).length === 0) {

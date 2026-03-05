@@ -762,7 +762,7 @@ app.post("/api/profile/update", async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const userId = req.session.user.id;
-  const { email, password,callsign,discordId } = req.body;
+  const { email,callsign,discordId } = req.body;
   try {
     const user = await Users.findById(userId);
     if (!user) {
@@ -771,11 +771,7 @@ app.post("/api/profile/update", async (req, res) => {
     if (email) {
       user.Email = email;
     }
-    if (password) {
-      const { hash, salt } = authHandler.hashPassword(password);
-      user.Hash = hash;
-      user.Salt = salt;
-    }
+   
     if (callsign) {
       user.Callsign = callsign.trim().toUpperCase();
     }
