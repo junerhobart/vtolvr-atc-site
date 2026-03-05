@@ -500,7 +500,7 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
           content: `${ping} New Event Created`, // Empty content field
           "embeds": [{
               title: `New Event: ${event.name}`,
-            description: `A new event has been created by ${req.session.user.username}. The event is scheduled to take place at ${event.airport} on <t${Math.floor(new Date(event.startTime).getTime() / 1000)}:R> and will last for ${event.duration}hours. Please reach out to the event organizer if you would like to participate or need more information.`,
+            description: `A new event has been created by ${req.session.user.username}. The event is scheduled to take place at ${event.airport} on <t:${Math.floor(new Date(event.startTime).getTime() / 1000)}:R> and will last for ${event.duration}hours. Please reach out to the event organizer if you would like to participate or need more information.`,
             color: 0x00FF00,
         }],
         timestamp: new Date().toISOString()
