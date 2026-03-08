@@ -351,14 +351,76 @@
             overflow-y: auto;
         }
 
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.2s;
+        }
+
+        .hamburger-btn:hover {
+            color: #667eea;
+        }
+
+        .hamburger-btn.active {
+            color: #667eea;
+        }
+
         @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
+
             .sidebar {
                 width: 100%;
                 height: auto;
-                position: relative;
-                flex-direction: row;
-                justify-content: space-between;
-                padding: 15px;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                flexbox: column;
+                padding: 80px 20px 20px 20px;
+                transition: left 0.3s ease-in-out;
+                z-index: 1000;
+                overflow-y: auto;
+                align-items: flex-start;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-logo {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar-title {
+                font-size: 1.1em;
+                margin-bottom: 15px;
+            }
+
+            .sidebar-menu {
+                width: 100%;
+            }
+
+            .sidebar-menu-item {
+                width: 100%;
+                padding: 12px 16px;
+            }
+
+            .sidebar-login-btn {
+                width: 100%;
+                margin-top: 15px;
             }
 
             .main-wrapper {
@@ -378,10 +440,25 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .form-section, .events-section {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+          <button type="button" class="close-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar" style="font-size: 1.5em; padding: 0; width: auto; height: auto; background: none; border: none; color: #e0e0e0; cursor: pointer;;display: none;">✕</button>
         <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
         <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
         <div class="sidebar-menu">
@@ -396,6 +473,10 @@
     </div>
 
     <div class="main-wrapper">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
+            
+        </div>
     <div class="container">
         <header>
             <h1>ATC Events Planning</h1>
@@ -404,7 +485,10 @@
 
         <div class="content-wrapper">
             <div class="form-section">
-                <h2 class="section-title">Create New Event</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="section-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Create New Event</h2>
+                  
+                </div>
                 
                 <div id="successMessage" class="message success"></div>
                 <div id="errorMessage" class="message error"></div>
@@ -523,6 +607,39 @@
                 endInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
             }
         }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            sidebar.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+            // Show close button when sidebar is active
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            if (sidebar.classList.contains('active')) {
+                closeBtn.style.display = 'block';
+            } else {
+                closeBtn.style.display = 'none';
+            }
+
+        }
+
+        // Close sidebar when menu item is clicked on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item, .sidebar-login-btn');
+            sidebarMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.getElementById('sidebar');
+                        const hamburgerBtn = document.getElementById('hamburgerBtn');
+                        const closeBtn = document.getElementById('closeSidebarBtn');
+                        sidebar.classList.remove('active');
+                        hamburgerBtn.classList.remove('active');
+                        closeBtn.style.display = 'none';
+                    }
+                });
+            });
+        });
 
         function handleSubmit(event) {
             event.preventDefault();
@@ -660,6 +777,14 @@
             messageEl.textContent = message;
             messageEl.classList.add('show');
             setTimeout(() => messageEl.classList.remove('show'), 4000);
+        }
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            sidebar.classList.remove('active');
+            hamburgerBtn.classList.remove('active');
+            closeBtn.style.display = 'none';
         }
 
         // Load events on page load

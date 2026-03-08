@@ -24,6 +24,7 @@
             flex-direction: row;
             padding: 0;
             margin: 0;
+            overflow-x: hidden;
         }
 
         .main-content {
@@ -34,6 +35,8 @@
             justify-content: center;
             padding: 20px;
             overflow-y: auto;
+            min-height: 100vh;
+            width: calc(100% - 280px);
         }
 
         .sidebar {
@@ -46,6 +49,107 @@
             align-items: center;
             gap: 25px;
             overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 999;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .close-sidebar-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            z-index: 1004;
+        }
+
+        .close-sidebar-btn:hover {
+            color: #667eea;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+       .hamburger-btn {
+            display: none;
+            align-items: left;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.2s;
+            padding: 10px 0;
+        }
+
+        .hamburger-btn:hover {
+            color: #667eea;
+        }
+
+        .hamburger-btn.active {
+            color: #667eea;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .header-top {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .hamburger-btn.active {
+            color: #667eea;
+        }
+
+        .header-top {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .sidebar-logo {
@@ -58,6 +162,13 @@
             justify-content: center;
             font-size: 60px;
             color: #2a2a2a;
+        }
+
+        .sidebar-logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .sidebar-title {
@@ -235,50 +346,186 @@
         }
 
         @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #444;
-                flex-direction: row;
-                justify-content: space-around;
-                padding: 20px;
+            .hamburger-btn {
+                display: block;
             }
 
             .main-content {
-                flex: 1;
+                width: 100%;
+                padding: 15px;
+                padding-top: 60px;
+            }
+
+            .sidebar {
+                width: 250px;
+                height: auto;
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translateX(-100%);
+                padding: 70px 20px 20px 20px;
+                z-index: 1001;
+                max-height: 100vh;
+                overflow-y: auto;
+                border-right: 1px solid #444;
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .close-sidebar-btn {
+                display: block;
             }
 
             .sidebar-logo {
                 width: 80px;
                 height: 80px;
                 font-size: 40px;
+                margin-bottom: 10px;
             }
 
-            body {
-                flex-direction: column;
+            .sidebar-title {
+                font-size: 1.05em;
+                line-height: 1.2;
+                margin-bottom: 15px;
             }
-        }
 
-        @media (max-width: 480px) {
-            .register-panel {
-                padding: 25px;
+            .sidebar-menu {
+                width: 100%;
+            }
+
+            .sidebar-menu-item {
+                width: 100%;
+                padding: 12px 16px;
+                font-size: 0.95em;
+            }
+
+            header {
+                margin-bottom: 30px;
             }
 
             header h1 {
                 font-size: 1.8em;
+                margin-bottom: 10px;
+            }
+
+            header p {
+                font-size: 0.95em;
+            }
+
+            .register-panel {
+                padding: 25px;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .header-container {
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .main-content {
+                padding: 12px;
+                padding-top: 60px;
+            }
+
+            .header-container {
+                margin-bottom: 20px;
+            }
+
+            header {
+                margin-bottom: 25px;
+            }
+
+            header h1 {
+                font-size: 1.6em;
+                margin-bottom: 10px;
+            }
+
+            header p {
+                font-size: 0.9em;
+            }
+
+            .register-panel {
+                padding: 20px;
+                max-width: 100%;
+                width: 100%;
+                border-radius: 8px;
+            }
+
+            .register-panel h2 {
+                font-size: 1.3em;
+                margin-bottom: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
             }
 
             .form-group input {
+                padding: 12px;
+                font-size: 16px;
+                border-radius: 4px;
+            }
+
+            .form-group label {
+                font-size: 0.95em;
+                margin-bottom: 6px;
+            }
+
+            .form-actions {
+                gap: 8px;
+            }
+
+            .submit-btn {
+                padding: 12px;
+                font-size: 0.95em;
+            }
+
+            .login-link {
+                font-size: 0.9em;
+                margin-top: 15px;
+            }
+
+            footer {
+                font-size: 0.85em;
+                margin-top: 30px;
+                padding: 20px 0;
+            }
+        }
+
+        @media (max-width: 360px) {
+            header h1 {
+                font-size: 1.4em;
+            }
+
+            .register-panel {
+                padding: 15px;
+            }
+
+            .submit-btn {
                 padding: 10px;
+                font-size: 0.9em;
             }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
         <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
-        <div class="sidebar-title"><a href="#">Aviation Realism<br>Network</a></div>
+        <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
         <div class="sidebar-menu">
+            <a class="sidebar-menu-item" href="/">Home</a>
             <a class="sidebar-menu-item" href="/profile">Profile</a>
             <a class="sidebar-menu-item" href="/announcements">Announcements</a>
             <a class="sidebar-menu-item" href="/pilots">Pilots</a>
@@ -288,6 +535,10 @@
     </div>
 
     <div class="main-content">
+        <div class="header-container">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle navigation menu">☰</button>
+        </div>
+        
         <header>
             <h1>Register</h1>
             <p>Create your Aviation Realism Network account</p>
@@ -334,6 +585,45 @@
     </div>
 
     <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+        }
+
+        // Close sidebar
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('sidebarOverlay');
+            overlay.addEventListener('click', closeSidebar);
+
+            // Close sidebar when menu item is clicked
+            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+            sidebarMenuItems.forEach(item => {
+                item.addEventListener('click', closeSidebar);
+            });
+
+            // Close sidebar on window resize if screen is large
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             

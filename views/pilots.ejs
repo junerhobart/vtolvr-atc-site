@@ -36,6 +36,47 @@
             overflow-y: auto;
         }
 
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 0;
+            transition: all 0.2s;
+            margin-right: 15px;
+        }
+
+        .hamburger-btn:hover {
+            color: #667eea;
+        }
+
+        .hamburger-btn.active {
+            color: #667eea;
+        }
+
+        .close-sidebar-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            z-index: 1002;
+        }
+
+        .close-sidebar-btn:hover {
+            color: #667eea;
+        }
+
         .sidebar {
             width: 280px;
             background-color: #2a2a2a;
@@ -46,6 +87,11 @@
             align-items: center;
             gap: 25px;
             overflow-y: auto;
+            position: relative;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
         }
 
         .sidebar-logo {
@@ -319,7 +365,50 @@
             opacity: 0.8;
         }
 
+        @media (max-width: 1024px) {
+            .main-content {
+                width: calc(100% - 280px);
+            }
+        }
+
         @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
+
+            .main-content {
+                width: 100%;
+                padding: 15px;
+                padding-top: 0;
+            }
+
+            .sidebar {
+                width: 250px;
+                height: auto;
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translateX(-100%);
+                padding: 70px 20px 20px 20px;
+                z-index: 1001;
+                max-height: 100vh;
+                overflow-y: auto;
+                border-right: 1px solid #444;
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .close-sidebar-btn {
+                display: block;
+            }
+
             .pilots-container {
                 grid-template-columns: 1fr;
             }
@@ -328,18 +417,160 @@
                 font-size: 1.8em;
             }
 
+            header p {
+                font-size: 0.95em;
+            }
+
             .search-box {
                 flex-direction: column;
+            }
+
+            .search-box input {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .search-box button {
+                padding: 12px;
+                font-size: 1em;
             }
 
             .filter-options {
                 justify-content: center;
             }
+
+            .filter-btn {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 12px;
+                padding-top: 0;
+            }
+
+            header {
+                margin-bottom: 20px;
+                padding-top: 10px;
+            }
+
+            header h1 {
+                font-size: 1.6em;
+                margin-bottom: 5px;
+            }
+
+            header p {
+                font-size: 0.9em;
+            }
+
+            .sidebar-logo {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar-title {
+                font-size: 1.05em;
+                line-height: 1.2;
+                margin-bottom: 15px;
+            }
+
+            .sidebar-menu {
+                width: 100%;
+            }
+
+            .sidebar-menu-item {
+                width: 100%;
+                padding: 12px 16px;
+                font-size: 0.95em;
+            }
+
+            .search-box {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .search-box input {
+                padding: 12px;
+                font-size: 16px;
+                width: 100%;
+            }
+
+            .search-box button {
+                padding: 12px;
+                font-size: 0.95em;
+                width: 100%;
+            }
+
+            .filter-options {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .filter-btn {
+                padding: 10px 12px;
+                font-size: 0.8em;
+                width: 100%;
+            }
+
+            .pilots-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                max-width: 100%;
+            }
+
+            .pilot-card {
+                padding: 15px;
+            }
+
+            .pilot-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+
+            .pilot-name {
+                font-size: 1.1em;
+            }
+
+            .pilot-callsign {
+                font-size: 0.85em;
+            }
+
+            .pilot-info {
+                font-size: 0.85em;
+            }
+
+            .pilot-hours {
+                font-size: 1.1em;
+            }
+
+            .pilot-role-badge {
+                padding: 3px 8px;
+                font-size: 0.7em;
+            }
+
+            .results-count {
+                font-size: 0.85em;
+            }
+
+            footer {
+                font-size: 0.85em;
+                margin-top: 30px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
         <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
         <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
         <div class="sidebar-menu">
@@ -357,6 +588,9 @@
     </div>
 
     <div class="main-content">
+        <div style="display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px;">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
+        </div>
         <header>
             <h1>Pilots Directory</h1>
             <p>Browse and search all pilots in our network</p>
@@ -400,8 +634,45 @@
         let allPilots = [];
         let currentFilter = 'all';
 
-        // Fetch pilots data on page load
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            sidebar.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+            // Show close button when sidebar is active
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            if (sidebar.classList.contains('active')) {
+                closeBtn.style.display = 'block';
+            } else {
+                closeBtn.style.display = 'none';
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            sidebar.classList.remove('active');
+            hamburgerBtn.classList.remove('active');
+            closeBtn.style.display = 'none';
+        }
+
+        // Close sidebar when menu item is clicked on mobile
         document.addEventListener('DOMContentLoaded', function() {
+            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+            sidebarMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.getElementById('sidebar');
+                        const hamburgerBtn = document.getElementById('hamburgerBtn');
+                        const closeBtn = document.getElementById('closeSidebarBtn');
+                        sidebar.classList.remove('active');
+                        hamburgerBtn.classList.remove('active');
+                        closeBtn.style.display = 'none';
+                    }
+                });
+            });
             fetchPilots();
         });
 

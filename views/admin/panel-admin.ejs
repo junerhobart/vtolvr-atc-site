@@ -24,6 +24,7 @@
             flex-direction: row;
             padding: 0;
             margin: 0;
+            overflow-x: hidden;
         }
 
         .main-content {
@@ -33,6 +34,8 @@
             align-items: center;
             padding: 20px;
             overflow-y: auto;
+            width: calc(100% - 280px);
+            padding-top: 0;
         }
 
         .sidebar {
@@ -45,6 +48,36 @@
             align-items: center;
             gap: 25px;
             overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 999;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .close-sidebar-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            z-index: 1002;
+        }
+
+        .close-sidebar-btn:hover {
+            color: #667eea;
         }
 
         .sidebar-logo {
@@ -121,6 +154,7 @@
         header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
+            word-break: break-word;
         }
 
         header p {
@@ -200,6 +234,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 15px;
         }
 
         .member-item:hover {
@@ -223,6 +258,7 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
+            min-width: 0;
         }
 
         .detail-item {
@@ -239,8 +275,10 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            min-width: 300px;
+            min-width: 100px;
             justify-content: flex-end;
+            width: auto;
+            flex-shrink: 0;
         }
 
         .action-btn {
@@ -294,6 +332,8 @@
             overflow-y: auto;
             color: #e0e0e0;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            margin: 20px;
         }
 
         .modal-header {
@@ -470,38 +510,355 @@
             opacity: 0.8;
         }
 
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 0;
+            transition: all 0.2s;
+            margin-right: 15px;
+        }
+
+        .hamburger-btn:hover {
+            color: #667eea;
+        }
+
+        .hamburger-btn.active {
+            color: #667eea;
+        }
+
+        .close-sidebar-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            z-index: 1002;
+        }
+
+        .close-sidebar-btn:hover {
+            color: #667eea;
+        }
+
+        .header-top {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-panel {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+        }
+
         @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
+
+            .main-content {
+                width: 100%;
+                padding: 15px;
+                padding-top: 0;
+            }
+
+            .sidebar {
+                width: 250px;
+                height: auto;
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translateX(-100%);
+                padding: 70px 20px 20px 20px;
+                z-index: 1001;
+                max-height: 100vh;
+                overflow-y: auto;
+                border-right: 1px solid #444;
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .close-sidebar-btn {
+                display: block;
+            }
+
             .member-item {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 15px;
+            }
+
+            .member-info {
+                width: 100%;
             }
 
             .member-actions {
                 width: 100%;
                 justify-content: flex-start;
-                margin-top: 15px;
+                gap: 8px;
+            }
+
+            .member-details {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
             }
 
             header h1 {
                 font-size: 1.8em;
             }
+
+            header p {
+                font-size: 0.95em;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .search-input {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .action-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+                flex: 1;
+                min-width: calc(50% - 4px);
+            }
+
+            .modal-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .modal-close {
+                align-self: flex-end;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+            }
+
+            .detail-item {
+                flex-wrap: wrap;
+                word-break: break-word;
+            }
         }
 
         @media (max-width: 480px) {
+            .main-content {
+                padding: 12px;
+                padding-top: 0;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .admin-panel {
+                padding: 15px;
+                gap: 15px;
+                border-radius: 8px;
+            }
+
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding-bottom: 12px;
+            }
+
+            .panel-header h2 {
+                font-size: 1.3em;
+                margin: 0;
+            }
+
             .action-btn {
-                padding: 6px 10px;
+                padding: 8px 10px;
                 font-size: 0.75em;
+                flex: 1;
+            }
+
+            header {
+                margin-bottom: 20px;
+                padding-top: 10px;
+            }
+
+            header h1 {
+                font-size: 1.6em;
+                margin-bottom: 5px;
+            }
+
+            header p {
+                font-size: 0.9em;
+            }
+
+            .sidebar-logo {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar-title {
+                font-size: 1.05em;
+                line-height: 1.2;
+                margin-bottom: 15px;
+            }
+
+            .sidebar-menu {
+                width: 100%;
+            }
+
+            .sidebar-menu-item {
+                width: 100%;
+                padding: 12px 16px;
+                font-size: 0.95em;
+            }
+
+            .search-input {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .member-item {
+                padding: 15px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .member-name {
+                font-size: 1.05em;
+                width: 100%;
+            }
+
+            .member-info {
+                width: 100%;
             }
 
             .member-details {
-                flex-direction: column;
-                gap: 5px;
+                font-size: 0.9em;
+                gap: 12px;
+                width: 100%;
+            }
+
+            .action-btn {
+                padding: 8px 14px;
+                font-size: 0.8em;
+                flex: 0 1 calc(50% - 6px);
+            }
+
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+                max-height: 85vh;
+                width: calc(100% - 20px);
+            }
+
+            .modal-header h2 {
+                font-size: 1.3em;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            .form-label {
+                font-size: 0.95em;
+                margin-bottom: 8px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .role-item {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                padding: 12px;
+                font-size: 0.95em;
+            }
+
+            .detail-item {
+                flex-basis: 100%;
+                word-break: break-word;
+            }
+
+            footer {
+                font-size: 0.85em;
+                margin-top: 30px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            header h1 {
+                font-size: 1.4em;
+            }
+
+            .modal-content {
+                padding: 15px;
+                width: calc(100% - 30px);
+            }
+
+            .action-btn {
+                padding: 8px 10px;
+                font-size: 0.75em;
+                flex: 1;
+            }
+
+            .member-item {
+                padding: 12px;
+            }
+
+            .search-input {
+                padding: 10px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
         <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
         <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
         <div class="sidebar-menu">
@@ -516,6 +873,9 @@
     </div>
 
     <div class="main-content">
+        <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
+        </div>
         <header>
             <h1>Admin Dashboard</h1>
             <p>Manage members, roles, and flight hours for the Aviation Realism Network.</p>
@@ -595,6 +955,47 @@
         let filteredMembers = [];
         let currentEditingMemberId = null;
         let currentEditingMemberRoles = [];
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            sidebar.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+            // Show close button when sidebar is active
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            if (sidebar.classList.contains('active')) {
+                closeBtn.style.display = 'block';
+            } else {
+                closeBtn.style.display = 'none';
+            }
+        }
+
+        // Close sidebar when menu item is clicked on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+            sidebarMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.getElementById('sidebar');
+                        const hamburgerBtn = document.getElementById('hamburgerBtn');
+                        const closeBtn = document.getElementById('closeSidebarBtn');
+                        sidebar.classList.remove('active');
+                        hamburgerBtn.classList.remove('active');
+                        closeBtn.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            sidebar.classList.remove('active');
+            hamburgerBtn.classList.remove('active');
+            closeBtn.style.display = 'none';
+        }
 
         function filterMembers() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();

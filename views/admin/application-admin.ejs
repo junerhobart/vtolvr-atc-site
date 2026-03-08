@@ -24,6 +24,7 @@
             flex-direction: row;
             padding: 0;
             margin: 0;
+            overflow-x: hidden;
         }
 
         .main-content {
@@ -33,6 +34,8 @@
             align-items: center;
             padding: 20px;
             overflow-y: auto;
+            width: calc(100% - 280px);
+            padding-top: 0;
         }
 
         .sidebar {
@@ -45,6 +48,66 @@
             align-items: center;
             gap: 25px;
             overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 999;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 10px 8px;
+            margin-bottom: 0;
+            transition: all 0.2s;
+            margin-right: 10px;
+            z-index: 1003;
+        }
+
+        .hamburger-btn:hover {
+            color: #667eea;
+        }
+
+        .hamburger-btn.active {
+            color: #667eea;
+        }
+
+        .close-sidebar-btn {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px 10px;
+            width: auto;
+            height: auto;
+            z-index: 1002;
+            transition: all 0.2s;
+        }
+
+        .close-sidebar-btn:hover {
+            color: #667eea;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
         }
 
         .sidebar-logo {
@@ -139,7 +202,7 @@
             flex-direction: column;
             gap: 20px;
             flex: 1;
-            min-width: 400px;
+            min-width: 300px;
             max-width: 600px;
             width: 100%;
         }
@@ -288,30 +351,289 @@
             opacity: 0.8;
         }
 
+        @media (max-width: 1024px) {
+            .main-content {
+                width: calc(100% - 250px);
+            }
+
+            .sidebar {
+                width: 250px;
+            }
+        }
+
         @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
+
+            .main-content {
+                width: 100%;
+                padding: 15px;
+                padding-top: 50px;
+            }
+
+            .header-content {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                padding: 10px 15px;
+                background-color: #2a2a2a;
+                border-bottom: 1px solid #444;
+                z-index: 1002;
+                height: 50px;
+            }
+
+            .sidebar {
+                width: 280px;
+                height: auto;
+                position: fixed;
+                top: 50px;
+                left: 0;
+                transform: translateX(-100%);
+                padding: 20px;
+                z-index: 1001;
+                max-height: calc(100vh - 50px);
+                overflow-y: auto;
+                border-right: 1px solid #444;
+                transition: transform 0.3s ease-in-out;
+                background-color: #2a2a2a;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+            }
+
+            .close-sidebar-btn {
+                display: block;
+            }
+
             .container {
                 flex-direction: column;
-                align-items: center;
+                align-items: 100%;
+                gap: 20px;
+            }
+
+            header {
+                margin-bottom: 30px;
+                margin-top: 10px;
             }
 
             header h1 {
-                font-size: 1.8em;
+                font-size: 1.6em;
+                margin-bottom: 5px;
+            }
+
+            header p {
+                font-size: 0.85em;
             }
 
             .applications-panel {
                 min-width: 100%;
                 max-width: 100%;
+                width: 100%;
             }
-        }
 
-        @media (max-width: 480px) {
             .application-item {
                 padding: 12px;
             }
 
+            .application-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .applicant-name {
+                font-size: 1em;
+            }
+
+            .application-actions {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
             .action-btn {
-                padding: 4px 8px;
+                flex: 1;
+                min-width: calc(50% - 3px);
+                padding: 8px 10px;
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 12px;
+                padding-top: 50px;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .applications-panel {
+                padding: 15px;
+                gap: 12px;
+                border-radius: 8px;
+            }
+
+            .applications-panel h2 {
+                font-size: 1.2em;
+                margin: 0;
+            }
+
+            header {
+                margin-bottom: 25px;
+                padding-top: 5px;
+            }
+
+            header h1 {
+                font-size: 1.4em;
+                margin-bottom: 3px;
+            }
+
+            header p {
+                font-size: 0.8em;
+            }
+
+            .sidebar-logo {
+                width: 70px;
+                height: 70px;
+                font-size: 35px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar-title {
+                font-size: 0.95em;
+                line-height: 1.2;
+                margin-bottom: 15px;
+            }
+
+            .sidebar-menu {
+                width: 100%;
+            }
+
+            .sidebar-menu-item {
+                width: 100%;
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+
+            .search-input {
+                padding: 10px;
+                font-size: 14px;
+                border-radius: 4px;
+            }
+
+            .application-item {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .applicant-name {
+                font-size: 0.95em;
+            }
+
+            .application-position {
+                font-size: 0.85em;
+            }
+
+            .application-date {
                 font-size: 0.75em;
+            }
+
+            .action-btn {
+                padding: 6px 8px;
+                font-size: 0.7em;
+                flex: 1;
+                min-width: calc(50% - 3px);
+            }
+
+            .modal-content {
+                padding: 16px;
+                margin: 10px;
+                max-height: 85vh;
+                width: calc(100% - 20px);
+                border-radius: 8px;
+            }
+
+            .modal-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+
+            .modal-close {
+                align-self: flex-end;
+                margin: -5px -5px 0 0;
+            }
+
+            .modal-header h2 {
+                font-size: 1.15em;
+                margin: 0;
+            }
+
+            .question-answer {
+                margin-bottom: 16px;
+            }
+
+            .question {
+                font-size: 0.9em;
+            }
+
+            .answer {
+                font-size: 0.85em;
+                padding: 8px;
+            }
+
+            .container {
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.25em;
+            }
+
+            header p {
+                font-size: 0.75em;
+            }
+
+            .modal-content {
+                padding: 12px;
+                width: calc(100% - 14px);
+                margin: 7px;
+            }
+
+            .action-btn {
+                padding: 5px 6px;
+                font-size: 0.65em;
+            }
+
+            .application-item {
+                padding: 8px;
+            }
+
+            .search-input {
+                padding: 8px;
+                font-size: 13px;
+            }
+
+            .hamburger-btn {
+                padding: 8px 5px;
+                font-size: 1.3em;
             }
         }
 
@@ -420,7 +742,8 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
         <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
         <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
         <div class="sidebar-menu">
@@ -433,6 +756,9 @@
     </div>
 
     <div class="main-content">
+        <div class="header-content">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle navigation menu">☰</button>
+        </div>
         <header>
             <h1>Applications</h1>
             <p>Manage ATC and Enforcer applications for the Aviation Realism Network Discord group.</p>
@@ -479,6 +805,47 @@
     <script>
         let allApplications = [];
         let filteredApplications = [];
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            sidebar.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+            // Show close button when sidebar is active
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            if (sidebar.classList.contains('active')) {
+                closeBtn.style.display = 'block';
+            } else {
+                closeBtn.style.display = 'none';
+            }
+        }
+
+        // Close sidebar when menu item is clicked on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
+            sidebarMenuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        const sidebar = document.getElementById('sidebar');
+                        const hamburgerBtn = document.getElementById('hamburgerBtn');
+                        const closeBtn = document.getElementById('closeSidebarBtn');
+                        sidebar.classList.remove('active');
+                        hamburgerBtn.classList.remove('active');
+                        closeBtn.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            sidebar.classList.remove('active');
+            hamburgerBtn.classList.remove('active');
+            closeBtn.style.display = 'none';
+        }
 
         function filterApplications() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
