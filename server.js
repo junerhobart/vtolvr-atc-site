@@ -538,7 +538,7 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
 var metarSubmissions = {}
 
 app.post("/api/metar/submit", authHandler.ATCOnly, (req, res) => {
-  const data = req.query;
+  const data = req.body;
   console.log('Received METAR data:', data);
   //store the metar submission in an array with the session id and the metar data
   metarSubmissions[data.sessionId] = data;
@@ -547,7 +547,9 @@ app.post("/api/metar/submit", authHandler.ATCOnly, (req, res) => {
 
 app.get("/api/metar/:sessionId", (req, res) => {
   const sessionId = req.params.sessionId;
+  console.log('Received request for METAR data for session:', sessionId);
   const metarData = metarSubmissions[sessionId];
+  console.log('METAR data for session:', metarData);
   if (metarData) {
     res.json({ data: metarData });
   } else {
