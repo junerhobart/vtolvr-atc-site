@@ -624,7 +624,7 @@
             if (metarData.stationId) {
                 faaMetar += metarData.stationId + ' ';
             }
-            
+           
             // Date-time group (DDHHmm)
             const now = new Date(metarData.timestamp || new Date());
             const day = String(now.getUTCDate()).padStart(2, '0');
@@ -655,23 +655,24 @@
                 if (metarData.weatherNotes && metarData.weatherNotes.includes('heavy')) {
                     faaMetar += '+RA ';
                 } else {
-                    faaMetar += 'RA ';
+                    faaMetar += '-RA ';
                 }
             } else if (metarData.weatherNotes) {
                 faaMetar += metarData.weatherNotes + ' ';
             }
             
-            // Format for display
-            const metarText = faaMetar.trim();
+            // Format for display - truncate after AO2
+            let metarText = faaMetar.trim();
+            
             metarDisplay.innerHTML = `
-                <h3>METAR Information (FAA Format)</h3>
+                <h3>METAR Information</h3>
                 <p style="font-size: 1.2em; margin: 10px 0; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #0066cc;">${metarText}</p>
-                <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                <p style="font-size: 0.9em; color: #333; margin-top: 10px; background-color: #d0e8f0; padding: 8px; border-radius: 4px;">
                     <strong>Raw Data:</strong><br>
-                    Wind: ${metarData.windDirection}° @ ${metarData.windSpeed}kt${metarData.windGust ? ' G' + metarData.windGust : ''}<br>
+                    Wind: ${metarData.windDirection}° @ ${metarData.windSpeed}kt${metarData.windGust ? ' G' + metarData.windGust : '' } <br>
                     Visibility: ${metarData.visibility}SM<br>
                     Conditions: ${metarData.weatherNotes || 'Clear'}<br>
-                    Updated: ${now.toUTCString()}
+                    Updated: ${now.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </p>
             `;
         }
