@@ -26,9 +26,8 @@ if (interaction.isButton()) {
 	const channel = await client.channels.fetch("1462570082793160867");
 	const message = await channel.messages.fetch(event.messageId);
 	const Event = EmbedBuilder.from(message.embeds[0])
-	.removeFields(f => f.name === "Attendees")
-	.addFields({ name: "Attendees", value: event.attendees.map(a => a.username).join("\n") || "No attendees yet", inline: false })
-		.setFooter({ text: `${event.attendees.length} attendees` });
+	.spliceFields(0, 1, { name: "Attendees", value: event.attendees.map(a => a.username).join("\n") || "No attendees yet", inline: false })
+	.setFooter({ text: `${event.attendees.length} attendees` });
 	message.edit({ embeds: [Event] });
 
 	const embed = new EmbedBuilder()
