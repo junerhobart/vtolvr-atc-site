@@ -847,7 +847,8 @@ app.post("/api/auth/login", async (req, res) => {
       username: user.Username,
       role: user.Role,
       flighthours: user.Flighthours,
-      Callsign: user.Callsign
+      Callsign: user.Callsign,
+      code: user.code
     };
     console.log('User logged in:', req.session.user);
     res.json({ message: 'Login successful', user: req.session.user });
