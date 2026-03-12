@@ -470,7 +470,7 @@ setInterval(() => {
           event.status = 'active';
 
           //open a thread in the events channel for this event and post the event details in the thread while mentioning the attendees
-            const channel = bot.channels.fetch("1462570082793160867").then(channel => {
+            bot.channels.fetch("1462570082793160867").then(channel => {
               channel.threads.create({
                 name: `Event: ${event.name}`,
                 autoArchiveDuration: 60,
@@ -499,6 +499,7 @@ setInterval(() => {
                     ping = "No attendees yet"
                   }
                   thread.send({ content: `Event is now active! ${ping}`, embeds: [embed] });
+                  event.save();
                 
               }).catch(err => {
                 console.error('Error creating thread:', err);
@@ -507,7 +508,7 @@ setInterval(() => {
               console.error('Error fetching channel:', err);
             }
             );
-          event.save();
+          
         }
       } else if (eventEnd < now) {
         if (event.status !== 'completed') {
@@ -534,7 +535,7 @@ setInterval(() => {
     console.error('Error updating event statuses:', error);
   });
 
-}, 60000);
+}, 10000);
 
 
 // event creation endpoint for atcs
