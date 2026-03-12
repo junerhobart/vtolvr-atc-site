@@ -1217,10 +1217,7 @@
                         <input type="email" class="form-input" id="email" placeholder="Enter your email address">
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Discord ID</label>
-                        <input type="text" class="form-input" id="discordId" placeholder="Enter your Discord ID">
-                    </div>
+                   
 
                     
 
@@ -1300,14 +1297,13 @@
         function saveProfileChanges() {
             const callsign = document.getElementById('callsign').value.trim();
             const email = document.getElementById('email').value.trim();
-            const discordId = document.getElementById('discordId').value.trim();
+           
             
 
             // Build the request body with only non-empty fields
             const body = {};
             if (callsign) body.callsign = callsign;
             if (email) body.email = email;
-            if (discordId) body.discordId = discordId;
            
 
             // If nothing is filled, show error

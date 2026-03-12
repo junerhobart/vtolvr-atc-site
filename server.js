@@ -829,6 +829,8 @@ app.post("/api/auth/register", async (req, res) => {
 }
 });
 
+
+
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
   try{
@@ -893,7 +895,7 @@ app.post("/api/profile/update", async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const userId = req.session.user.id;
-  const { email,callsign,discordId } = req.body;
+  const { email,callsign} = req.body;
   try {
     const user = await Users.findById(userId);
     if (!user) {
@@ -905,9 +907,6 @@ app.post("/api/profile/update", async (req, res) => {
    
     if (callsign) {
       user.Callsign = callsign.trim().toUpperCase();
-    }
-    if (discordId) {
-      user.DiscordID = discordId.trim();
     }
     await user.save();
     res.json({ message: 'Profile updated successfully' });
@@ -923,6 +922,7 @@ app.post("/api/profile/update", async (req, res) => {
 
 // Start the server
 app.listen(PORT, async () => {
+ 
  bot.login(process.env.Discord_TOKEN).then(() => {
   console.log('Discord bot logged in successfully');
 }).catch(err => {
@@ -931,3 +931,14 @@ app.listen(PORT, async () => {
 
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+/* //find all users that dont have code and generate one for them that 6 random characters long containing letter and numbers
+Users.find( {}).then(users => {
+  users.forEach(user => { 
+    user.code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    user.save();
+  });
+}).catch(err => {
+  console.error('Error generating codes for users:', err);
+
+});*/
