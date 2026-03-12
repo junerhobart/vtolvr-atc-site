@@ -68,7 +68,7 @@ const eventSchema = new mongoose.Schema({
   },
   messageId: {
     type: String,
-    required: true,
+    
   },
 });
 
