@@ -18,6 +18,9 @@ if (process.env.ENABLE_MESSAGE_CONTENT_INTENT === 'true') {
   botIntents.push(GatewayIntentBits.MessageContent);
 }
 const bot = new discord.Client({ intents: botIntents });
+
+
+
 const fs = require('fs');
 for (const file of fs.readdirSync(path.join(__dirname, './functions'))) {
     if (file.endsWith('.js')) {
@@ -470,7 +473,7 @@ setInterval(() => {
           event.status = 'active';
 
           //open a thread in the events channel for this event and post the event details in the thread while mentioning the attendees
-            bot.channels.fetch("1462570082793160867").then(channel => {
+            bot.channels.fetch("1481658593630617724").then(channel => {
               channel.threads.create({
                 name: `Event: ${event.name}`,
                 autoArchiveDuration: 60,
@@ -504,10 +507,7 @@ setInterval(() => {
               }).catch(err => {
                 console.error('Error creating thread:', err);
               });
-            }).catch(err => {
-              console.error('Error fetching channel:', err);
-            }
-            );
+            });
           
         }
       } else if (eventEnd < now) {
@@ -612,8 +612,6 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
             }).catch(err => {
               console.error('Error sending event message:', err);
             });
-          }).catch(err => {
-            console.error('Error fetching channel:', err);
           });
     }
     res.json({ message: 'Event created successfully' });
