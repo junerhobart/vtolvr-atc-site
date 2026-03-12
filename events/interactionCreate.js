@@ -76,8 +76,7 @@ if( command.DevOnly && !Devs.includes(interaction.user.id.toString())) return in
 
 
 
-// Defer the reply to give us more time to process the command
-await interaction.deferReply({ ephemeral: command.Ephemeral || false }).catch(() => {});
+
 
 
 
