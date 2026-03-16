@@ -79,7 +79,7 @@ function AdminOnly(req, res, next) {
     if (req.session.user && req.session.user.role.includes('admin')) {
         return next();
     }
-    res.status(403).json({ message: 'Forbidden' });
+    return res.redirect('/login');
 }
 
 
