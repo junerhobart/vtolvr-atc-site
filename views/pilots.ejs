@@ -712,7 +712,7 @@
 
             container.innerHTML = pilots.map(pilot => `
                 <div class="pilot-card">
-                    <div class="pilot-avatar"><img src="${pilot.Avatar || '/images/default-avatar.png'}" alt="Avatar" /></div>
+                    <div class="pilot-avatar"><img src="${pilot.Avatar || '✈️'}" alt="Avatar" /></div>
                     <div class="pilot-name">${pilot.Username || 'Unknown'}</div>
                     <div class="pilot-callsign">${pilot.Callsign || 'N/A'}</div>
                     <div class="pilot-info">
