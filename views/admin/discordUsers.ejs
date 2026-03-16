@@ -649,10 +649,10 @@
 
             container.innerHTML = users.map(user => `
                 <div class="user-card">
-                    <div class="user-avatar">👤</div>
+                    <div class="user-avatar">${user.avatar ? `<img src="${user.avatar}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;"/>` : '<i class="fas fa-user"></i>'}</div>
                     <div class="user-name">${user.username || 'Unknown'}</div>
                     <div class="user-id">ID: ${user.id || 'N/A'}</div>
-                    ${user.avatar ? `<div class="user-info"><strong>Avatar:</strong> <img src="${user.avatar}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;"></div>` : ''}
+                    
                     ${user.roles && user.roles.length > 0 ? `<div class="user-info"><strong>Roles:</strong> ${user.roles.join(', ')}</div>` : ''}
                 </div>
             `).join('');

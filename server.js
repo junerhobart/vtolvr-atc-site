@@ -13,7 +13,12 @@ const { GatewayIntentBits, EmbedBuilder,Collection,ActionRowBuilder,ButtonStyle 
 
 
 //Discord bot setup
-const botIntents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages];
+const botIntents = [
+  GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMembers,
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.DirectMessages,
+];
 if (process.env.ENABLE_MESSAGE_CONTENT_INTENT === 'true') {
   botIntents.push(GatewayIntentBits.MessageContent);
 }
@@ -697,7 +702,13 @@ app.get("/api/users/discord", async (req, res) => {
 
   //grabs all the users from the discord server and returns their username, discriminator, id, and avatar url
   try {
-    const guild = await bot.guilds.fetch(process.env.DISCORD_GUILD_ID);
+    if (!bot.isReady()) {
+      return res.status(503).json({ error: 'Discord bot is not ready yet' });
+    }
+
+    const guildId = process.env.DISCORD_GUILD_ID || "1462567359792283691";
+    const guild = await bot.guilds.fetch(guildId);
+
     const members = await guild.members.fetch();
     const users = members.map(member => {
       return {
