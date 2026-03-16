@@ -693,7 +693,7 @@ app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
   
 });
 
-app.get("/api/users/discord/", async (req, res) => {
+app.get("/api/users/discord", async (req, res) => {
 
   //grabs all the users from the discord server and returns their username, discriminator, id, and avatar url
   try {
