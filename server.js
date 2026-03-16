@@ -592,7 +592,7 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
             { name: 'Host', value: event.hostName || 'No host provided', inline: true },
             { name: 'Attendees', value: event.attendees.map(a => a.username).join("\n") || "No attendees yet", inline: false }
           )
-          .setFooter({ text: "VTOL VR ATC Bot" })
+          .setFooter({ text: "ARN Control Bot" })
           .setColor("#87cefa")
 
           .setTimestamp();
@@ -692,6 +692,33 @@ app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
   }
   
 });
+
+app.get("/api/users/discord/", async (req, res) => {
+
+  //grabs all the users from the discord server and returns their username, discriminator, id, and avatar url
+  try {
+    const guild = await bot.guilds.fetch(process.env.DISCORD_GUILD_ID);
+    const members = await guild.members.fetch();
+    const users = members.map(member => {
+      return {
+        username: member.user.username,
+        discriminator: member.user.discriminator,
+        id: member.user.id,
+        avatar: member.user.avatarURL(),
+        roles: member.roles.cache.map(role => role.name)
+        
+      };
+    });
+    res.json({ data: users });
+  } catch (error) {
+    console.error('Error fetching users from Discord:', error);
+    res.status(500).json({ error: 'Failed to fetch users from Discord' });
+  }
+
+});
+
+
+
 
 app.get("/api/users", async (req, res) => {
   try {
