@@ -120,6 +120,13 @@ app.get("/ifr", authHandler.restrict, (req, res) => {
 app.get("/discord", (req, res) => {
   res.redirect("https://discord.gg/F3rh3FZ8cs");
 });
+app.get("/information", authHandler.restrict, (req, res) => { 
+  res.render('infomation', {
+    title: 'Information',
+    message: 'Access guides, manuals, and documentation for ATC and Enforcer roles',
+    user: req.session.user
+  });
+});
 
 app.get("/charts", authHandler.restrict, (req, res) => {
   res.render('charts', {
