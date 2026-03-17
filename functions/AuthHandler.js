@@ -72,14 +72,17 @@ async function register(username, password, email, role) {
 }
 
 
-function AdminOnly(req, res, next) {
+function AdminOnly(type) {
+    return function(req, res, next) {
+        type = type.toLowerCase();
+        
+        if (req.session.user && req.session.user.role.includes(type)|| req.session.user.role.includes("owner")|| req.session.user.role.includes("admin")) {
+            return next();
+        }
+    const redirect = req.query.redirect ? `?redirect=${encodeURIComponent(req.query.redirect)}` : '';
 
-    console.info('checking admin access for user', {user: req.session.user ? req.session.user.Username : 'unknown'});
-    console.info('user roles', {roles: req.session.user ? req.session.user.role : 'unknown'});
-    if (req.session.user && req.session.user.role.includes('admin')) {
-        return next();
-    }
-    return res.redirect('/login');
+        return res.redirect(`/login/${redirect}`);
+    };
 }
 
 
@@ -94,9 +97,11 @@ function restrict(req, res, next) {
     next();
   } else {
     req.session.error = 'Access denied!';
+const url = req.originalUrl;
+   const redirect = url.split("/").at(-1);
+   
 
-    //redirect to login page if not authenticated
-    return res.redirect('/login');
+    return res.redirect(`/login/${redirect}`);
   }
 }
 
@@ -107,7 +112,14 @@ function ATCOnly(req, res, next) {
     if (req.session.user && req.session.user.role.includes('atc')) {
         return next();
     }
-    return res.redirect('/login');
+
+    //grabs the redirect query param if it exists and appends it to the login url so the user can be redirected back after login
+    const url = req.originalUrl;
+    
+    
+    const redirect = url.split("/").at(-1);
+
+    return res.redirect(`/login/${redirect}`);
   
 
 }
@@ -118,7 +130,9 @@ function EnforcerOnly(req, res, next) {
     if (req.session.user && req.session.user.role.includes('enforcer')) {
         return next();
     }
-    return res.redirect('/login');
+   //grab the last part of the url to redirect back to after login
+
+    return res.redirect(`/login/${redirect}`);
 
 }
 function hashPassword(password) {

@@ -514,7 +514,7 @@
             <a class="sidebar-menu-item" href="/profile">Profile</a>
             <a class="sidebar-menu-item" href="/announcements">Announcements</a>
             <a class="sidebar-menu-item" href="/pilots">Pilots</a>
-            <a class="sidebar-menu-item active" href="/auth/login">Login</a>
+            <a class="sidebar-menu-item active" href="/login/home">Login</a>
             <a class="sidebar-menu-item" href="/applications">Applications</a>
             <a class="sidebar-menu-item" href="/information">Information</a>
         </div>
@@ -620,7 +620,7 @@
                     document.getElementById('errorMessage').style.display = 'block';
                 } else {
                     alert('Login successful!');
-                    window.location.href = '/';
+                    window.location.href = <%- redirect ? `'${redirect}'` : `''` %>;
                 }
             })
             .catch(error => {

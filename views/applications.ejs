@@ -668,7 +668,9 @@
                     </div>
                     <div class="form-group">
                         <label for="discordId">Discord ID <a href="https://support.discord.com/hc/en-us/articles/200156798-FAQs-User-IDs-in-Discord" target="_blank" rel="noopener noreferrer">?</a>:</label>
-                        <input type="text" id="discordId" name="discordId" placeholder="123456789012345678" required>
+                        <!--auto fill in based on the logged in user's discord id if they are logged in, otherwise allow them to input it manually-->
+
+                        <input type="text" id="discordId" name="discordId" placeholder="Optional if logged in" value="">
                     </div>
 
                     <div class="form-group" id="callsignGroup" >
@@ -718,6 +720,14 @@
 
         // Close sidebar when menu item is clicked on mobile
         document.addEventListener('DOMContentLoaded', function() {
+
+            //load the logged in user's discord id into the form if they are logged in
+            const discordIdInput = document.getElementById('discordId');
+            const user = <%- JSON.stringify(user || null) %>;
+            if (user && user.DiscordID) {
+                discordIdInput.value = user.DiscordID;
+                discordIdInput.readOnly = true;
+            }
             const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
             sidebarMenuItems.forEach(item => {
                 item.addEventListener('click', function() {

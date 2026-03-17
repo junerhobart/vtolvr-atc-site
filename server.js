@@ -110,7 +110,7 @@ app.get('/sessions', (req, res) => {
   });
 });
 
-app.get("/ifr", (req, res) => {
+app.get("/ifr", authHandler.restrict, (req, res) => {
   res.render('ifr', {
     title: 'IFR',
     message: 'IFR Flight Planning and Tracking',
@@ -121,14 +121,14 @@ app.get("/discord", (req, res) => {
   res.redirect("https://discord.gg/F3rh3FZ8cs");
 });
 
-app.get("/charts", (req, res) => {
+app.get("/charts", authHandler.restrict, (req, res) => {
   res.render('charts', {
     title: 'Charts',
     message: 'VTOL VR Maps and Charts',
     user: req.session.user
   });
 });
-app.get("/api/sessions", (req, res) => {
+app.get("/api/sessions",  (req, res) => {
  const sessions = fetch(process.env.SESSIONS_API_URL)
   .then(response => response.json())
   .then(data => {
@@ -309,17 +309,18 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
   });
 
 
-app.get("/applications/admin", authHandler.AdminOnly, (req, res) => {
+app.get("/applications/admin", authHandler.AdminOnly("Admin"), (req, res) => {
   res.render('admin/application-admin', {
     title: 'Admin Applications',
     message: 'Review and manage applications here'
   });
 }
 );
-app.get ("/applications", (req, res) => {
+app.get("/applications",authHandler.restrict, (req, res) => {
   res.render('applications', {
     title: 'Application',
-    message: 'Apply to become an ATC or Enforcer'
+    message: 'Apply to become an ATC or Enforcer',
+    user: req.session.user
   });
 });
   app.get("/api/applications", async (req, res) => {
@@ -433,27 +434,14 @@ app.get ("/applications", (req, res) => {
   });
 
 function sendDM(userId, message) {
-  return fetch(`${process.env.SESSIONS_API_URL}/api/send/dm`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ userId, message })
-  })
-  .then(response => {
-    if (!response.ok) {
-      return response.text().then(errorText => {
-        console.error('Error:', errorText);
-        throw new Error('Failed to send DM');
-
-      });
-    }
-    return response.json();
-  })
-  .catch(error => {
-    console.error('Error sending DM:', error);
-    throw error;
+  bot.users.fetch(userId).then(user => {
+    user.send(message).catch(err => {
+      console.error(`Error sending DM to user ${userId}:`, err);
+    });
+  }).catch(err => {
+    console.error(`Error fetching user ${userId} for DM:`, err);
   });
+
 }
 
   app.get("/test", async (req, res) => {
@@ -682,10 +670,8 @@ app.post("/api/metar/clear", (req, res) => {
   }
 });
 
-app.get("/profile", (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');
-  }
+app.get("/profile", authHandler.restrict, (req, res) => {
+  
   res.render('profile', {
     title: 'Profile',
     message: 'View and edit your profile information here',
@@ -696,13 +682,13 @@ app.get("/profile", (req, res) => {
 
 //admin routes
 
-app.get("/admin", authHandler.AdminOnly, (req, res) => {
+app.get("/admin", authHandler.AdminOnly("mod"), (req, res) => {
   res.render('admin/panel-admin', {
     title: 'Admin Dashboard',
     message: 'Welcome to the admin dashboard'
   });});
 
-app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
+app.get("/api/admin/users", authHandler.AdminOnly("mod"), async (req, res) => {
   try {
     const users = await Users.find();
    
@@ -714,7 +700,7 @@ app.get("/api/admin/users", authHandler.AdminOnly, async (req, res) => {
   
 });
 
-app.get("/api/users/discord", async (req, res) => {
+app.get("/api/users/discord",authHandler.AdminOnly("mod"), async (req, res) => {
 
   //grabs all the users from the discord server and returns their username, discriminator, id, and avatar url
   try {
@@ -745,7 +731,7 @@ app.get("/api/users/discord", async (req, res) => {
 });
 
 
-app.get("/admin/discord", authHandler.AdminOnly, (req, res) => {
+app.get("/admin/discord", authHandler.AdminOnly("mod"), (req, res) => {
   res.render('admin/discordUsers', {
     title: 'Discord Users',
     message: 'View all users in the Discord server here',
@@ -789,7 +775,7 @@ app.get("/pilots", (req, res) => {
 })
 
 //!SECTION Endpoint for updating a user's role
-app.post("/api/admin/users/:id/updateRole", authHandler.AdminOnly, async (req, res) => {
+app.post("/api/admin/users/:id/updateRole", authHandler.AdminOnly("admin"), async (req, res) => {
   const userId = req.params.id;
   const { role } = req.body;
   if (!['admin', 'atc', 'enforcer', 'user', 'mod', "owner"].includes(role)) {
@@ -805,13 +791,25 @@ app.post("/api/admin/users/:id/updateRole", authHandler.AdminOnly, async (req, r
     }
     user.Role.push(role);
     await user.save();
+    bot.guilds.fetch("1462567359792283691").then(guild => {
+      guild.channels.fetch("1462571415361294387").then(channel => {
+
+        var embed = new EmbedBuilder()
+
+          .setTitle("Role Updated")
+          .setDescription(`User ${user.Username}\nNew role: ${role}\nUpdated by: ${req.session.user.username}`)
+          .setColor("#87cefa")
+          .setTimestamp();
+        channel.send({ embeds: [embed] });
+      });
+    });
     res.json({ message: 'User role updated successfully' });
   } catch (error) {
     console.error('Error updating user role:', error);
     res.status(500).json({ error: 'Failed to update user role' });
   }
 });
-app.post("/api/admin/users/:id/updateCallsign", authHandler.AdminOnly, async (req, res) => {
+app.post("/api/admin/users/:id/updateCallsign", authHandler.AdminOnly("admin"), async (req, res) => {
   const userId = req.params.id;
   const { callsign } = req.body;
   if (typeof callsign !== 'string' || callsign.trim() === '') {
@@ -824,6 +822,18 @@ app.post("/api/admin/users/:id/updateCallsign", authHandler.AdminOnly, async (re
     }
     user.Callsign = callsign.trim().toUpperCase();
     await user.save();
+    bot.guilds.fetch("1462567359792283691").then(guild => {
+      guild.channels.fetch("1462571415361294387").then(channel => {
+
+        var embed = new EmbedBuilder()
+
+          .setTitle("Callsign Updated")
+          .setDescription(`User ${user.Username}\nNew Callsign: ${user.Callsign}\nUpdated by: ${req.session.user.username}`)
+          .setColor("#87cefa")
+          .setTimestamp();
+        channel.send({ embeds: [embed] });
+      });
+    });
     res.json({ message: 'User callsign updated successfully' });
   } catch (error) {
     console.error('Error updating user callsign:', error);
@@ -833,7 +843,7 @@ app.post("/api/admin/users/:id/updateCallsign", authHandler.AdminOnly, async (re
 
 
 //!SECTION Endpoint for removing a role from a user
-app.post("/api/admin/users/:id/removeRole", authHandler.AdminOnly, async (req, res) => {
+app.post("/api/admin/users/:id/removeRole", authHandler.AdminOnly("admin"), async (req, res) => {
   const userId = req.params.id;
   const { role } = req.body;
   if (!['admin', 'atc', 'enforcer', 'user', 'mod', "owner"].includes(role)) {
@@ -849,6 +859,18 @@ app.post("/api/admin/users/:id/removeRole", authHandler.AdminOnly, async (req, r
     }
     user.Role = user.Role.filter(r => r !== role);
     await user.save();
+    bot.guilds.fetch("1462567359792283691").then(guild => {
+      guild.channels.fetch("1462571415361294387").then(channel => {
+
+        var embed = new EmbedBuilder()
+
+          .setTitle("Role Removed")
+          .setDescription(`User ${user.Username}\nRemoved Role: ${role}\nUpdated by: ${req.session.user.username}`)
+          .setColor("#87cefa")
+          .setTimestamp();
+        channel.send({ embeds: [embed] });
+      });
+    });
     res.json({ message: 'User role removed successfully' });
   } catch (error) {
     console.error('Error removing user role:', error);
@@ -857,7 +879,7 @@ app.post("/api/admin/users/:id/removeRole", authHandler.AdminOnly, async (req, r
 });
 
 
-app.post("/api/admin/users/:id/updateFlighthours", authHandler.AdminOnly, async (req, res) => {
+app.post("/api/admin/users/:id/updateFlighthours", authHandler.AdminOnly("mod"), async (req, res) => {
   const userId = req.params.id;
   const { flighthours } = req.body;
   if (isNaN(flighthours) || flighthours < 0) {
@@ -869,6 +891,18 @@ app.post("/api/admin/users/:id/updateFlighthours", authHandler.AdminOnly, async 
 
     user.Flighthours = flighthours;
     await user.save();
+    bot.guilds.fetch("1462567359792283691").then(guild => {
+      guild.channels.fetch("1462571415361294387").then(channel => {
+
+        var embed = new EmbedBuilder()
+
+          .setTitle("Flighthours Updated")
+          .setDescription(`User ${user.Username}\nNew Flighthours: ${user.Flighthours}\nUpdated by: ${req.session.user.username}`)
+          .setColor("#87cefa")
+          .setTimestamp();
+        channel.send({ embeds: [embed] });
+      });
+    });
     res.json({ message: 'User flighthours updated successfully' });
   } catch (error) {
     console.error('Error updating user flighthours:', error);
@@ -915,7 +949,8 @@ app.post("/api/auth/login", async (req, res) => {
       flighthours: user.Flighthours,
       Callsign: user.Callsign,
       code: user.code,
-      avatar: user.avatar
+      avatar: user.avatar,
+      DiscordID: user.DiscordID
     };
     console.log('User logged in:', req.session.user);
     res.json({ message: 'Login successful', user: req.session.user });
@@ -927,10 +962,18 @@ app.post("/api/auth/login", async (req, res) => {
  
 });
 
-app.get("/login", (req, res) => {
+app.get("/login/:redirect", (req, res) => {
+
+  if (req.params.redirect ==="home") {
+    var redirectUrl = "/"
+  }
+  else{
+    var redirectUrl = `/${req.params.redirect}`;
+  }
   res.render('auth/login', {
     title: 'Login',
-    message: 'Login to your account'
+    message: 'Login to your account',
+    redirect: redirectUrl
    });
 });
 
