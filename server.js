@@ -74,38 +74,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const passwordResetRequests = new Map();
 
-const smtpPort = Number(process.env.SMTP_PORT || 587);
-const smtpSecure = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
-const smtpConfigured = Boolean(
-  process.env.SMTP_HOST &&
-  process.env.SMTP_USER &&
-  process.env.SMTP_PASS &&
-  process.env.SMTP_FROM
-);
-
-const mailTransporter = smtpConfigured ? nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: smtpPort,
-  secure: smtpSecure,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  },
-  connectionTimeout: 5000,
-  socketTimeout: 5000,
-  pool: {
-    maxConnections: 1,
-    maxMessages: 5,
-    rateDelta: 2000,
-    rateLimit: 1
-  }
-}) : null;
-
-// SendGrid Fallback Configuration
+// SendGrid Configuration (Primary Email Provider)
 const sendgridApiKey = process.env.SENDGRID_API_KEY;
 const sendgridConfigured = Boolean(sendgridApiKey && sendgridApiKey.trim());
 
-const sendgridTransporter = sendgridConfigured ? nodemailer.createTransport({
+const mailTransporter = sendgridConfigured ? nodemailer.createTransport({
   host: 'smtp.sendgrid.net',
   port: 587,
   secure: false,
@@ -120,19 +93,9 @@ const sendgridTransporter = sendgridConfigured ? nodemailer.createTransport({
 if (mailTransporter && process.env.NODE_ENV !== 'production') {
   mailTransporter.verify((error, success) => {
     if (error) {
-      console.error('[SMTP] Namecheap connection test failed:', error.message);
+      console.error('[Email] SendGrid connection test failed:', error.message);
     } else {
-      console.log('[SMTP] Namecheap connection test successful');
-    }
-  });
-}
-
-if (sendgridTransporter && process.env.NODE_ENV !== 'production') {
-  sendgridTransporter.verify((error, success) => {
-    if (error) {
-      console.error('[SMTP] SendGrid connection test failed:', error.message);
-    } else {
-      console.log('[SMTP] SendGrid connection test successful');
+      console.log('[Email] SendGrid connection test successful');
     }
   });
 }
@@ -146,8 +109,8 @@ function normalizeEmail(email) {
 }
 
 function sendPasswordResetEmail(email, code) {
-  if (!mailTransporter && !sendgridTransporter) {
-    return Promise.reject(new Error('No email provider configured'));
+  if (!mailTransporter) {
+    return Promise.reject(new Error('SendGrid is not configured'));
   }
 
   const smtpTimeoutMs = 8000;
@@ -163,10 +126,6 @@ function sendPasswordResetEmail(email, code) {
   ].join('\n');
 
   const mailOptions = {
-    envelope: {
-      from: fromAddress,
-      to: email
-    },
     from: `"${fromDisplay}" <${fromAddress}>`,
     replyTo: fromAddress,
     to: email,
@@ -183,53 +142,19 @@ function sendPasswordResetEmail(email, code) {
     `
   };
 
-  // Helper function for Promise timeout
-  const withTimeout = (promise, timeoutMs) => Promise.race([
-    promise,
+  return Promise.race([
+    mailTransporter.sendMail(mailOptions).then(result => {
+      console.log('[Email] Password reset code sent via SendGrid:', {
+        messageId: result?.messageId,
+        accepted: result?.accepted,
+        provider: 'SendGrid'
+      });
+      return result;
+    }),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Send timeout')), timeoutMs)
+      setTimeout(() => reject(new Error('SendGrid send timeout')), smtpTimeoutMs)
     )
   ]);
-
-  // Attempt primary provider (Namecheap), fall back to SendGrid
-  const attemptSend = async () => {
-    if (mailTransporter) {
-      try {
-        const result = await withTimeout(mailTransporter.sendMail(mailOptions), smtpTimeoutMs);
-        console.log('[Email] Reset code sent via Namecheap:', {
-          messageId: result?.messageId,
-          accepted: result?.accepted,
-          provider: 'Namecheap'
-        });
-        return result;
-      } catch (error) {
-        console.warn('[Email] Namecheap provider failed, attempting SendGrid:', error.message);
-        if (!sendgridTransporter) {
-          throw error; // Re-throw if no fallback available
-        }
-      }
-    }
-
-    // Fall back to SendGrid
-    if (sendgridTransporter) {
-      try {
-        const result = await withTimeout(sendgridTransporter.sendMail(mailOptions), smtpTimeoutMs);
-        console.log('[Email] Reset code sent via SendGrid:', {
-          messageId: result?.messageId,
-          accepted: result?.accepted,
-          provider: 'SendGrid'
-        });
-        return result;
-      } catch (error) {
-        console.error('[Email] SendGrid provider also failed:', error.message);
-        throw error;
-      }
-    }
-
-    throw new Error('No email providers available');
-  };
-
-  return attemptSend();
 }
 
 // Set EJS as the view engine
