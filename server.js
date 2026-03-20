@@ -176,7 +176,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false, httpOnly: true }
+  cookie: { secure: false, httpOnly: true, maxAge: 1800000 } // 30 minutes
 }));
 
 // Routes
