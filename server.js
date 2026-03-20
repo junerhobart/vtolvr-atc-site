@@ -179,6 +179,26 @@ app.use(session({
   cookie: { secure: false, httpOnly: true, maxAge: 1800000 } // 30 minutes
 }));
 
+// Fast-fail common internet scanner probes to reduce noise and prevent unnecessary route work.
+app.use((req, res, next) => {
+  const pathLower = req.path.toLowerCase();
+  const isLikelyProbe =
+    pathLower.includes('.env') ||
+    pathLower.endsWith('.php') ||
+    pathLower.includes('phpinfo') ||
+    pathLower.includes('/wp-') ||
+    pathLower.includes('wordpress') ||
+    pathLower.includes('sendgrid_keys.json') ||
+    pathLower.endsWith('webpack.config.js') ||
+    pathLower.endsWith('vite.config.ts');
+
+  if (isLikelyProbe) {
+    return res.status(404).send('Not found');
+  }
+
+  return next();
+});
+
 // Routes
 app.get('/', (req, res) => {
   res.render('index', { 
@@ -537,12 +557,13 @@ function sendDM(userId, message) {
 
 }
 
-  app.get("/test", async (req, res) => {
-    res.render('test', {
-      title: 'Test',
-      message: 'This is a test page'
-    });
-  });
+// Intentionally return 404 for scanner probe routes hitting /test and /test/*.
+app.get("/test", async (req, res) => {
+  return res.status(404).send('Not found');
+});
+app.get("/test/*splat", async (req, res) => {
+  return res.status(404).send('Not found');
+});
 //events endpoints 
 
 app.get("/events", (req, res) => {
