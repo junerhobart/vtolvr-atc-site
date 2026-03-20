@@ -3,123 +3,608 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Game Sessions</title>
+    <meta name="description" content="Browse active VTOL VR lobbies and filter by lobby type.">
+    <title>VTOL VR Sessions</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #1e1e1e;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 50px;
+            width: 50px;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 14px;
+            list-style: none;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-links > li {
+            list-style: none;
+        }
+
+        .nav-links > li > a,
+        .nav-dropdown > summary {
             color: #e0e0e0;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+            cursor: pointer;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .filters {
-            background: #2d2d2d;
-            padding: 20px;
+
+        .nav-links > li > a:hover,
+        .nav-dropdown > summary:hover {
+            color: #667eea;
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown > summary {
+            user-select: none;
+        }
+
+        .nav-dropdown > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .nav-dropdown > summary::after {
+            content: '▾';
+            font-size: 0.75em;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-dropdown[open] > summary::after {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 210px;
+            list-style: none;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(20, 20, 30, 0.98);
+            border: 1px solid rgba(102, 126, 234, 0.35);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+            z-index: 120;
+        }
+
+        .nav-dropdown[open] .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu li {
+            list-style: none;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            color: #e0e0e0;
+            text-decoration: none;
             border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            padding: 9px 12px;
+            transition: all 0.25s;
+            white-space: nowrap;
         }
+
+        .dropdown-menu a:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: #8ea2ff;
+        }
+
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 10px;
+            transition: color 0.3s;
+        }
+
+        .hamburger-btn:hover {
+            color: #667eea;
+        }
+
+        .sidebar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: rgba(20, 20, 30, 0.98);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 80px 20px 20px 20px;
+            z-index: 999;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar.active {
+            display: flex;
+        }
+
+        .sidebar-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+
+        .sidebar-close-btn:hover {
+            color: #667eea;
+        }
+
+        .sidebar a {
+            color: #e0e0e0;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            display: block;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .page-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .hero {
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.6em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            color: #b0b0b0;
+            font-size: 1.05em;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .filters {
+            background: rgba(51, 51, 51, 0.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
         .filter-group {
             display: flex;
-            gap: 20px;
+            gap: 18px;
             flex-wrap: wrap;
+            align-items: center;
         }
+
         .filter-item {
             display: flex;
             align-items: center;
             gap: 8px;
+            color: #d5d5d5;
         }
+
         label {
-            font-weight: bold;
+            font-weight: 600;
         }
+
         input[type="checkbox"] {
             cursor: pointer;
+            accent-color: #667eea;
         }
-        button {
-            background-color: #0078d4;
+
+        .reload-btn {
+            margin-left: auto;
+            background: #667eea;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            border: 2px solid #667eea;
+            padding: 10px 18px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
         }
-        button:hover {
-            background-color: #106ebe;
+
+        .reload-btn:hover {
+            background: #764ba2;
+            border-color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
+
         .sessions-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
+
         .session-card {
-            background: #2d2d2d;
-            border-radius: 8px;
+            background: rgba(51, 51, 51, 0.7);
+            border: 1px solid rgba(102, 126, 234, 0.25);
+            border-left: 4px solid #667eea;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s;
         }
+
+        .session-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(102, 126, 234, 0.2);
+        }
+
         .session-card h3 {
             margin-top: 0;
+            margin-bottom: 10px;
+            color: #cdd6ff;
+            font-size: 1.12em;
         }
+
+        .session-card p {
+            color: #bfc3d6;
+            margin-bottom: 7px;
+        }
+
         .badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 4px;
+            padding: 5px 12px;
+            border-radius: 20px;
             font-size: 12px;
+            font-weight: 700;
             margin-right: 8px;
-            margin-bottom: 10px;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
+
         .badge.public {
-            background-color: #28a745;
-            color: white;
+            background-color: rgba(76, 175, 80, 0.25);
+            color: #73d87a;
         }
+
         .badge.private {
-            background-color: #dc3545;
-            color: white;
+            background-color: rgba(244, 67, 54, 0.24);
+            color: #ff8d85;
         }
+
         .badge.modded {
-            background-color: #ffc107;
-            color: black;
+            background-color: rgba(255, 193, 7, 0.25);
+            color: #ffd75e;
         }
-        .loading {
+
+        .loading,
+        .empty-state {
             text-align: center;
             padding: 20px;
+            background: rgba(51, 51, 51, 0.55);
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            color: #c8c8c8;
         }
-        .error {
-            background-color: #3d1f1f;
-            color: #ffb3b3;
-            padding: 15px;
 
-            border-radius: 4px;
-            margin-bottom: 20px;
+        .error {
+            background-color: rgba(244, 67, 54, 0.18);
+            border: 1px solid rgba(244, 67, 54, 0.45);
+            color: #ffb7b2;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 35px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        footer p {
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .logo {
+                font-size: 1.5em;
+            }
+
+            .logo img {
+                height: 40px;
+                width: 40px;
+            }
+
+            .page-wrap {
+                padding: 40px 16px;
+            }
+
+            .hero h1 {
+                font-size: 2em;
+            }
+
+            .filter-group {
+                gap: 14px;
+            }
+
+            .reload-btn {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav {
+                padding: 0 15px;
+            }
+
+            .logo {
+                font-size: 1.25em;
+            }
+
+            .logo img {
+                height: 34px;
+                width: 34px;
+            }
+
+            .hero h1 {
+                font-size: 1.65em;
+            }
+
+            .hero p {
+                font-size: 0.95em;
+            }
+
+            .filters {
+                padding: 16px;
+            }
+
+            .session-card {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Vtol VR Lobbies</h1>
-    
-    <div class="filters">
-        <div class="filter-group">
-            <div class="filter-item">
-                <input type="checkbox" id="publicFilter" checked>
-                <label for="publicFilter">Public</label>
-            </div>
-            <div class="filter-item">
-                <input type="checkbox" id="privateFilter" checked>
-                <label for="privateFilter">Private</label>
-            </div>
-            <div class="filter-item">
-                <input type="checkbox" id="moddedFilter" checked>
-                <label for="moddedFilter">Modded</label>
-            </div>
-            <button onclick="loadSessions()">Reload Sessions</button>
-        </div>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="closeSidebar()">&times;</button>
+        <a href="/profile">Profile</a>
+        <a href="/sessions">Sessions</a>
+        <a href="/charts">Charts</a>
+        <a href="/announcements">Announcements</a>
+        <% if (user && user.role.includes('atc')) { %>
+            <a href="/events">Create Events</a>
+            <a href="/atc/metar">Submit METAR</a>
+        <% } %>
+        <% if (user && user.role.includes('admin')) { %>
+            <a href="/admin">Admin Panel</a>
+            <a href="/applications/admin">Apps Panel</a>
+            <a href="/admin/discord">Discord Users</a>
+        <% } %>
+        <% if (user) { %>
+            <a href="/logout">Logout</a>
+        <% } else { %>
+            <a href="/login/home">Login</a>
+            <a href="/register">Register</a>
+        <% } %>
     </div>
 
-    <div id="error" class="error" style="display: none;"></div>
-    <div id="loading" class="loading" style="display: none;">Loading sessions...</div>
-    <div id="sessions" class="sessions-container"></div>
+    <header>
+        <nav>
+            <a href="/" class="logo"><img src="https://atc-vtolvr.site/assets/logo.png" alt="ARN Logo">ARN</a>
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle navigation menu">☰</button>
+            <ul class="nav-links">
+                <li><a href="/profile">Profile</a></li>
+                <li><a href="/sessions">Sessions</a></li>
+                <li>
+                    <details class="nav-dropdown">
+                        <summary>Resources</summary>
+                        <ul class="dropdown-menu">
+                            <li><a href="/charts">Charts</a></li>
+                            <li><a href="/announcements">Announcements</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <% if (user && user.role.includes('atc')) { %>
+                    <li>
+                        <details class="nav-dropdown">
+                            <summary>ATC Tools</summary>
+                            <ul class="dropdown-menu">
+                                <li><a href="/events">Create Events</a></li>
+                                <li><a href="/atc/metar">Submit METAR</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                <% } %>
+                <% if (user && user.role.includes('admin')) { %>
+                    <li>
+                        <details class="nav-dropdown">
+                            <summary>Admin</summary>
+                            <ul class="dropdown-menu">
+                                <li><a href="/admin">Admin Panel</a></li>
+                                <li><a href="/applications/admin">Apps Panel</a></li>
+                                <li><a href="/admin/discord">Discord Users</a></li>
+                            </ul>
+                        </details>
+                    </li>
+                <% } %>
+                <li>
+                    <details class="nav-dropdown">
+                        <summary>Account</summary>
+                        <ul class="dropdown-menu">
+                            <% if (user) { %>
+                                <li><a href="/logout">Logout</a></li>
+                            <% } else { %>
+                                <li><a href="/login/home">Login</a></li>
+                                <li><a href="/register">Register</a></li>
+                            <% } %>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="page-wrap">
+        <section class="hero">
+            <h1>VTOL VR Live Lobbies</h1>
+            <p>Track active servers in real-time and quickly find the right session for your next sortie.</p>
+        </section>
+
+        <section class="filters">
+            <div class="filter-group">
+                <div class="filter-item">
+                    <input type="checkbox" id="publicFilter" checked>
+                    <label for="publicFilter">Public</label>
+                </div>
+                <div class="filter-item">
+                    <input type="checkbox" id="privateFilter" checked>
+                    <label for="privateFilter">Private</label>
+                </div>
+                <div class="filter-item">
+                    <input type="checkbox" id="moddedFilter" checked>
+                    <label for="moddedFilter">Modded</label>
+                </div>
+                <button class="reload-btn" onclick="loadSessions()">Reload Sessions</button>
+            </div>
+        </section>
+
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">Loading sessions...</div>
+        <div id="sessions" class="sessions-container"></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p>
+        <p>Bringing realistic aviation simulation to VTOL VR</p>
+        <div class="footer-links">
+            <a href="/information">Information</a>
+            <a href="/announcements">Announcements</a>
+            <a href="/pilots">Pilots Directory</a>
+            <a href="/applications">Applications</a>
+        </div>
+    </footer>
 
     <script>
         let cachedSessions = [];
@@ -170,7 +655,7 @@
             });
 
             if (sessions.length === 0) {
-                sessionsDiv.innerHTML = '<p>No sessions found matching filters.</p>';
+                sessionsDiv.innerHTML = '<div class="empty-state">No sessions found matching filters.</div>';
             } else {
                 sessions.forEach(session => {
                     const card = document.createElement('div');
@@ -208,6 +693,33 @@
         document.getElementById('publicFilter').addEventListener('change', displaySessions);
         document.getElementById('privateFilter').addEventListener('change', displaySessions);
         document.getElementById('moddedFilter').addEventListener('change', displaySessions);
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        document.getElementById('overlay').addEventListener('click', closeSidebar);
+
+        const sidebarLinks = document.querySelectorAll('.sidebar a');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', closeSidebar);
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
     </script>
 </body>
 </html>

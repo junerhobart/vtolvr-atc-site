@@ -56,19 +56,93 @@
 
         .nav-links {
             display: flex;
-            gap: 30px;
+            gap: 14px;
+            list-style: none;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-links > li {
             list-style: none;
         }
 
-        .nav-links a {
+        .nav-links > li > a,
+        .nav-dropdown > summary {
             color: #e0e0e0;
             text-decoration: none;
             transition: color 0.3s;
             font-weight: 500;
+            cursor: pointer;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .nav-links a:hover {
+        .nav-links > li > a:hover,
+        .nav-dropdown > summary:hover {
             color: #667eea;
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown > summary {
+            user-select: none;
+        }
+
+        .nav-dropdown > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .nav-dropdown > summary::after {
+            content: '▾';
+            font-size: 0.75em;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-dropdown[open] > summary::after {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 210px;
+            list-style: none;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(20, 20, 30, 0.98);
+            border: 1px solid rgba(102, 126, 234, 0.35);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+            z-index: 120;
+        }
+
+        .nav-dropdown[open] .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu li {
+            list-style: none;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            color: #e0e0e0;
+            text-decoration: none;
+            border-radius: 8px;
+            padding: 9px 12px;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+
+        .dropdown-menu a:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: #8ea2ff;
         }
 
         .hamburger-btn {
@@ -592,25 +666,51 @@
             <ul class="nav-links">
                 <li><a href="/profile">Profile</a></li>
                 <li><a href="/sessions">Sessions</a></li>
-                <li><a href="/charts">Charts</a></li>
-                <li><a href="/announcements">Announcements</a></li>
+                <li>
+                    <details class="nav-dropdown">
+                        <summary>Resources</summary>
+                        <ul class="dropdown-menu">
+                            <li><a href="/charts">Charts</a></li>
+                            <li><a href="/announcements">Announcements</a></li>
+                        </ul>
+                    </details>
+                </li>
                 <% if (user && user.role.includes('atc')) { %>
-                    <li><a href="/events">Create Events</a></li>
-                    <li><a href="/atc/metar">Submit METAR</a></li>
-                    
+                    <li>
+                        <details class="nav-dropdown">
+                            <summary>ATC Tools</summary>
+                            <ul class="dropdown-menu">
+                                <li><a href="/events">Create Events</a></li>
+                                <li><a href="/atc/metar">Submit METAR</a></li>
+                            </ul>
+                        </details>
+                    </li>
                 <% } %>
                 <% if (user && user.role.includes('admin')) { %>
-                    <li><a href="/admin">Admin Panel</a></li>
-                    <li><a href="/applications/admin">apps panel</a></li>
-                    <li><a href="/admin/discord">Discord Users</a></li>
+                    <li>
+                        <details class="nav-dropdown">
+                            <summary>Admin</summary>
+                            <ul class="dropdown-menu">
+                                <li><a href="/admin">Admin Panel</a></li>
+                                <li><a href="/applications/admin">Apps Panel</a></li>
+                                <li><a href="/admin/discord">Discord Users</a></li>
+                            </ul>
+                        </details>
+                    </li>
                 <% } %>
-                <% if (user) { %>
-                    <li><a href="/logout">Logout</a></li>
-                <% } else { %>
-
-                <li><a href="/login/home">Login</a></li>
-                <li><a href="/register">Register</a></li>
-                <% } %>
+                <li>
+                    <details class="nav-dropdown">
+                        <summary>Account</summary>
+                        <ul class="dropdown-menu">
+                            <% if (user) { %>
+                                <li><a href="/logout">Logout</a></li>
+                            <% } else { %>
+                                <li><a href="/login/home">Login</a></li>
+                                <li><a href="/register">Register</a></li>
+                            <% } %>
+                        </ul>
+                    </details>
+                </li>
             </ul>
         </nav>
     </header>
