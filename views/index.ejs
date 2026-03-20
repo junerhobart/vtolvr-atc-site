@@ -230,7 +230,7 @@
         .hero {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 100px 20px 60px;
+            padding: 90px 20px 50px;
             text-align: center;
         }
 
@@ -304,6 +304,12 @@
             gap: 30px;
         }
 
+        .feature-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
         .feature-card {
             background: rgba(51, 51, 51, 0.5);
             backdrop-filter: blur(10px);
@@ -312,6 +318,7 @@
             border: 1px solid rgba(102, 126, 234, 0.2);
             transition: all 0.3s;
             text-align: center;
+            height: 100%;
         }
 
         .feature-card:hover {
@@ -336,6 +343,14 @@
             padding: 0 20px;
         }
 
+        .sessions-shell {
+            background: rgba(51, 51, 51, 0.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
         .section-title {
             font-size: 2.2em;
             margin-bottom: 40px;
@@ -356,7 +371,15 @@
             background: rgba(51, 51, 51, 0.7);
             padding: 25px;
             border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.25);
             border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .session-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(102, 126, 234, 0.2);
         }
 
         .session-card h4 {
@@ -492,6 +515,10 @@
                 padding: 0 15px;
             }
 
+            .sessions-shell {
+                padding: 18px;
+            }
+
             .section-title {
                 font-size: 1.8em;
                 margin-bottom: 30px;
@@ -588,6 +615,11 @@
                 padding: 0 12px;
             }
 
+            .sessions-shell {
+                padding: 14px;
+                border-radius: 10px;
+            }
+
             .section-title {
                 font-size: 1.5em;
                 margin-bottom: 20px;
@@ -645,6 +677,7 @@
         <a href="/announcements">Announcements</a>
         <% if (user && user.role.includes('atc')) { %>
             <a href="/events">Create Events</a>
+            <a href="/atc/metar">Submit METAR</a>
         <% } %>
         <% if (user && user.role.includes('admin')) { %>
             <a href="/admin">Admin Panel</a>
@@ -654,7 +687,7 @@
         <% if (user) { %>
             <a href="/logout">Logout</a>
         <% } else { %>
-            <a href="/login">Login</a>
+            <a href="/login/home">Login</a>
             <a href="/register">Register</a>
         <% } %>
     </div>
@@ -727,10 +760,12 @@
         </section>
 
         <section class="features">
-            <div class="feature-card">
-                <h3>🎮 Live Sessions</h3>
-                <p>Join active game sessions with other pilots and air traffic controllers in real-time gameplay.</p>
-            </div>
+            <a href="/sessions" class="feature-link">
+                <div class="feature-card">
+                    <h3>🎮 Live Sessions</h3>
+                    <p>Join active game sessions with other pilots and air traffic controllers in real-time gameplay.</p>
+                </div>
+            </a>
             <a href="/charts" class="feature-link">
                 <div class="feature-card">
                     <h3>📊 Flight Charts</h3>
@@ -747,8 +782,10 @@
 
         <section class="content-section">
             <h2 class="section-title">Current Game Sessions</h2>
-            <div class="sessions-preview" id="sessionsList">
-                <p>Loading sessions...</p>
+            <div class="sessions-shell">
+                <div class="sessions-preview" id="sessionsList">
+                    <p>Loading sessions...</p>
+                </div>
             </div>
             <div style="text-align: center; margin-top: 30px;">
                 <a href="/sessions" class="btn btn-primary">View All Sessions</a>
@@ -761,13 +798,14 @@
                 .then(data => {
                     const sessionsList = document.getElementById('sessionsList');
                     sessionsList.innerHTML = '';
+                    const events = Array.isArray(data?.data) ? data.data : [];
                     
-                    if (data.data.length === 0) {
+                    if (events.length === 0) {
                         sessionsList.innerHTML = '<p>No sessions available at this time.</p>';
                         return;
                     }
                     
-                    data.data.slice(0, 3).forEach(session => {
+                    events.slice(0, 3).forEach(session => {
                         const statusClass = session.status === 'active' ? 'status-active' : 'status-upcoming';
                         
                         // Format duration: show in minutes if less than 1 hour
@@ -788,7 +826,7 @@
                                 <p>👤 Expected Pilots: ${session.pilots}</p>
                                 <p>🕐 Start: ${startTime}</p>
                                 <p>⏱️ Duration: ${formattedDuration}</p>
-                                <span class="session-status ${statusClass}">${session.status}</span>
+                                <span class="session-status ${statusClass}">${(session.status || 'upcoming').toUpperCase()}</span>
                             </div>
                         `;
                         sessionsList.innerHTML += sessionHTML;
