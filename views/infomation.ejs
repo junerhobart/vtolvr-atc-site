@@ -535,14 +535,14 @@
                         : [];
 
         const userRoles = normalizedRoles.map((role) => String(role).toLowerCase());
-        if (userRoles.length === 0) userRoles.push("guest");
+        if (userRoles.length === 0) userRoles.push("user");
 
         // Knowledge base content based on roles
         const knowledgeBase = [
             {
                 title: 'General Information',
                 pdfPath: 'assets/pdfs/GeneralGuide.pdf',
-                roles: ['guest', 'atc', 'enforcer', 'interceptor', 'mod', 'admin', 'owner']
+                roles: ['user', 'atc', 'enforcer', 'interceptor', 'mod', 'admin', 'owner']
             },
             {
                 title: 'ATC Operations',
