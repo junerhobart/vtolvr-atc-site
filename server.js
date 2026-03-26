@@ -1280,10 +1280,10 @@ app.post("/api/profile/update", async (req, res) => {
   }
 });
 
-app.get("/chart-maker", authHandler.AdminOnly("mod"), (req, res) => {
+app.get("/chart-maker", (req, res) => {
   res.render('admin/chartMaker', {
     title: 'Chart Maker',
-    message: 'Create custom charts for events here'
+    message: 'Create custom charts for ATC Maps'
   });
 });
 

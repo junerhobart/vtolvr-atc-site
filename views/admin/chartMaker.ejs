@@ -161,6 +161,172 @@
 			font-family: Consolas, Monaco, monospace;
 			font-size: 0.74rem;
 		}
+
+		/* Mobile & Tablet Responsive Design */
+		@media (max-width: 1024px) {
+			.page {
+				grid-template-columns: 1fr;
+				height: auto;
+				min-height: 100vh;
+			}
+
+			.sidebar {
+				border-right: none;
+				border-bottom: 1px solid var(--border);
+				max-height: 50vh;
+				overflow: auto;
+			}
+
+			.canvas-wrap {
+				min-height: 50vh;
+			}
+
+			#canvas {
+				max-width: 100%;
+				height: auto;
+			}
+		}
+
+		@media (max-width: 768px) {
+			body {
+				font-size: 14px;
+			}
+
+			.page {
+				grid-template-columns: 1fr;
+				height: auto;
+			}
+
+			.sidebar {
+				padding: 12px;
+				max-height: none;
+				border-bottom: 1px solid var(--border);
+			}
+
+			h1 {
+				font-size: 1.1rem;
+				margin: 0 0 10px;
+			}
+
+			h2 {
+				font-size: 0.95rem;
+				margin: 14px 0 8px;
+			}
+
+			.field {
+				margin-bottom: 10px;
+			}
+
+			label {
+				font-size: 0.82rem;
+			}
+
+			input, select, button, textarea {
+				padding: 10px 12px;
+				font-size: 0.92rem;
+				border-radius: 6px;
+			}
+
+			button {
+				min-height: 44px;
+				font-size: 0.9rem;
+			}
+
+			.grid-2 {
+				grid-template-columns: 1fr;
+				gap: 10px;
+			}
+
+			.btn-row {
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+
+			.parts-grid {
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+
+			.part-thumb {
+				height: 72px;
+			}
+
+			.part-name {
+				font-size: 0.8rem;
+			}
+
+			.canvas-wrap {
+				padding: 12px;
+				min-height: 50vh;
+			}
+
+			#canvas {
+				max-width: 100%;
+				height: auto;
+				max-height: 60vh;
+			}
+
+			textarea {
+				min-height: 100px;
+				font-size: 0.8rem;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.sidebar {
+				padding: 10px;
+			}
+
+			h1 {
+				font-size: 1rem;
+			}
+
+			h2 {
+				font-size: 0.9rem;
+				margin: 12px 0 6px;
+			}
+
+			input, select, button, textarea {
+				padding: 9px 10px;
+				font-size: 15px;
+				border-radius: 6px;
+			}
+
+			button {
+				min-height: 40px;
+			}
+
+			.grid-2 {
+				gap: 8px;
+			}
+
+			.btn-row {
+				grid-template-columns: 1fr;
+				gap: 8px;
+			}
+
+			.parts-grid {
+				grid-template-columns: 1fr;
+				gap: 8px;
+			}
+
+			.part-thumb {
+				height: 60px;
+			}
+
+			.canvas-wrap {
+				padding: 8px;
+			}
+
+			#canvas {
+				max-height: 50vh;
+			}
+
+			textarea {
+				min-height: 80px;
+				font-size: 14px;
+			}
+		}
 	</style>
 </head>
 <body>
@@ -300,14 +466,14 @@
 				w: 768,
 				h: 1138,
 				text: {
-					topLeftTitle: { x: 36, y: 56, align: "left", size: 42 },
-					topCenterRef: { x: 384, y: 44, align: "center", size: 18 },
+					topLeftTitle: { x: 36, y: 56, align: "left", size: 29 },
+					topCenterRef: { x: 384, y: 44, align: "center", size: 15 },
 					topRunway: { x: 384, y: 78, align: "center", size: 28 },
-					topRightAirport: { x: 732, y: 34, align: "right", size: 34 },
+					topRightAirport: { x: 732, y: 34, align: "right", size: 24 },
 					topRightCity: { x: 732, y: 62, align: "right", size: 24 },
-					bottomLeftTitle: { x: 36, y: 1104, align: "left", size: 42 },
+					bottomLeftTitle: { x: 36, y: 1104, align: "left", size: 29 },
 					bottomRightCity: { x: 732, y: 1086, align: "right", size: 24 },
-					bottomRightAirport: { x: 732, y: 1120, align: "right", size: 34 },
+					bottomRightAirport: { x: 732, y: 1120, align: "right", size: 24 },
 					bottomRunway: { x: 384, y: 1118, align: "center", size: 28 }
 				}
 			},
@@ -330,9 +496,9 @@
 				docRef: "AL-289 (FAA)",
 				fontFamily: "Arial, Helvetica, sans-serif",
 				fontSizes: {
-					title: 42,
-					docRef: 18,
-					airport: 34,
+					title: 29,
+					docRef: 15,
+					airport: 24,
 					city: 24,
 					runway: 28
 				},
