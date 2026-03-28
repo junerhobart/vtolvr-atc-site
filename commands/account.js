@@ -32,7 +32,7 @@ module.exports = {
         .setColor("#87cefa")
         .setFooter({ text: "ARN Control Bot" })
         .setTimestamp();
-    return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    return interaction.reply({ embeds: [embed], components: [row] });
 
 
 
