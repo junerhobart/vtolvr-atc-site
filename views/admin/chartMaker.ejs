@@ -19,7 +19,7 @@
 
 		* { box-sizing: border-box; }
 		html, body {
-			height: 100%;
+			
 			margin: 0;
 			padding: 0;
 		}
@@ -149,11 +149,11 @@
 
 		.canvas-wrap {
 			display: flex;
-			align-items: center;
+			align-items: flex-start;
 			justify-content: center;
 			overflow: auto;
 			padding: 20px;
-			height: 100%;
+			
 			width: 100%;
 		}
 
@@ -161,6 +161,10 @@
 			background: #000;
 			border: 1px solid #334155;
 			box-shadow: 0 12px 28px rgba(0,0,0,.4);
+			max-width: 100%;
+			max-height: calc(100vh - 40px);
+			height: auto;
+			width: auto;
 		}
 
 		textarea {
