@@ -174,6 +174,12 @@
 			font-size: 0.74rem;
 		}
 
+		#textContent {
+			min-height: 76px;
+			font-family: Inter, Segoe UI, Arial, sans-serif;
+			font-size: 0.84rem;
+		}
+
 
 	</style>
 </head>
@@ -185,13 +191,6 @@
 
 			<h2>Template</h2>
 			<div class="grid-2">
-				<div class="field">
-					<label for="layoutSize">Layout</label>
-					<select id="layoutSize">
-						<option value="large">large</option>
-						<option value="medium">medium</option>
-					</select>
-				</div>
 				<div class="field">
 					<label for="theme">Theme</label>
 					<select id="theme">
@@ -261,8 +260,12 @@
 				<div class="field"><label for="pieceRotation">Rotation</label><input id="pieceRotation" type="number" step="1" value="0" /></div>
 			</div>
 			<div class="grid-2">
-				<div class="field"><label for="textContent">Text Content</label><input id="textContent" placeholder="Enter text" /></div>
+				<div class="field"><label for="textContent">Text Content</label><textarea id="textContent" placeholder="Enter text" rows="3"></textarea></div>
 				<div class="field"><label for="textFontSize">Text Font Size</label><input id="textFontSize" type="number" step="1" min="8" value="28" /></div>
+			</div>
+			<div class="grid-2">
+				<div class="field"><label for="textBorderWidth">Border Width</label><input id="textBorderWidth" type="number" step="0.5" min="0" value="0" /></div>
+				<div class="field"><label for="textBorderColor">Border Color</label><input id="textBorderColor" type="color" value="#000000" /></div>
 			</div>
 			<button id="deletePieceBtn" class="warn">Delete Piece</button>
 			<button id="duplicatePieceBtn" class="secondary">Duplicate</button>
@@ -275,6 +278,20 @@
 				<div class="part-card" draggable="true" data-text-type="runway">
 					<div class="part-thumb" style="display: flex; align-items: center; justify-content: center; background: #1e3a8a; font-size: 12px; color: #fff; font-weight: bold;">RWY 12</div>
 					<div class="part-name">Runway Number</div>
+				</div>
+				<div class="part-card" draggable="true" data-text-type="frequency">
+					<div class="part-thumb" style="display: flex; align-items: center; justify-content: center; background: #1e3a8a; font-size: 5px; color: #fff; font-weight: bold; text-align: left; padding: 6px; line-height: 1.2;">Frequencies:<br/>ATIS 118.5<br/>TWR 119.1<br/>GND 121.9<br/>APP 124.3<br/>DEP 125.7<br/>UNICOM 122.8
+					</div>
+					<div class="part-name">Frequencies</div>
+				</div>
+
+				<div class="part-card" draggable="true" data-text-type="info">
+					<div class="part-thumb" style="display: flex; align-items: center; justify-content: center; background: #1e3a8a; font-size: 12px; color: #fff; font-weight: bold;">Airport Info</div>
+					<div class="part-name">Airport Information</div>
+				</div>
+				<div class="part-card" draggable="true" data-text-type="custom">
+					<div class="part-thumb" style="display: flex; align-items: center; justify-content: center; background: #1e3a8a; font-size: 12px; color: #fff; font-weight: bold;">custom</div>
+					<div class="part-name">Custom Text</div>
 				</div>
 			</div>
 
@@ -310,42 +327,24 @@
 		];
 
 		const TEMPLATE_REF = {
-			large: {
-				w: 768,
-				h: 1138,
-				text: {
-					topLeftTitle: { x: 36, y: 56, align: "left", size: 42 },
-					topCenterRef: { x: 384, y: 44, align: "center", size: 18 },
-					topRunway: { x: 384, y: 78, align: "center", size: 28 },
-					topRightAirport: { x: 732, y: 34, align: "right", size: 34 },
-					topRightCity: { x: 732, y: 62, align: "right", size: 24 },
-					bottomLeftTitle: { x: 36, y: 1104, align: "left", size: 42 },
-					bottomRightCity: { x: 732, y: 1086, align: "right", size: 24 },
-					bottomRightAirport: { x: 732, y: 1120, align: "right", size: 34 },
-					bottomRunway: { x: 384, y: 1118, align: "center", size: 28 }
-				}
-			},
-			medium: {
-				w: 768,
-				h: 1138,
-				text: {
-					
-                    topLeftTitle: { x: 36, y: 56, align: "left", size: 42 },
-					topCenterRef: { x: 384, y: 44, align: "center", size: 18 },
-					topRunway: { x: 384, y: 78, align: "center", size: 28 },
-					topRightAirport: { x: 732, y: 34, align: "right", size: 34 },
-					topRightCity: { x: 732, y: 62, align: "right", size: 24 },
-					bottomLeftTitle: { x: 36, y: 1104, align: "left", size: 42 },
-					bottomRightCity: { x: 732, y: 1086, align: "right", size: 24 },
-					bottomRightAirport: { x: 732, y: 1120, align: "right", size: 34 },
-					bottomRunway: { x: 384, y: 1118, align: "center", size: 28 }
-				}
+			w: 768,
+			h: 1138,
+			text: {
+				topLeftTitle: { x: 36, y: 56, align: "left", size: 42 },
+				topCenterRef: { x: 384, y: 44, align: "center", size: 18 },
+				topRunway: { x: 384, y: 78, align: "center", size: 28 },
+				topRightAirport: { x: 732, y: 34, align: "right", size: 34 },
+				topRightCity: { x: 732, y: 62, align: "right", size: 24 },
+				bottomLeftTitle: { x: 36, y: 1104, align: "left", size: 42 },
+				bottomRightCity: { x: 732, y: 1086, align: "right", size: 24 },
+				bottomRightAirport: { x: 732, y: 1120, align: "right", size: 34 },
+				bottomRunway: { x: 384, y: 1118, align: "center", size: 28 }
 			}
 		};
 
 		const defaultState = {
 			meta: {
-				layoutSize: "large",
+				layoutSize: "default",
 				theme: "light",
 				airportName: "AIRPORT NAME",
 				airportCode: "ABRV",
@@ -382,7 +381,6 @@
 
 		const imageCache = new Map();
 		const els = {
-			layoutSize: document.getElementById("layoutSize"),
 			theme: document.getElementById("theme"),
 			airportName: document.getElementById("airportName"),
 			airportCode: document.getElementById("airportCode"),
@@ -418,6 +416,8 @@
 			pieceRotation: document.getElementById("pieceRotation"),
 			textContent: document.getElementById("textContent"),
 			textFontSize: document.getElementById("textFontSize"),
+			textBorderWidth: document.getElementById("textBorderWidth"),
+			textBorderColor: document.getElementById("textBorderColor"),
 			deletePieceBtn: document.getElementById("deletePieceBtn"),
 			duplicatePieceBtn: document.getElementById("duplicatePieceBtn"),
 			syncJsonBtn: document.getElementById("syncJsonBtn"),
@@ -454,7 +454,6 @@
 
 		function syncFormFromState() {
 			const m = state.meta;
-			els.layoutSize.value = m.layoutSize;
 			els.theme.value = m.theme;
 			els.airportName.value = m.airportName;
 			els.airportCode.value = m.airportCode;
@@ -466,24 +465,24 @@
 			els.airportFontSize.value = Number(m.fontSizes?.airport ?? 34);
 			els.cityFontSize.value = Number(m.fontSizes?.city ?? 24);
 			els.runwayFontSize.value = Number(m.fontSizes?.runway ?? 28);
-			els.topLeftTitleX.value = m.anchors?.topLeftTitle?.x ?? TEMPLATE_REF.large.text.topLeftTitle.x;
-			els.topLeftTitleY.value = m.anchors?.topLeftTitle?.y ?? TEMPLATE_REF.large.text.topLeftTitle.y;
-			els.topCenterRefX.value = m.anchors?.topCenterRef?.x ?? TEMPLATE_REF.large.text.topCenterRef.x;
-			els.topCenterRefY.value = m.anchors?.topCenterRef?.y ?? TEMPLATE_REF.large.text.topCenterRef.y;
-			els.topRightAirportX.value = m.anchors?.topRightAirport?.x ?? TEMPLATE_REF.large.text.topRightAirport.x;
-			els.topRightAirportY.value = m.anchors?.topRightAirport?.y ?? TEMPLATE_REF.large.text.topRightAirport.y;
-			els.topRightCityX.value = m.anchors?.topRightCity?.x ?? TEMPLATE_REF.large.text.topRightCity.x;
-			els.topRightCityY.value = m.anchors?.topRightCity?.y ?? TEMPLATE_REF.large.text.topRightCity.y;
-			els.bottomLeftTitleX.value = m.anchors?.bottomLeftTitle?.x ?? TEMPLATE_REF.large.text.bottomLeftTitle.x;
-			els.bottomLeftTitleY.value = m.anchors?.bottomLeftTitle?.y ?? TEMPLATE_REF.large.text.bottomLeftTitle.y;
-			els.bottomRightCityX.value = m.anchors?.bottomRightCity?.x ?? TEMPLATE_REF.large.text.bottomRightCity.x;
-			els.bottomRightCityY.value = m.anchors?.bottomRightCity?.y ?? TEMPLATE_REF.large.text.bottomRightCity.y;
-			els.bottomRightAirportX.value = m.anchors?.bottomRightAirport?.x ?? TEMPLATE_REF.large.text.bottomRightAirport.x;
-			els.bottomRightAirportY.value = m.anchors?.bottomRightAirport?.y ?? TEMPLATE_REF.large.text.bottomRightAirport.y;
+			els.topLeftTitleX.value = m.anchors?.topLeftTitle?.x ?? TEMPLATE_REF.text.topLeftTitle.x;
+			els.topLeftTitleY.value = m.anchors?.topLeftTitle?.y ?? TEMPLATE_REF.text.topLeftTitle.y;
+			els.topCenterRefX.value = m.anchors?.topCenterRef?.x ?? TEMPLATE_REF.text.topCenterRef.x;
+			els.topCenterRefY.value = m.anchors?.topCenterRef?.y ?? TEMPLATE_REF.text.topCenterRef.y;
+			els.topRightAirportX.value = m.anchors?.topRightAirport?.x ?? TEMPLATE_REF.text.topRightAirport.x;
+			els.topRightAirportY.value = m.anchors?.topRightAirport?.y ?? TEMPLATE_REF.text.topRightAirport.y;
+			els.topRightCityX.value = m.anchors?.topRightCity?.x ?? TEMPLATE_REF.text.topRightCity.x;
+			els.topRightCityY.value = m.anchors?.topRightCity?.y ?? TEMPLATE_REF.text.topRightCity.y;
+			els.bottomLeftTitleX.value = m.anchors?.bottomLeftTitle?.x ?? TEMPLATE_REF.text.bottomLeftTitle.x;
+			els.bottomLeftTitleY.value = m.anchors?.bottomLeftTitle?.y ?? TEMPLATE_REF.text.bottomLeftTitle.y;
+			els.bottomRightCityX.value = m.anchors?.bottomRightCity?.x ?? TEMPLATE_REF.text.bottomRightCity.x;
+			els.bottomRightCityY.value = m.anchors?.bottomRightCity?.y ?? TEMPLATE_REF.text.bottomRightCity.y;
+			els.bottomRightAirportX.value = m.anchors?.bottomRightAirport?.x ?? TEMPLATE_REF.text.bottomRightAirport.x;
+			els.bottomRightAirportY.value = m.anchors?.bottomRightAirport?.y ?? TEMPLATE_REF.text.bottomRightAirport.y;
 		}
 
 		function syncStateFromForm() {
-			state.meta.layoutSize = els.layoutSize.value;
+			state.meta.layoutSize = "default";
 			state.meta.theme = els.theme.value;
 			state.meta.airportName = els.airportName.value.trim();
 			state.meta.airportCode = els.airportCode.value.trim();
@@ -499,53 +498,132 @@
 			};
 			state.meta.anchors = state.meta.anchors || {};
 			state.meta.anchors.topLeftTitle = {
-				x: Number(els.topLeftTitleX.value || TEMPLATE_REF.large.text.topLeftTitle.x),
-				y: Number(els.topLeftTitleY.value || TEMPLATE_REF.large.text.topLeftTitle.y)
+				x: Number(els.topLeftTitleX.value || TEMPLATE_REF.text.topLeftTitle.x),
+				y: Number(els.topLeftTitleY.value || TEMPLATE_REF.text.topLeftTitle.y)
 			};
 			state.meta.anchors.topCenterRef = {
-				x: Number(els.topCenterRefX.value || TEMPLATE_REF.large.text.topCenterRef.x),
-				y: Number(els.topCenterRefY.value || TEMPLATE_REF.large.text.topCenterRef.y)
+				x: Number(els.topCenterRefX.value || TEMPLATE_REF.text.topCenterRef.x),
+				y: Number(els.topCenterRefY.value || TEMPLATE_REF.text.topCenterRef.y)
 			};
 			state.meta.anchors.topRightAirport = {
-				x: Number(els.topRightAirportX.value || TEMPLATE_REF.large.text.topRightAirport.x),
-				y: Number(els.topRightAirportY.value || TEMPLATE_REF.large.text.topRightAirport.y)
+				x: Number(els.topRightAirportX.value || TEMPLATE_REF.text.topRightAirport.x),
+				y: Number(els.topRightAirportY.value || TEMPLATE_REF.text.topRightAirport.y)
 			};
 			state.meta.anchors.topRightCity = {
-				x: Number(els.topRightCityX.value || TEMPLATE_REF.large.text.topRightCity.x),
-				y: Number(els.topRightCityY.value || TEMPLATE_REF.large.text.topRightCity.y)
+				x: Number(els.topRightCityX.value || TEMPLATE_REF.text.topRightCity.x),
+				y: Number(els.topRightCityY.value || TEMPLATE_REF.text.topRightCity.y)
 			};
 			state.meta.anchors.bottomLeftTitle = {
-				x: Number(els.bottomLeftTitleX.value || TEMPLATE_REF.large.text.bottomLeftTitle.x),
-				y: Number(els.bottomLeftTitleY.value || TEMPLATE_REF.large.text.bottomLeftTitle.y)
+				x: Number(els.bottomLeftTitleX.value || TEMPLATE_REF.text.bottomLeftTitle.x),
+				y: Number(els.bottomLeftTitleY.value || TEMPLATE_REF.text.bottomLeftTitle.y)
 			};
 			state.meta.anchors.bottomRightCity = {
-				x: Number(els.bottomRightCityX.value || TEMPLATE_REF.large.text.bottomRightCity.x),
-				y: Number(els.bottomRightCityY.value || TEMPLATE_REF.large.text.bottomRightCity.y)
+				x: Number(els.bottomRightCityX.value || TEMPLATE_REF.text.bottomRightCity.x),
+				y: Number(els.bottomRightCityY.value || TEMPLATE_REF.text.bottomRightCity.y)
 			};
 			state.meta.anchors.bottomRightAirport = {
-				x: Number(els.bottomRightAirportX.value || TEMPLATE_REF.large.text.bottomRightAirport.x),
-				y: Number(els.bottomRightAirportY.value || TEMPLATE_REF.large.text.bottomRightAirport.y)
+				x: Number(els.bottomRightAirportX.value || TEMPLATE_REF.text.bottomRightAirport.x),
+				y: Number(els.bottomRightAirportY.value || TEMPLATE_REF.text.bottomRightAirport.y)
 			};
 		}
 
 		function sizeCanvas() {
-			const t = TEMPLATE_REF[state.meta.layoutSize] || TEMPLATE_REF.large;
-			els.canvas.width = t.w;
-			els.canvas.height = t.h;
+			els.canvas.width = TEMPLATE_REF.w;
+			els.canvas.height = TEMPLATE_REF.h;
 		}
 
 		function getPartById(id) {
 			return PART_SOURCES.find((p) => p.id === id) || null;
 		}
 
-		function addTextItem(text = "RWY 12", x = 384, y = 569, fontSize = 28) {
+		function getTextLines(value) {
+			return String(value ?? "")
+				.replace(/\r\n/g, "\n")
+				.split("\n");
+		}
+
+		function getTextItemBounds(item) {
+			const fontFamily = state.meta.fontFamily || "Arial, Helvetica, sans-serif";
+			const lines = getTextLines(item.text);
+			const lineHeight = Number(item.lineHeight || Math.round(item.fontSize * 1.2));
+
+			ctx.save();
+			ctx.font = `${item.fontSize}px ${fontFamily}`;
+			const maxWidth = lines.reduce((max, line) => Math.max(max, ctx.measureText(line).width), 0);
+			ctx.restore();
+
+			const totalHeight = Math.max(lineHeight * lines.length, item.fontSize);
+			const align = item.align || "center";
+			const xMin = align === "left" ? item.x : (align === "right" ? item.x - maxWidth : item.x - maxWidth / 2);
+			const xMax = align === "left" ? item.x + maxWidth : (align === "right" ? item.x : item.x + maxWidth / 2);
+			const yMin = item.y - totalHeight / 2;
+			const yMax = item.y + totalHeight / 2;
+
+			return {
+				xMin,
+				xMax,
+				yMin,
+				yMax,
+				width: maxWidth,
+				height: totalHeight,
+				lineHeight,
+				lines
+			};
+		}
+
+		function drawTextItem(item) {
+			const fontFamily = state.meta.fontFamily || "Arial, Helvetica, sans-serif";
+			const bounds = getTextItemBounds(item);
+			const borderWidth = Number(item.borderWidth || 0);
+			const rotation = Number(item.rotation || 0);
+
+			ctx.save();
+			ctx.translate(item.x, item.y);
+			ctx.rotate((rotation * Math.PI) / 180);
+
+			// Draw border if border width > 0
+			if (borderWidth > 0) {
+				ctx.strokeStyle = item.borderColor || "#000000";
+				ctx.lineWidth = borderWidth;
+				const bw = bounds.width;
+				const bh = bounds.height;
+				ctx.strokeRect(-bw / 2 - borderWidth / 2, -bh / 2 - borderWidth / 2, bw + borderWidth, bh + borderWidth);
+			}
+
+			// Draw text
+			ctx.fillStyle = state.meta.theme === "dark" ? "#f8fafc" : "#111827";
+			ctx.font = `${item.fontSize}px ${fontFamily}`;
+			ctx.textAlign = item.align || "center";
+			ctx.textBaseline = "middle";
+
+			const startY = ((bounds.lines.length - 1) * bounds.lineHeight) / 2;
+			for (let i = 0; i < bounds.lines.length; i += 1) {
+				ctx.fillText(bounds.lines[i], 0, startY - i * bounds.lineHeight);
+			}
+
+			// Draw selection outline
+			if (item.id === selectedTextItemId) {
+				ctx.strokeStyle = "#22d3ee";
+				ctx.lineWidth = 2;
+				const bw = bounds.width;
+				const bh = bounds.height;
+				ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+			}
+			ctx.restore();
+		}
+
+		function addTextItem(text = "RWY 12", x = 384, y = 569, fontSize = 28, options = {}) {
 			state.textItems.push({
 				id: `text-${nextTextItemId++}`,
 				text,
 				x,
 				y,
 				fontSize,
-				align: "center"
+				align: options.align || "center",
+				lineHeight: Number(options.lineHeight || Math.round(fontSize * 1.2)),
+				borderWidth: Number(options.borderWidth || 0),
+				borderColor: String(options.borderColor || "#000000"),
+				rotation: Number(options.rotation || 0)
 			});
 			selectedPieceId = null;
 			selectedTextItemId = state.textItems[state.textItems.length - 1].id;
@@ -571,9 +649,8 @@
 		}
 
 		function drawTextAnchors() {
-			const template = TEMPLATE_REF[state.meta.layoutSize] || TEMPLATE_REF.large;
-			const text = structuredClone(template.text);
-			if (state.meta.layoutSize === "large" && state.meta.anchors) {
+			const text = structuredClone(TEMPLATE_REF.text);
+			if (state.meta.anchors) {
 				for (const key of Object.keys(state.meta.anchors)) {
 					if (text[key]) {
 						text[key].x = Number(state.meta.anchors[key].x ?? text[key].x);
@@ -586,27 +663,13 @@
 			ctx.strokeStyle = state.meta.theme === "dark" ? "#f8fafc" : "#111827";
 			ctx.lineWidth = 1;
 
-			if (state.meta.layoutSize === "large") {
-				drawTemplateText("AIRPORT DIAGRAM", { ...text.topLeftTitle, size: state.meta.fontSizes?.title ?? text.topLeftTitle.size });
-				drawTemplateText(state.meta.docRef, { ...text.topCenterRef, size: state.meta.fontSizes?.docRef ?? text.topCenterRef.size });
-				
-				drawTemplateText(`${state.meta.airportName} (${state.meta.airportCode})`, { ...text.topRightAirport, size: state.meta.fontSizes?.airport ?? text.topRightAirport.size });
-				drawTemplateText(state.meta.cityState, { ...text.topRightCity, size: state.meta.fontSizes?.city ?? text.topRightCity.size });
-				drawTemplateText("AIRPORT DIAGRAM", { ...text.bottomLeftTitle, size: state.meta.fontSizes?.title ?? text.bottomLeftTitle.size });
-				drawTemplateText(state.meta.cityState, { ...text.bottomRightCity, size: state.meta.fontSizes?.city ?? text.bottomRightCity.size });
-				drawTemplateText(`${state.meta.airportName} (${state.meta.airportCode})`, { ...text.bottomRightAirport, size: state.meta.fontSizes?.airport ?? text.bottomRightAirport.size });
-			} else if (state.meta.layoutSize === "medium") {
-				drawTemplateText("AIRPORT DIAGRAM", { ...text.topLeftTitle, size: state.meta.fontSizes?.title ?? text.topLeftTitle.size });
-				drawTemplateText(state.meta.docRef, { ...text.topCenterRef, size: state.meta.fontSizes?.docRef ?? text.topCenterRef.size });
-				
-				drawTemplateText(`${state.meta.airportName} (${state.meta.airportCode})`, { ...text.topRightAirport, size: state.meta.fontSizes?.airport ?? text.topRightAirport.size });
-				drawTemplateText(state.meta.cityState, { ...text.topRightCity, size: state.meta.fontSizes?.city ?? text.topRightCity.size });
-				drawTemplateText("AIRPORT DIAGRAM", { ...text.bottomLeftTitle, size: state.meta.fontSizes?.title ?? text.bottomLeftTitle.size });
-				drawTemplateText(state.meta.cityState, { ...text.bottomRightCity, size: state.meta.fontSizes?.city ?? text.bottomRightCity.size });
-				drawTemplateText(`${state.meta.airportName} (${state.meta.airportCode})`, { ...text.bottomRightAirport, size: state.meta.fontSizes?.airport ?? text.bottomRightAirport.size });
-			}else {
-                drawTemplateText(state.meta.docRef, { ...text.topCenterRef, size: state.meta.fontSizes?.docRef ?? text.topCenterRef.size });
-            }
+			drawTemplateText("AIRPORT DIAGRAM", { ...text.topLeftTitle, size: state.meta.fontSizes?.title ?? text.topLeftTitle.size });
+			drawTemplateText(state.meta.docRef, { ...text.topCenterRef, size: state.meta.fontSizes?.docRef ?? text.topCenterRef.size });
+			drawTemplateText(`${state.meta.airportName} (${state.meta.airportCode})`, { ...text.topRightAirport, size: state.meta.fontSizes?.airport ?? text.topRightAirport.size });
+			drawTemplateText(state.meta.cityState, { ...text.topRightCity, size: state.meta.fontSizes?.city ?? text.topRightCity.size });
+			drawTemplateText("AIRPORT DIAGRAM", { ...text.bottomLeftTitle, size: state.meta.fontSizes?.title ?? text.bottomLeftTitle.size });
+			drawTemplateText(state.meta.cityState, { ...text.bottomRightCity, size: state.meta.fontSizes?.city ?? text.bottomRightCity.size });
+			drawTemplateText(`${state.meta.airportName} (${state.meta.airportCode})`, { ...text.bottomRightAirport, size: state.meta.fontSizes?.airport ?? text.bottomRightAirport.size });
 
 			ctx.restore();
 		}
@@ -656,22 +719,7 @@
 			}
 
 			for (const item of state.textItems) {
-				const fontFamily = state.meta.fontFamily || "Arial, Helvetica, sans-serif";
-				ctx.save();
-				ctx.fillStyle = state.meta.theme === "dark" ? "#f8fafc" : "#111827";
-				ctx.font = `${item.fontSize}px ${fontFamily}`;
-				ctx.textAlign = item.align;
-				ctx.textBaseline = "middle";
-				ctx.fillText(item.text, item.x, item.y);
-				if (item.id === selectedTextItemId) {
-					const metrics = ctx.measureText(item.text);
-					const w = metrics.width;
-					const h = item.fontSize;
-					ctx.strokeStyle = "#22d3ee";
-					ctx.lineWidth = 2;
-					ctx.strokeRect(item.x - w / 2, item.y - h / 2, w, h);
-				}
-				ctx.restore();
+				drawTextItem(item);
 			}
 		}
 
@@ -697,10 +745,8 @@
 		function pickPiece(mx, my) {
 			for (let i = state.textItems.length - 1; i >= 0; i -= 1) {
 				const item = state.textItems[i];
-				const metrics = ctx.measureText(item.text);
-				const w = metrics.width;
-				const h = item.fontSize;
-				if (mx >= item.x - w / 2 && mx <= item.x + w / 2 && my >= item.y - h / 2 && my <= item.y + h / 2) {
+				const bounds = getTextItemBounds(item);
+				if (mx >= bounds.xMin && mx <= bounds.xMax && my >= bounds.yMin && my <= bounds.yMax) {
 					selectedPieceId = null;
 					return { type: "text", item };
 				}
@@ -743,6 +789,8 @@
 				els.pieceRotation.value = "0";
 				els.textContent.value = "";
 				els.textFontSize.value = "28";
+				els.textBorderWidth.value = "0";
+				els.textBorderColor.value = "#000000";
 				return;
 			}
 			
@@ -757,9 +805,11 @@
 				els.posX.value = Math.round(t.x);
 				els.posY.value = Math.round(t.y);
 				els.pieceScale.value = "1";
-				els.pieceRotation.value = "0";
+				els.pieceRotation.value = Math.round(t.rotation || 0);
 				els.textContent.value = t.text || "";
 				els.textFontSize.value = t.fontSize || 28;
+				els.textBorderWidth.value = t.borderWidth || 0;
+				els.textBorderColor.value = t.borderColor || "#000000";
 			}
 		}
 
@@ -785,7 +835,7 @@
 			render();
 			const a = document.createElement("a");
 			a.href = els.canvas.toDataURL("image/png");
-			a.download = `${state.meta.airportCode || "chart"}-${state.meta.layoutSize}-${state.meta.theme}.png`;
+			a.download = `${state.meta.airportCode || "chart"}-${state.meta.theme}.png`;
 			document.body.appendChild(a);
 			a.click();
 			a.remove();
@@ -798,12 +848,9 @@
 				if (!parsed.meta || !Array.isArray(parsed.pieces)) {
 					throw new Error("JSON must include { meta, pieces[] }.");
 				}
-				if (!["large", "medium"].includes(parsed.meta.layoutSize)) {
-					throw new Error("meta.layoutSize must be 'large' or 'medium'.");
-				}
 				state = {
 					meta: {
-						layoutSize: parsed.meta.layoutSize,
+						layoutSize: "default",
 						theme: parsed.meta.theme === "dark" ? "dark" : "light",
 						airportName: String(parsed.meta.airportName || "AIRPORT NAME"),
 						airportCode: String(parsed.meta.airportCode || "ABRV"),
@@ -821,32 +868,32 @@
 						},
 						anchors: {
 							topLeftTitle: {
-								x: Number(parsed.meta.anchors?.topLeftTitle?.x ?? TEMPLATE_REF.large.text.topLeftTitle.x),
-								y: Number(parsed.meta.anchors?.topLeftTitle?.y ?? TEMPLATE_REF.large.text.topLeftTitle.y)
+								x: Number(parsed.meta.anchors?.topLeftTitle?.x ?? TEMPLATE_REF.text.topLeftTitle.x),
+								y: Number(parsed.meta.anchors?.topLeftTitle?.y ?? TEMPLATE_REF.text.topLeftTitle.y)
 							},
 							topCenterRef: {
-								x: Number(parsed.meta.anchors?.topCenterRef?.x ?? TEMPLATE_REF.large.text.topCenterRef.x),
-								y: Number(parsed.meta.anchors?.topCenterRef?.y ?? TEMPLATE_REF.large.text.topCenterRef.y)
+								x: Number(parsed.meta.anchors?.topCenterRef?.x ?? TEMPLATE_REF.text.topCenterRef.x),
+								y: Number(parsed.meta.anchors?.topCenterRef?.y ?? TEMPLATE_REF.text.topCenterRef.y)
 							},
 							topRightAirport: {
-								x: Number(parsed.meta.anchors?.topRightAirport?.x ?? TEMPLATE_REF.large.text.topRightAirport.x),
-								y: Number(parsed.meta.anchors?.topRightAirport?.y ?? TEMPLATE_REF.large.text.topRightAirport.y)
+								x: Number(parsed.meta.anchors?.topRightAirport?.x ?? TEMPLATE_REF.text.topRightAirport.x),
+								y: Number(parsed.meta.anchors?.topRightAirport?.y ?? TEMPLATE_REF.text.topRightAirport.y)
 							},
 							topRightCity: {
-								x: Number(parsed.meta.anchors?.topRightCity?.x ?? TEMPLATE_REF.large.text.topRightCity.x),
-								y: Number(parsed.meta.anchors?.topRightCity?.y ?? TEMPLATE_REF.large.text.topRightCity.y)
+								x: Number(parsed.meta.anchors?.topRightCity?.x ?? TEMPLATE_REF.text.topRightCity.x),
+								y: Number(parsed.meta.anchors?.topRightCity?.y ?? TEMPLATE_REF.text.topRightCity.y)
 							},
 							bottomLeftTitle: {
-								x: Number(parsed.meta.anchors?.bottomLeftTitle?.x ?? TEMPLATE_REF.large.text.bottomLeftTitle.x),
-								y: Number(parsed.meta.anchors?.bottomLeftTitle?.y ?? TEMPLATE_REF.large.text.bottomLeftTitle.y)
+								x: Number(parsed.meta.anchors?.bottomLeftTitle?.x ?? TEMPLATE_REF.text.bottomLeftTitle.x),
+								y: Number(parsed.meta.anchors?.bottomLeftTitle?.y ?? TEMPLATE_REF.text.bottomLeftTitle.y)
 							},
 							bottomRightCity: {
-								x: Number(parsed.meta.anchors?.bottomRightCity?.x ?? TEMPLATE_REF.large.text.bottomRightCity.x),
-								y: Number(parsed.meta.anchors?.bottomRightCity?.y ?? TEMPLATE_REF.large.text.bottomRightCity.y)
+								x: Number(parsed.meta.anchors?.bottomRightCity?.x ?? TEMPLATE_REF.text.bottomRightCity.x),
+								y: Number(parsed.meta.anchors?.bottomRightCity?.y ?? TEMPLATE_REF.text.bottomRightCity.y)
 							},
 							bottomRightAirport: {
-								x: Number(parsed.meta.anchors?.bottomRightAirport?.x ?? TEMPLATE_REF.large.text.bottomRightAirport.x),
-								y: Number(parsed.meta.anchors?.bottomRightAirport?.y ?? TEMPLATE_REF.large.text.bottomRightAirport.y)
+								x: Number(parsed.meta.anchors?.bottomRightAirport?.x ?? TEMPLATE_REF.text.bottomRightAirport.x),
+								y: Number(parsed.meta.anchors?.bottomRightAirport?.y ?? TEMPLATE_REF.text.bottomRightAirport.y)
 							}
 						}
 					},
@@ -870,7 +917,11 @@
 						x: Number(t.x || 100),
 						y: Number(t.y || 100),
 						fontSize: Number(t.fontSize || 28),
-						align: t.align || "center"
+						align: t.align || "center",
+						lineHeight: Number(t.lineHeight || Math.round(Number(t.fontSize || 28) * 1.2)),
+						borderWidth: Number(t.borderWidth || 0),
+						borderColor: String(t.borderColor || "#000000"),
+						rotation: Number(t.rotation || 0)
 					}));
 				syncFormFromState();
 				syncSelectedControls();
@@ -884,7 +935,7 @@
 
 		function bindEvents() {
 			for (const el of [
-				els.layoutSize, els.theme, els.airportName, els.airportCode, els.cityState, els.docRef,
+				els.theme, els.airportName, els.airportCode, els.cityState, els.docRef,
 				els.fontFamily, els.titleFontSize, els.docRefFontSize, els.airportFontSize, els.cityFontSize, els.runwayFontSize,
 				els.topLeftTitleX, els.topLeftTitleY,
 				els.topCenterRefX, els.topCenterRefY,
@@ -956,6 +1007,32 @@
 				} else if (textType === "runway") {
 					addTextItem("RWY 12", pt.x, pt.y, state.meta.fontSizes?.runway ?? 28);
 				}
+				else if (textType ==="frequency") {
+					const frequenciesText = [
+						"Frequencies:",
+						"ATIS 118.5",
+						"TWR 119.1",
+						"GND 121.9",
+						"APP 124.3",
+						"DEP 125.7",
+						"UNICOM 122.8"
+					].join("\n");
+					addTextItem(frequenciesText, pt.x, pt.y, Math.max((state.meta.fontSizes?.runway ?? 28) - 8, 14), { align: "left" });
+				}
+
+				else if (textType === "info") {
+					const infoText = [
+						"Airport Information:",
+						"Elevation: 500 ft",
+						"Mag Var: 5°E",
+						"CTA: 2500 ft",
+						"Remarks: RWY 12 has a displaced threshold."
+					].join("\n");
+					addTextItem(infoText, pt.x, pt.y, Math.max((state.meta.fontSizes?.runway ?? 28) - 8, 14), { align: "left" });
+				}
+				else if (textType === "custom") {
+					addTextItem("Custom Text", pt.x, pt.y, state.meta.fontSizes?.runway ?? 28);
+				}
 				syncJsonEditor();
 				setStatus("Item dropped on canvas.", "ok");
 			});
@@ -966,7 +1043,9 @@
 				[els.pieceScale, "scale"],
 				[els.pieceRotation, "rotation"],
 				[els.textContent, "text"],
-				[els.textFontSize, "fontSize"]
+				[els.textFontSize, "fontSize"],
+				[els.textBorderWidth, "borderWidth"],
+				[els.textBorderColor, "borderColor"]
 			]) {
 				el.addEventListener("input", () => {
 					const p = state.pieces.find((x) => x.id === selectedPieceId);
@@ -980,8 +1059,11 @@
 					} else if (t) {
 						if (key === "posX") t.x = Number(el.value || 0);
 						if (key === "posY") t.y = Number(el.value || 0);
+						if (key === "rotation") t.rotation = Number(el.value || 0);
 						if (key === "text") t.text = el.value;
 						if (key === "fontSize") t.fontSize = Number(el.value || 28);
+						if (key === "borderWidth") t.borderWidth = Number(el.value || 0);
+						if (key === "borderColor") t.borderColor = String(el.value || "#000000");
 					}
 					render();
 					syncJsonEditor();
@@ -1005,6 +1087,16 @@
 					setStatus("Text item deleted.", "warn");
 				}
 			});
+			document.keydownListener = (e) => {
+				const tag = e.target?.tagName;
+				if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) {
+					return;
+				}
+				if (e.key === "Delete") {
+					els.deletePieceBtn.click();
+				}
+			};
+			document.addEventListener("keydown", document.keydownListener);
 
 			els.duplicatePieceBtn.addEventListener("click", () => {
 				const p = state.pieces.find((x) => x.id === selectedPieceId);
@@ -1045,7 +1137,7 @@
 				state.meta.runwayTop = "RWY 12";
 				state.meta.runwayBottom = "RWY 30";
 				state.meta.fontFamily = "Arial, Helvetica, sans-serif";
-				state.meta.fontSizes = { title: 42, docRef: 18, airport: 34, city: 24, runway: 28 };
+				state.meta.fontSizes = { title: 28, docRef: 15, airport: 24, city: 24, runway: 28 };
 				syncFormFromState();
 				render();
 				syncJsonEditor();
