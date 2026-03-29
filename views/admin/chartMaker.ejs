@@ -576,6 +576,11 @@
 			const bounds = getTextItemBounds(item);
 			const borderWidth = Number(item.borderWidth || 0);
 			const rotation = Number(item.rotation || 0);
+			const align = item.align || "center";
+			const bw = bounds.width;
+			const bh = bounds.height;
+			const boxX = align === "left" ? 0 : (align === "right" ? -bw : -bw / 2);
+			const boxY = -bh / 2;
 
 			ctx.save();
 			ctx.translate(item.x, item.y);
@@ -585,15 +590,13 @@
 			if (borderWidth > 0) {
 				ctx.strokeStyle = item.borderColor || "#000000";
 				ctx.lineWidth = borderWidth;
-				const bw = bounds.width;
-				const bh = bounds.height;
-				ctx.strokeRect(-bw / 2 - borderWidth / 2, -bh / 2 - borderWidth / 2, bw + borderWidth, bh + borderWidth);
+				ctx.strokeRect(boxX - borderWidth / 2, boxY - borderWidth / 2, bw + borderWidth, bh + borderWidth);
 			}
 
 			// Draw text
 			ctx.fillStyle = state.meta.theme === "dark" ? "#f8fafc" : "#111827";
 			ctx.font = `${item.fontSize}px ${fontFamily}`;
-			ctx.textAlign = item.align || "center";
+			ctx.textAlign = align;
 			ctx.textBaseline = "middle";
 
 			const startY = -((bounds.lines.length - 1) * bounds.lineHeight) / 2;
@@ -605,9 +608,7 @@
 			if (item.id === selectedTextItemId) {
 				ctx.strokeStyle = "#22d3ee";
 				ctx.lineWidth = 2;
-				const bw = bounds.width;
-				const bh = bounds.height;
-				ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+				ctx.strokeRect(boxX, boxY, bw, bh);
 			}
 			ctx.restore();
 		}
