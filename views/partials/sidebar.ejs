@@ -2,7 +2,7 @@
     .sidebar-overlay {
         display: none;
     }
-
+    
     .mobile-top-bar {
         display: none !important;
     }
@@ -24,6 +24,71 @@
     </a>
 </div>
 
+<!--header class="top-nav-desktop" aria-label="Main top navigation">
+    <div class="top-nav-inner">
+        <div class="top-nav-links" role="navigation" aria-label="Primary">
+            <details class="top-nav-folder" data-folder="core" open>
+                <summary class="top-nav-link">Core</summary>
+                <div class="top-nav-folder-menu">
+                    <a class="top-nav-folder-item <%= locals.page === 'home' ? 'active' : '' %>" href="/">Home</a>
+                    <a class="top-nav-folder-item <%= locals.page === 'sessions' ? 'active' : '' %>" href="/sessions">Sessions</a>
+                    <a class="top-nav-folder-item <%= locals.page === 'pilots' ? 'active' : '' %>" href="/pilots">Pilots</a>
+                    <a class="top-nav-folder-item <%= locals.page === 'charts' ? 'active' : '' %>" href="/charts">Charts</a>
+                </div>
+            </details>
+
+            <details class="top-nav-folder" data-folder="tools" open>
+                <summary class="top-nav-link">Tools</summary>
+                <div class="top-nav-folder-menu">
+                    <a class="top-nav-folder-item <%= locals.page === 'chart-maker' ? 'active' : '' %>" href="/chart-maker">Chart Maker</a>
+                </div>
+            </details>
+
+            <% if (locals.user) { %>
+                <details class="top-nav-folder" data-folder="member" open>
+                    <summary class="top-nav-link">Member</summary>
+                    <div class="top-nav-folder-menu">
+                        <a class="top-nav-folder-item <%= locals.page === 'profile' ? 'active' : '' %>" href="/profile">Profile</a>
+                        <a class="top-nav-folder-item <%= locals.page === 'applications' ? 'active' : '' %>" href="/applications">Applications</a>
+                        <a class="top-nav-folder-item <%= locals.page === 'information' ? 'active' : '' %>" href="/information">Information</a>
+                        <a class="top-nav-folder-item <%= locals.page === 'ifr' ? 'active' : '' %>" href="/ifr">IFR</a>
+                    </div>
+                </details>
+            <% } %>
+
+            <% if (locals.user && locals.user.role && locals.user.role.includes('atc')) { %>
+                <details class="top-nav-folder" data-folder="atc" open>
+                    <summary class="top-nav-link">ATC</summary>
+                    <div class="top-nav-folder-menu">
+                        <a class="top-nav-folder-item <%= locals.page === 'events' ? 'active' : '' %>" href="/events">Events</a>
+                        <a class="top-nav-folder-item <%= locals.page === 'metar' ? 'active' : '' %>" href="/atc/metar">METAR</a>
+                    </div>
+                </details>
+            <% } %>
+
+            <% if (locals.user && locals.user.role && (locals.user.role.includes('admin') || locals.user.role.includes('mod'))) { %>
+                <details class="top-nav-folder" data-folder="admin" open>
+                    <summary class="top-nav-link">Admin</summary>
+                    <div class="top-nav-folder-menu">
+                        <a class="top-nav-folder-item <%= locals.page === 'admin' ? 'active' : '' %>" href="/admin">Admin</a>
+                        <a class="top-nav-folder-item <%= locals.page === 'applicationsAdmin' ? 'active' : '' %>" href="/applications/admin">Apps Admin</a>
+                        <a class="top-nav-folder-item <%= locals.page === 'discordUsers' ? 'active' : '' %>" href="/admin/discord">Discord Users</a>
+                    </div>
+                </details>
+            <% } %>
+        </div>
+
+        <div class="top-nav-actions">
+            <% if (locals.user) { %>
+                <a class="top-nav-link top-nav-signout" href="/logout">Sign out</a>
+            <% } else { %>
+                <a class="top-nav-link <%= locals.page === 'login' ? 'active' : '' %>" href="/login/home">Login</a>
+                <a class="top-nav-link <%= locals.page === 'register' ? 'active' : '' %>" href="/register">Register</a>
+            <% } %>
+        </div>
+    </div>
+</header-->
+
 <div class="sidebar" id="sidebar">
     <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close">✕</button>
     <a href="/" class="sidebar-brand">
@@ -31,24 +96,72 @@
         <span>Aviation Realism Network</span>
     </a>
     <div class="sidebar-menu">
-        <a class="sidebar-menu-item <%= locals.page === 'sessions' ? 'active' : '' %>" href="/sessions">Sessions</a>
-        <a class="sidebar-menu-item <%= locals.page === 'pilots'   ? 'active' : '' %>" href="/pilots">Pilots</a>
-        <a class="sidebar-menu-item <%= locals.page === 'charts'      ? 'active' : '' %>" href="/charts">Charts</a>
-        <a class="sidebar-menu-item <%= locals.page === 'chart-maker' ? 'active' : '' %>" href="/chart-maker">Chart Maker</a>
+        <details class="sidebar-folder" data-folder="core" open>
+            <summary class="sidebar-folder-title">Core</summary>
+            <div class="sidebar-folder-items">
+                <a class="sidebar-menu-item <%= locals.page === 'home' ? 'active' : '' %>" href="/">Home</a>
+                <a class="sidebar-menu-item <%= locals.page === 'sessions' ? 'active' : '' %>" href="/sessions">Sessions</a>
+                <a class="sidebar-menu-item <%= locals.page === 'pilots' ? 'active' : '' %>" href="/pilots">Pilots</a>
+                <a class="sidebar-menu-item <%= locals.page === 'charts' ? 'active' : '' %>" href="/charts">Charts</a>
+            </div>
+        </details>
+
+        <details class="sidebar-folder" data-folder="tools" open>
+            <summary class="sidebar-folder-title">Tools</summary>
+            <div class="sidebar-folder-items">
+                <a class="sidebar-menu-item <%= locals.page === 'chart-maker' ? 'active' : '' %>" href="/chart-maker">Chart Maker</a>
+
+                <% if (locals.page === 'charts') { %>
+                    <div class="sidebar-chart-picker">
+                        <span class="sidebar-chart-label">Select Chart</span>
+                        <button
+                            type="button"
+                            id="sidebarChartDropdownToggle"
+                            class="sidebar-chart-dropdown-toggle"
+                            aria-expanded="false"
+                            aria-controls="sidebarChartList"
+                        >
+                            Select a chart...
+                        </button>
+                        <ul id="sidebarChartList" class="sidebar-chart-list" role="listbox" aria-label="Chart list">
+                            <li class="sidebar-chart-empty">Loading charts...</li>
+                        </ul>
+                    </div>
+                <% } %>
+            </div>
+        </details>
+
         <% if (locals.user) { %>
-            <a class="sidebar-menu-item <%= locals.page === 'profile'      ? 'active' : '' %>" href="/profile">Profile</a>
-            <a class="sidebar-menu-item <%= locals.page === 'applications' ? 'active' : '' %>" href="/applications">Applications</a>
-            <a class="sidebar-menu-item <%= locals.page === 'information'  ? 'active' : '' %>" href="/information">Information</a>
-            <a class="sidebar-menu-item <%= locals.page === 'ifr'          ? 'active' : '' %>" href="/ifr">IFR</a>
+            <details class="sidebar-folder" data-folder="member" open>
+                <summary class="sidebar-folder-title">Member</summary>
+                <div class="sidebar-folder-items">
+                    <a class="sidebar-menu-item <%= locals.page === 'profile' ? 'active' : '' %>" href="/profile">Profile</a>
+                    <a class="sidebar-menu-item <%= locals.page === 'applications' ? 'active' : '' %>" href="/applications">Applications</a>
+                    <a class="sidebar-menu-item <%= locals.page === 'information' ? 'active' : '' %>" href="/information">Information</a>
+                    <a class="sidebar-menu-item <%= locals.page === 'ifr' ? 'active' : '' %>" href="/ifr">IFR</a>
+                </div>
+            </details>
         <% } %>
+
         <% if (locals.user && locals.user.role && locals.user.role.includes('atc')) { %>
-            <a class="sidebar-menu-item <%= locals.page === 'events' ? 'active' : '' %>" href="/events">Events</a>
-            <a class="sidebar-menu-item <%= locals.page === 'metar'  ? 'active' : '' %>" href="/atc/metar">METAR</a>
+            <details class="sidebar-folder" data-folder="atc" open>
+                <summary class="sidebar-folder-title">ATC</summary>
+                <div class="sidebar-folder-items">
+                    <a class="sidebar-menu-item <%= locals.page === 'events' ? 'active' : '' %>" href="/events">Events</a>
+                    <a class="sidebar-menu-item <%= locals.page === 'metar' ? 'active' : '' %>" href="/atc/metar">METAR</a>
+                </div>
+            </details>
         <% } %>
+
         <% if (locals.user && locals.user.role && (locals.user.role.includes('admin') || locals.user.role.includes('mod'))) { %>
-            <a class="sidebar-menu-item <%= locals.page === 'admin'            ? 'active' : '' %>" href="/admin">Admin</a>
-            <a class="sidebar-menu-item <%= locals.page === 'applicationsAdmin'? 'active' : '' %>" href="/applications/admin">Apps Admin</a>
-            <a class="sidebar-menu-item <%= locals.page === 'discordUsers'     ? 'active' : '' %>" href="/admin/discord">Discord Users</a>
+            <details class="sidebar-folder" data-folder="admin" open>
+                <summary class="sidebar-folder-title">Admin</summary>
+                <div class="sidebar-folder-items">
+                    <a class="sidebar-menu-item <%= locals.page === 'admin' ? 'active' : '' %>" href="/admin">Admin</a>
+                    <a class="sidebar-menu-item <%= locals.page === 'applicationsAdmin' ? 'active' : '' %>" href="/applications/admin">Apps Admin</a>
+                    <a class="sidebar-menu-item <%= locals.page === 'discordUsers' ? 'active' : '' %>" href="/admin/discord">Discord Users</a>
+                </div>
+            </details>
         <% } %>
     </div>
 
@@ -82,11 +195,68 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        const folderStateUser = '<%= locals.user ? (locals.user._id || locals.user.id || locals.user.username || locals.user.discordId || "user") : "guest" %>';
+        const folderStateKey = 'arn:folder-state:' + folderStateUser;
+
+        function loadFolderState() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(folderStateKey) || '{}');
+                return (parsed && typeof parsed === 'object') ? parsed : {};
+            } catch (_) {
+                return {};
+            }
+        }
+
+        function saveFolderState(state) {
+            try {
+                localStorage.setItem(folderStateKey, JSON.stringify(state));
+            } catch (_) {
+                // ignore storage errors
+            }
+        }
+
+        const folderState = loadFolderState();
+        const allFolders = Array.from(document.querySelectorAll('details[data-folder]'));
+
+        allFolders.forEach(function (folder) {
+            const folderId = folder.dataset.folder;
+            if (!folderId) return;
+            if (Object.prototype.hasOwnProperty.call(folderState, folderId)) {
+                folder.open = !!folderState[folderId];
+            }
+        });
+
+        allFolders.forEach(function (folder) {
+            folder.addEventListener('toggle', function () {
+                const folderId = folder.dataset.folder;
+                if (!folderId) return;
+
+                folderState[folderId] = folder.open;
+                saveFolderState(folderState);
+
+                allFolders.forEach(function (other) {
+                    if (other === folder) return;
+                    if (other.dataset.folder !== folderId) return;
+                    other.open = folder.open;
+                });
+            });
+        });
+
         document.querySelectorAll('.sidebar-menu-item, .sidebar-auth-item').forEach(function (link) {
             link.addEventListener('click', function () {
                 if (window.innerWidth <= 768) closeSidebar();
             });
         });
+
+        document.querySelectorAll('.top-nav-desktop details').forEach(function (dropdown) {
+            dropdown.addEventListener('toggle', function () {
+                if (!dropdown.open) return;
+                document.querySelectorAll('.top-nav-desktop details').forEach(function (other) {
+                    if (other !== dropdown) other.open = false;
+                });
+            });
+        });
+
         window.addEventListener('resize', function () {
             if (window.innerWidth > 768) closeSidebar();
         });

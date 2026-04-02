@@ -76,25 +76,79 @@
             gap: 24px;
         }
 
-        .chart-selector-select {
+        .sidebar-chart-picker {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(245,243,239,0.12);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .sidebar-chart-label {
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(245,243,239,0.6);
+            font-weight: 600;
+        }
+
+        .sidebar-chart-dropdown-toggle {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 12px;
             background: #232323;
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 8px;
             color: #f5f3ef;
-            font-size: 0.95rem;
-            font-weight: 500;
+            font-size: 0.9rem;
             cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 40px;
+            text-align: left;
         }
 
-        .chart-selector-select option { background: #232323; color: #f5f3ef; }
+        .sidebar-chart-list {
+            list-style: none;
+            margin: 0;
+            padding: 4px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            background: #1b1b1b;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: max-height 0.2s ease, opacity 0.2s ease;
+        }
+
+        .sidebar-chart-picker.open .sidebar-chart-list {
+            max-height: 320px;
+            opacity: 1;
+            pointer-events: auto;
+            overflow-y: auto;
+        }
+
+        .sidebar-chart-item {
+            width: 100%;
+            background: transparent;
+            color: #f5f3ef;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 10px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .sidebar-chart-item:hover,
+        .sidebar-chart-item.active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-chart-empty {
+            color: rgba(245,243,239,0.6);
+            font-size: 0.8rem;
+            padding: 8px 10px;
+        }
 
         .chart-display {
             width: 100%;
@@ -259,13 +313,9 @@
 
     <div class="main-content">
         <div class="page-wrap">
-            <select id="chartList" style="display:none;">
-                <option value="">Select a chart</option>
-            </select>
-
             <div class="hero">
                 <h1>Raven's Airport Charts</h1>
-                <p>Select a chart to view it. Voice commands: "Select chart [name]" (Chrome).</p>
+                <p>Select a chart from the sidebar to view it. Voice commands: "Select chart [name]" (Chrome).</p>
             </div>
 
             <div class="chart-area">
@@ -275,12 +325,8 @@
                     <button id="fetchMetarBtn">Fetch METAR</button>
                 </div>
 
-                <select class="chart-selector-select" id="chartSelectorButtons">
-                    <option value="">Select a chart...</option>
-                </select>
-
                 <div class="chart-display" id="chartDisplay">
-                    <div class="placeholder">Select a chart above to display it</div>
+                    <div class="placeholder">Select a chart from the sidebar to display it</div>
                 </div>
 
                 <div id="metarDisplay" class="metar-display" style="display:none"></div>
@@ -353,7 +399,11 @@
 
     <script>
         const chartDisplay = document.getElementById('chartDisplay');
+        const sidebarChartPicker = document.querySelector('.sidebar-chart-picker');
+        const sidebarChartToggle = document.getElementById('sidebarChartDropdownToggle');
+        const sidebarChartList = document.getElementById('sidebarChartList');
         let charts = [];
+        let selectedChartIndex = null;
         
         function openSizedWindow() {
         // Opens a new window with specified dimensions
@@ -406,39 +456,93 @@
 
                 setTimeout(() => {
                     if (charts.length === 0) {
-                        document.getElementById('chartSelectorButtons').innerHTML = '<p style="color:var(--muted)">No charts found</p>';
+                        if (sidebarChartList) {
+                            sidebarChartList.innerHTML = '<li class="sidebar-chart-empty">No charts found</li>';
+                        }
                     }
                 }, 2000);
 
             } catch (error) {
-                document.getElementById('chartSelectorButtons').innerHTML = '<p style="color:var(--muted)">Error loading charts</p>';
+                if (sidebarChartList) {
+                    sidebarChartList.innerHTML = '<li class="sidebar-chart-empty">Error loading charts</li>';
+                }
             }
         }
 
-        function renderChartList() {
-            const select = document.getElementById('chartSelectorButtons');
-            if (!select) return;
+        function setChartDropdownLabel(label) {
+            if (!sidebarChartToggle) return;
+            sidebarChartToggle.textContent = label;
+        }
 
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">Select a chart...</option>';
+        function setActiveChartInList(index) {
+            if (!sidebarChartList) return;
+            const items = sidebarChartList.querySelectorAll('.sidebar-chart-item');
+            items.forEach((item) => {
+                const isActive = parseInt(item.dataset.index, 10) === index;
+                item.classList.toggle('active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+        }
+
+        function selectChartByIndex(index) {
+            const chart = charts[index];
+            if (!chart) return;
+            selectedChartIndex = index;
+            setChartDropdownLabel(chart.name);
+            setActiveChartInList(index);
+            selectChart(chart);
+        }
+
+        function renderChartList() {
+            if (!sidebarChartList) return;
+            sidebarChartList.innerHTML = '';
 
             charts.forEach((chart, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = chart.name;
-                select.appendChild(option);
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'sidebar-chart-item';
+                btn.dataset.index = index;
+                btn.setAttribute('role', 'option');
+                btn.setAttribute('aria-selected', 'false');
+                btn.textContent = chart.name;
+                li.appendChild(btn);
+                sidebarChartList.appendChild(li);
             });
 
-            if (currentVal) select.value = currentVal;
+            if (selectedChartIndex !== null) {
+                setActiveChartInList(selectedChartIndex);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const select = document.getElementById('chartSelectorButtons');
-            select.addEventListener('change', function() {
-                if (this.value !== '') {
-                    selectChart(charts[parseInt(this.value)]);
-                }
-            });
+            if (sidebarChartToggle && sidebarChartPicker) {
+                sidebarChartToggle.addEventListener('click', function () {
+                    const isOpen = sidebarChartPicker.classList.toggle('open');
+                    sidebarChartToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
+            }
+
+            if (sidebarChartList && sidebarChartPicker && sidebarChartToggle) {
+                sidebarChartList.addEventListener('click', function (event) {
+                    const target = event.target.closest('.sidebar-chart-item');
+                    if (!target) return;
+                    const index = parseInt(target.dataset.index, 10);
+                    selectChartByIndex(index);
+                    sidebarChartPicker.classList.remove('open');
+                    sidebarChartToggle.setAttribute('aria-expanded', 'false');
+                    if (window.innerWidth <= 768 && typeof closeSidebar === 'function') {
+                        closeSidebar();
+                    }
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!sidebarChartPicker.contains(event.target)) {
+                        sidebarChartPicker.classList.remove('open');
+                        sidebarChartToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
         });
 
         function selectChart(chart) {
@@ -446,14 +550,6 @@
 
             chartDisplay.innerHTML = `<img src="${chart.src}" alt="${chart.name}" height="750px">`;
         }
-        
-        // Handle dropdown change
-        chartList.addEventListener('change', function() {
-            if (this.value !== '') {
-                const chart = charts[this.value];
-                selectChart(chart);
-            }
-        });
 
 
         // allow for speech to change charts
@@ -474,9 +570,11 @@
                 charts.forEach((chart, index) => {
                     if (chartName.includes(chart.name.toLowerCase())) {
                         speak.speak('Loading ' + chart.name + ' chart');
-                        const select = document.getElementById('chartSelectorButtons');
-                        select.value = index;
-                        selectChart(chart);
+                        selectChartByIndex(index);
+                        if (sidebarChartPicker && sidebarChartToggle) {
+                            sidebarChartPicker.classList.remove('open');
+                            sidebarChartToggle.setAttribute('aria-expanded', 'false');
+                        }
                     }
                 });
             }

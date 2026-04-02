@@ -134,6 +134,75 @@
             font-size: 0.8rem;
             color: rgba(245,243,239,0.3);
         }
+
+        /* Virtual Keyboard */
+        .vk-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
+            font-size: 1.4em;
+            transition: bottom 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vk-toggle-btn.kb-open {
+            bottom: calc(var(--kb-height, 240px) + 14px);
+        }
+
+        .virtual-keyboard {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(26, 26, 26, 0.97);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding: 10px 8px 16px;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .virtual-keyboard.active { transform: translateY(0); }
+
+        .vk-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            width: 100%;
+            max-width: 860px;
+        }
+
+        .vk-key {
+            background: rgba(50, 50, 50, 0.9);
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            height: 38px;
+            flex: 1;
+            min-width: 0;
+            font-size: 0.82em;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2px;
+        }
+
+        .vk-key-wide   { flex: 1.6; }
+        .vk-key-space  { flex: 5; }
+        .vk-key-action { background: rgba(70, 70, 70, 0.9); }
         <%- include('../partials/fixed-sidebar-theme') %>
     </style>
 </head>
@@ -169,6 +238,65 @@
         </footer>
     </div>
 
+    <!-- Virtual Keyboard Toggle Button -->
+    <button class="vk-toggle-btn" id="vkToggleBtn" aria-label="Toggle virtual keyboard" title="Virtual Keyboard">⌨</button>
+
+    <!-- Virtual Keyboard -->
+    <div class="virtual-keyboard" id="virtualKeyboard">
+        <div class="vk-row">
+            <button class="vk-key" data-key="1">1</button>
+            <button class="vk-key" data-key="2">2</button>
+            <button class="vk-key" data-key="3">3</button>
+            <button class="vk-key" data-key="4">4</button>
+            <button class="vk-key" data-key="5">5</button>
+            <button class="vk-key" data-key="6">6</button>
+            <button class="vk-key" data-key="7">7</button>
+            <button class="vk-key" data-key="8">8</button>
+            <button class="vk-key" data-key="9">9</button>
+            <button class="vk-key" data-key="0">0</button>
+            <button class="vk-key vk-key-wide vk-key-action" data-action="backspace">⌫</button>
+        </div>
+        <div class="vk-row">
+            <button class="vk-key" data-key="Q">Q</button>
+            <button class="vk-key" data-key="W">W</button>
+            <button class="vk-key" data-key="E">E</button>
+            <button class="vk-key" data-key="R">R</button>
+            <button class="vk-key" data-key="T">T</button>
+            <button class="vk-key" data-key="Y">Y</button>
+            <button class="vk-key" data-key="U">U</button>
+            <button class="vk-key" data-key="I">I</button>
+            <button class="vk-key" data-key="O">O</button>
+            <button class="vk-key" data-key="P">P</button>
+        </div>
+        <div class="vk-row">
+            <button class="vk-key" data-key="A">A</button>
+            <button class="vk-key" data-key="S">S</button>
+            <button class="vk-key" data-key="D">D</button>
+            <button class="vk-key" data-key="F">F</button>
+            <button class="vk-key" data-key="G">G</button>
+            <button class="vk-key" data-key="H">H</button>
+            <button class="vk-key" data-key="J">J</button>
+            <button class="vk-key" data-key="K">K</button>
+            <button class="vk-key" data-key="L">L</button>
+        </div>
+        <div class="vk-row">
+            <button class="vk-key" data-key="Z">Z</button>
+            <button class="vk-key" data-key="X">X</button>
+            <button class="vk-key" data-key="C">C</button>
+            <button class="vk-key" data-key="V">V</button>
+            <button class="vk-key" data-key="B">B</button>
+            <button class="vk-key" data-key="N">N</button>
+            <button class="vk-key" data-key="M">M</button>
+            <button class="vk-key" data-key="-">-</button>
+            <button class="vk-key" data-key=".">.</button>
+            <button class="vk-key" data-key="/">/</button>
+        </div>
+        <div class="vk-row">
+            <button class="vk-key vk-key-space" data-key=" ">Space</button>
+            <button class="vk-key vk-key-wide vk-key-action" data-action="enter">↵ Enter</button>
+        </div>
+    </div>
+
     <script>
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -198,6 +326,73 @@
                 document.getElementById('errorMessage').textContent = error.message;
                 document.getElementById('errorMessage').style.display = 'block';
             });
+        });
+
+        // Virtual Keyboard
+        const virtualKeyboard = document.getElementById('virtualKeyboard');
+        const vkToggleBtn = document.getElementById('vkToggleBtn');
+        let lastFocusedInput = null;
+
+        // Remember last focused credential field
+        document.addEventListener('focusin', function(e) {
+            if (e.target.matches('input, textarea') && !e.target.closest('.virtual-keyboard')) {
+                lastFocusedInput = e.target;
+            }
+        });
+
+        function toggleVirtualKeyboard() {
+            const isOpen = virtualKeyboard.classList.toggle('active');
+            vkToggleBtn.classList.toggle('kb-open', isOpen);
+            vkToggleBtn.title = isOpen ? 'Close Virtual Keyboard' : 'Virtual Keyboard';
+            if (isOpen) {
+                requestAnimationFrame(() => {
+                    document.documentElement.style.setProperty('--kb-height', virtualKeyboard.offsetHeight + 'px');
+                });
+            }
+        }
+
+        vkToggleBtn.addEventListener('click', toggleVirtualKeyboard);
+
+        function insertAtCursor(input, text) {
+            const start = input.selectionStart != null ? input.selectionStart : input.value.length;
+            const end   = input.selectionEnd   != null ? input.selectionEnd   : input.value.length;
+            input.value = input.value.substring(0, start) + text + input.value.substring(end);
+            input.selectionStart = input.selectionEnd = start + text.length;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function deleteAtCursor(input) {
+            const start = input.selectionStart != null ? input.selectionStart : input.value.length;
+            const end   = input.selectionEnd   != null ? input.selectionEnd   : input.value.length;
+            if (start !== end) {
+                input.value = input.value.substring(0, start) + input.value.substring(end);
+                input.selectionStart = input.selectionEnd = start;
+            } else if (start > 0) {
+                input.value = input.value.substring(0, start - 1) + input.value.substring(end);
+                input.selectionStart = input.selectionEnd = start - 1;
+            }
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        virtualKeyboard.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
+
+        virtualKeyboard.addEventListener('click', function(e) {
+            const key = e.target.closest('.vk-key');
+            if (!key) return;
+            const fallbackTarget = document.getElementById('username');
+            const target = lastFocusedInput || fallbackTarget;
+            if (!target) return;
+
+            target.focus();
+            if (key.dataset.key !== undefined) {
+                insertAtCursor(target, key.dataset.key);
+            } else if (key.dataset.action === 'backspace') {
+                deleteAtCursor(target);
+            } else if (key.dataset.action === 'enter') {
+                document.getElementById('loginForm').requestSubmit();
+            }
         });
     </script>
 </body>
