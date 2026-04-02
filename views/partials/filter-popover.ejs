@@ -1,0 +1,26 @@
+<%
+  var fpItems = typeof items !== 'undefined' && Array.isArray(items) ? items : [];
+  var fpLabel = typeof triggerLabel !== 'undefined' && triggerLabel ? triggerLabel : 'Filters';
+  var fpClass = typeof filterPopoverClass !== 'undefined' && filterPopoverClass ? filterPopoverClass : '';
+  var fpPanelId = typeof panelId !== 'undefined' && panelId ? panelId : '';
+%>
+<details class="filter-popover<%= fpClass ? ' ' + fpClass : '' %>">
+    <summary class="filter-popover__trigger">
+        <span class="filter-popover__icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+        </span>
+        <span class="filter-popover__trigger-text"><%= fpLabel %></span>
+    </summary>
+    <div class="filter-popover__panel" role="group" aria-label="<%= fpLabel %>"<% if (fpPanelId) { %> id="<%= fpPanelId %>"<% } %>>
+        <% fpItems.forEach(function (row) {
+            var inputId = row.id;
+            var rowLabel = row.label != null ? row.label : inputId;
+            var isChecked = row.checked === true || row.checked === 'checked';
+        %>
+        <label class="filter-popover__row" for="<%= inputId %>">
+            <input type="checkbox" id="<%= inputId %>" name="<%= row.name != null ? row.name : inputId %>"<%= isChecked ? ' checked' : '' %>>
+            <span class="filter-popover__row-label"><%= rowLabel %></span>
+        </label>
+        <% }); %>
+    </div>
+</details>

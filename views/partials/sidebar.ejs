@@ -12,6 +12,41 @@
             display: flex !important;
         }
     }
+
+    /* flatten the folder boxes so they match the sidebar vibe */
+    .sidebar-folder {
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+    }
+
+    .sidebar-folder + .sidebar-folder {
+        margin-top: 0 !important;
+        padding-top: 4px !important;
+        border-top: 1px solid var(--line) !important;
+    }
+
+    .sidebar-folder-title {
+        color: rgba(245, 243, 239, 0.38) !important;
+        font-size: 0.68rem !important;
+        letter-spacing: 0.1em !important;
+        padding: 6px 4px !important;
+        border-bottom: none !important;
+    }
+
+    .sidebar-folder-title::marker,
+    .sidebar-folder-title::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .sidebar-folder[open] .sidebar-folder-title {
+        border-bottom: none !important;
+    }
+
+    .sidebar-folder-items {
+        padding: 2px 0 6px !important;
+        gap: 2px !important;
+    }
 </style>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -56,7 +91,7 @@
                 </details>
             <% } %>
 
-            <% if (locals.user && locals.user.role && locals.user.role.includes('atc')) { %>
+            <% if (locals.user && locals.hasAtcPlusAccess) { %>
                 <details class="top-nav-folder" data-folder="atc" open>
                     <summary class="top-nav-link">ATC</summary>
                     <div class="top-nav-folder-menu">
@@ -80,9 +115,9 @@
 
         <div class="top-nav-actions">
             <% if (locals.user) { %>
-                <a class="top-nav-link top-nav-signout" href="/logout">Sign out</a>
+                <a class="top-nav-link top-nav-signout" href="/logout?return=<%= encodeURIComponent(locals.logoutReturn || '/') %>">Sign out</a>
             <% } else { %>
-                <a class="top-nav-link <%= locals.page === 'login' ? 'active' : '' %>" href="/login/home">Login</a>
+                <a class="top-nav-link <%= locals.page === 'login' ? 'active' : '' %>" href="/login">Login</a>
                 <a class="top-nav-link <%= locals.page === 'register' ? 'active' : '' %>" href="/register">Register</a>
             <% } %>
         </div>
@@ -111,25 +146,7 @@
             <div class="sidebar-folder-items">
                 <a class="sidebar-menu-item <%= locals.page === 'chart-maker' ? 'active' : '' %>" href="/chart-maker">Chart Maker</a>
             </div>
-                </details>
-                <% if (locals.page === 'charts') { %>
-                    <div class="sidebar-chart-picker">
-                        <span class="sidebar-chart-label">Select Chart</span>
-                        <button
-                            type="button"
-                            id="sidebarChartDropdownToggle"
-                            class="sidebar-chart-dropdown-toggle"
-                            aria-expanded="false"
-                            aria-controls="sidebarChartList"
-                        >
-                            Select a chart...
-                        </button>
-                        <ul id="sidebarChartList" class="sidebar-chart-list" role="listbox" aria-label="Chart list">
-                            <li class="sidebar-chart-empty">Loading charts...</li>
-                        </ul>
-                    </div>
-                <% } %>
-        
+        </details>
 
         <% if (locals.user) { %>
             <details class="sidebar-folder" data-folder="member" open>
@@ -143,7 +160,7 @@
             </details>
         <% } %>
 
-        <% if (locals.user && locals.user.role && locals.user.role.includes('atc')) { %>
+        <% if (locals.user && locals.hasAtcPlusAccess) { %>
             <details class="sidebar-folder" data-folder="atc" open>
                 <summary class="sidebar-folder-title">ATC</summary>
                 <div class="sidebar-folder-items">
@@ -167,13 +184,17 @@
 
     <div class="sidebar-auth">
         <% if (locals.user) { %>
-            <a class="sidebar-auth-item sidebar-auth-signout" href="/logout">Sign out</a>
+            <a class="sidebar-auth-item sidebar-auth-signout" href="/logout?return=<%= encodeURIComponent(locals.logoutReturn || '/') %>">Sign out</a>
         <% } else { %>
-            <a class="sidebar-auth-item <%= locals.page === 'login'    ? 'active' : '' %>" href="/login/home">Login</a>
+            <a class="sidebar-auth-item <%= locals.page === 'login'    ? 'active' : '' %>" href="/login">Login</a>
             <a class="sidebar-auth-item <%= locals.page === 'register' ? 'active' : '' %>" href="/register">Register</a>
         <% } %>
     </div>
 </div>
+
+<% if (!locals.isProduction) { %>
+<%- include('./client-ui-mock') %>
+<% } %>
 
 <script>
     function toggleSidebar() {
@@ -260,5 +281,16 @@
         window.addEventListener('resize', function () {
             if (window.innerWidth > 768) closeSidebar();
         });
+
+        var _rp = new URLSearchParams(window.location.search).get('redirect');
+        var _back = _rp;
+        if (!_back) {
+            var _p = window.location.pathname;
+            if (_p === '/login' || _p === '/register' || _p === '/forgot-password') _back = '/';
+            else _back = window.location.pathname + window.location.search + window.location.hash;
+        }
+        var _enc = encodeURIComponent(_back);
+        document.querySelectorAll('a[href="/login"]').forEach(function (el) { el.href = '/login?redirect=' + _enc; });
+        document.querySelectorAll('a[href="/register"]').forEach(function (el) { el.href = '/register?redirect=' + _enc; });
     });
 </script>

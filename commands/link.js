@@ -1,7 +1,6 @@
 const {EmbedBuilder, SlashCommandBuilder} = require('discord.js');
 
 const User = require("../schemas/users");
-const authHandler = require("../functions/AuthHandler");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('link')

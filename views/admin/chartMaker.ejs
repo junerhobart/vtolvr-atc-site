@@ -16,7 +16,9 @@
 		}
 
 		.tool-panel {
-			background: var(--panel);
+			background:
+				radial-gradient(circle at top left, rgba(116, 144, 255, 0.025), transparent 24%),
+				linear-gradient(180deg, #1b1b1b 0%, #181818 100%);
 			border-right: 1px solid var(--line);
 			overflow-y: auto;
 			padding: 14px;
@@ -27,6 +29,17 @@
 			align-items: center;
 			gap: 10px;
 			margin-bottom: 10px;
+		}
+
+		.chart-maker-back {
+			flex-shrink: 0;
+			font-size: 0.8rem;
+			color: var(--muted);
+			text-decoration: none;
+		}
+
+		.chart-maker-back:hover {
+			color: var(--text);
 		}
 
 		.tool-header h1 {
@@ -64,6 +77,10 @@
 			width: 100%;
 			padding: 7px 10px;
 			font-size: 0.84rem;
+		}
+
+		#fontFamilySelect {
+			max-width: 100%;
 		}
 
 		.btn-row {
@@ -139,7 +156,9 @@
 			justify-content: center;
 			overflow: auto;
 			padding: 20px;
-			background: var(--bg);
+			background:
+				radial-gradient(circle at top left, rgba(116, 144, 255, 0.025), transparent 24%),
+				linear-gradient(180deg, #1b1b1b 0%, #181818 100%);
 		}
 
 		#canvas {
@@ -188,18 +207,29 @@
 		}
 
 		<%- include('../partials/fixed-sidebar-theme') %>
+		body.chart-maker-full .main-content {
+			margin-left: 0 !important;
+			width: 100% !important;
+			padding-top: 0 !important;
+			min-height: 100vh;
+		}
+		@media (max-width: 768px) {
+			body.chart-maker-full .main-content {
+				padding-top: 0 !important;
+			}
+		}
 	</style>
 </head>
-<body>
-	<%- include('../partials/sidebar', { page: 'chart-maker' }) %>
+<body class="chart-maker-full">
 
 	<div class="main-content">
 		<div class="tool-layout">
 			<aside class="tool-panel">
 				<div class="tool-header">
+					<a href="/" class="chart-maker-back">← Back</a>
 					<h1>Chart Maker</h1>
 				</div>
-				<div class="help">Use parts from the diagrams folder as pieces. Template image is only a placement reference for text.</div>
+				<div class="help">Diagram pieces are one per airbase size; light/dark artwork follows the template theme. The page URL keeps your chart in the hash so you can refresh or share the link.</div>
 
 			<h2>Template</h2>
 			<div class="grid-2">
@@ -221,7 +251,12 @@
 			<div class="field"><label for="docRef">Doc Ref</label><input id="docRef" value="AL-289 (FAA)" /></div>
 
 			<h2>Text Style</h2>
-			<div class="field"><label for="fontFamily">Font Family</label><input id="fontFamily" value="Arial, Helvetica, sans-serif" /></div>
+			<div class="field">
+				<label for="fontFamilySelect">Font (Google Fonts)</label>
+				<select id="fontFamilySelect" aria-describedby="fontFamilyHint"></select>
+				<input type="hidden" id="fontFamily" value="Arial, Helvetica, sans-serif" />
+				<p id="fontFamilyHint" class="help" style="margin-top:4px;margin-bottom:0;">Loads from the catalog on this server. Custom stacks from JSON stay available as an extra option.</p>
+			</div>
 			<div class="grid-2">
 				<div class="field"><label for="titleFontSize">Title Font Size</label><input id="titleFontSize" type="number" value="42" min="8" /></div>
 				<div class="field"><label for="docRefFontSize">Doc Ref Font Size</label><input id="docRefFontSize" type="number" value="18" min="8" /></div>
@@ -308,6 +343,7 @@
 			</div>
 
 			<h2>Layout JSON</h2>
+			<p class="help" style="margin:0 0 6px;">Chart state is also saved in <code>#chart=…</code> in the address bar (copy the full URL to share).</p>
 			<textarea id="layoutJson"></textarea>
 			<div class="btn-row">
 				<button id="syncJsonBtn" class="secondary">Sync to JSON</button>
@@ -332,12 +368,141 @@
 	</div>
 
 	<script>
-		const PART_SOURCES = [
-			{ id: "largeLight", label: "Large Airbase Light", src: "/assets/diagrams/large/LargeAirbaseLight.png" },
-			{ id: "largeDark", label: "Large Airbase Dark", src: "/assets/diagrams/large/LargeAirbaseDark.png" },
-			{ id: "mediumLight", label: "Medium Airbase Light", src: "/assets/diagrams/medium/MediumAirbaseLight.png" },
-			{ id: "mediumDark", label: "Medium Airbase Dark", src: "/assets/diagrams/medium/MediumAirbaseDark.png" }
+		const PART_CATALOG = [
+			{
+				id: "largeAirbase",
+				label: "Large Airbase",
+				srcLight: "/assets/diagrams/large/LargeAirbaseLight.png",
+				srcDark: "/assets/diagrams/large/LargeAirbaseDark.png"
+			},
+			{
+				id: "mediumAirbase",
+				label: "Medium Airbase",
+				srcLight: "/assets/diagrams/medium/MediumAirbaseLight.png",
+				srcDark: "/assets/diagrams/medium/MediumAirbaseDark.png"
+			}
 		];
+
+		const LEGACY_PART_ID_MAP = {
+			largeLight: "largeAirbase",
+			largeDark: "largeAirbase",
+			mediumLight: "mediumAirbase",
+			mediumDark: "mediumAirbase"
+		};
+
+		function normalizePartId(id) {
+			return LEGACY_PART_ID_MAP[id] || id;
+		}
+
+		const CHART_HASH_PREFIX = "#chart=";
+
+		function utf8ToBase64Url(str) {
+			const bytes = new TextEncoder().encode(str);
+			let bin = "";
+			for (let i = 0; i < bytes.length; i += 1) bin += String.fromCharCode(bytes[i]);
+			return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+		}
+
+		function base64UrlToUtf8(b64url) {
+			const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+			const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
+			const bin = atob(b64 + pad);
+			const bytes = new Uint8Array(bin.length);
+			for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+			return new TextDecoder().decode(bytes);
+		}
+
+		function encodeChartHash(stateObj) {
+			return CHART_HASH_PREFIX + utf8ToBase64Url(JSON.stringify(stateObj));
+		}
+
+		function tryDecodeChartHash(hash) {
+			if (!hash || !hash.startsWith(CHART_HASH_PREFIX)) return null;
+			try {
+				return JSON.parse(base64UrlToUtf8(hash.slice(CHART_HASH_PREFIX.length)));
+			} catch {
+				return null;
+			}
+		}
+
+		const CHART_GOOGLE_FONT_LINK_ID = "chart-maker-google-font";
+		const FONT_CATALOG_FALLBACK = [
+			"Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Source Sans 3",
+			"Noto Sans", "IBM Plex Sans", "DM Sans", "Barlow", "Work Sans", "Rubik", "Oswald",
+			"Raleway", "Merriweather", "Playfair Display", "PT Sans", "Ubuntu", "Nunito"
+		];
+
+		function googleFontCssHref(family) {
+			const q = encodeURIComponent(family).replace(/%20/g, "+");
+			return `https://fonts.googleapis.com/css2?family=${q}:wght@400;600;700&display=swap`;
+		}
+
+		function extractGoogleFamilyName(stack) {
+			const m = String(stack || "").trim().match(/^"([^"]+)"\s*,\s*sans-serif\s*$/i);
+			return m ? m[1] : null;
+		}
+
+		function stackForGoogleFamily(name) {
+			return `"${name}", sans-serif`;
+		}
+
+		async function loadGoogleFontForStack(stack) {
+			const face = extractGoogleFamilyName(stack);
+			if (!face) return;
+			let link = document.getElementById(CHART_GOOGLE_FONT_LINK_ID);
+			if (!link) {
+				link = document.createElement("link");
+				link.id = CHART_GOOGLE_FONT_LINK_ID;
+				link.rel = "stylesheet";
+				document.head.appendChild(link);
+			}
+			link.href = googleFontCssHref(face);
+			await new Promise((resolve) => {
+				link.onload = () => resolve();
+				link.onerror = () => resolve();
+			});
+			await document.fonts.ready;
+			try {
+				await document.fonts.load(`400 42px "${face}"`);
+				await document.fonts.load(`700 42px "${face}"`);
+			} catch (_) {}
+		}
+
+		function buildFontFamilySelect(families) {
+			const sel = els.fontFamilySelect;
+			if (!sel) return;
+			const list = Array.isArray(families) && families.length ? families : FONT_CATALOG_FALLBACK;
+			const frag = document.createDocumentFragment();
+			const system = document.createElement("option");
+			system.value = "Arial, Helvetica, sans-serif";
+			system.textContent = "Arial (system)";
+			frag.appendChild(system);
+			const sorted = [...new Set(list.map((x) => String(x).trim()).filter(Boolean))].sort((a, b) =>
+				a.localeCompare(b)
+			);
+			for (const name of sorted) {
+				const opt = document.createElement("option");
+				opt.value = stackForGoogleFamily(name);
+				opt.textContent = name;
+				frag.appendChild(opt);
+			}
+			sel.replaceChildren(frag);
+		}
+
+		function syncFontSelectToHidden() {
+			const v = state.meta.fontFamily || "Arial, Helvetica, sans-serif";
+			els.fontFamily.value = v;
+			const sel = els.fontFamilySelect;
+			if (!sel) return;
+			let match = Array.from(sel.options).find((o) => o.value === v);
+			if (!match) {
+				const opt = document.createElement("option");
+				opt.value = v;
+				opt.textContent = v.length > 48 ? `${v.slice(0, 46)}…` : v;
+				sel.insertBefore(opt, sel.children[1] || null);
+			}
+			sel.value = v;
+		}
 
 		const TEMPLATE_REF = {
 			w: 768,
@@ -391,6 +556,11 @@
 		let drag = null;
 		let nextPieceId = 1;
 		let nextTextItemId = 1;
+		let chartUrlSyncTimer = null;
+		let snapGuides = { v: false, h: false };
+		const SNAP_CENTER_X = TEMPLATE_REF.w / 2;
+		const SNAP_CENTER_Y = TEMPLATE_REF.h / 2;
+		const SNAP_PX = 12;
 
 		const imageCache = new Map();
 		const els = {
@@ -400,6 +570,7 @@
 			cityState: document.getElementById("cityState"),
 			docRef: document.getElementById("docRef"),
 			fontFamily: document.getElementById("fontFamily"),
+			fontFamilySelect: document.getElementById("fontFamilySelect"),
 			titleFontSize: document.getElementById("titleFontSize"),
 			docRefFontSize: document.getElementById("docRefFontSize"),
 			airportFontSize: document.getElementById("airportFontSize"),
@@ -462,7 +633,135 @@
 		}
 
 		async function preloadParts() {
-			await Promise.all(PART_SOURCES.map((p) => loadImage(p.src)));
+			const urls = new Set();
+			for (const p of PART_CATALOG) {
+				urls.add(p.srcLight);
+				urls.add(p.srcDark);
+			}
+			await Promise.all([...urls].map((src) => loadImage(src)));
+		}
+
+		function partSrcForTheme(part, theme) {
+			return theme === "dark" ? part.srcDark : part.srcLight;
+		}
+
+		function bumpIdCountersFromState() {
+			let maxP = 0;
+			let maxT = 0;
+			for (const p of state.pieces) {
+				const m = String(p.id).match(/^piece-(\d+)$/);
+				if (m) maxP = Math.max(maxP, Number(m[1]));
+			}
+			for (const t of state.textItems) {
+				const m = String(t.id).match(/^text-(\d+)$/);
+				if (m) maxT = Math.max(maxT, Number(m[1]));
+			}
+			nextPieceId = Math.max(nextPieceId, maxP + 1);
+			nextTextItemId = Math.max(nextTextItemId, maxT + 1);
+		}
+
+		function getSerializableChartState() {
+			return {
+				meta: state.meta,
+				pieces: state.pieces,
+				textItems: state.textItems
+			};
+		}
+
+		function scheduleChartUrlSync() {
+			clearTimeout(chartUrlSyncTimer);
+			chartUrlSyncTimer = setTimeout(() => {
+				try {
+					const nextHash = encodeChartHash(getSerializableChartState());
+					const nextUrl = `${location.pathname}${location.search}${nextHash}`;
+					if (`${location.pathname}${location.search}${location.hash}` !== nextUrl) {
+						history.replaceState(null, "", nextUrl);
+					}
+				} catch (_) {}
+			}, 450);
+		}
+
+		function ingestParsedLayout(parsed) {
+			if (!parsed.meta || !Array.isArray(parsed.pieces)) {
+				throw new Error("JSON must include { meta, pieces[] }.");
+			}
+			const normalizedPieces = parsed.pieces.map((p) => ({ ...p, partId: normalizePartId(p.partId) }));
+			state = {
+				meta: {
+					layoutSize: "default",
+					theme: parsed.meta.theme === "dark" ? "dark" : "light",
+					airportName: String(parsed.meta.airportName || "AIRPORT NAME"),
+					airportCode: String(parsed.meta.airportCode || "ABRV"),
+					cityState: String(parsed.meta.cityState || "CITY, STATE"),
+					docRef: String(parsed.meta.docRef || "AL-289 (FAA)"),
+					runwayTop: String(parsed.meta.runwayTop || "RWY 12"),
+					runwayBottom: String(parsed.meta.runwayBottom || "RWY 30"),
+					fontFamily: String(parsed.meta.fontFamily || "Arial, Helvetica, sans-serif"),
+					fontSizes: {
+						title: Number(parsed.meta.fontSizes?.title ?? 42),
+						docRef: Number(parsed.meta.fontSizes?.docRef ?? 18),
+						airport: Number(parsed.meta.fontSizes?.airport ?? 34),
+						city: Number(parsed.meta.fontSizes?.city ?? 24),
+						runway: Number(parsed.meta.fontSizes?.runway ?? 28)
+					},
+					anchors: {
+						topLeftTitle: {
+							x: Number(parsed.meta.anchors?.topLeftTitle?.x ?? TEMPLATE_REF.text.topLeftTitle.x),
+							y: Number(parsed.meta.anchors?.topLeftTitle?.y ?? TEMPLATE_REF.text.topLeftTitle.y)
+						},
+						topCenterRef: {
+							x: Number(parsed.meta.anchors?.topCenterRef?.x ?? TEMPLATE_REF.text.topCenterRef.x),
+							y: Number(parsed.meta.anchors?.topCenterRef?.y ?? TEMPLATE_REF.text.topCenterRef.y)
+						},
+						topRightAirport: {
+							x: Number(parsed.meta.anchors?.topRightAirport?.x ?? TEMPLATE_REF.text.topRightAirport.x),
+							y: Number(parsed.meta.anchors?.topRightAirport?.y ?? TEMPLATE_REF.text.topRightAirport.y)
+						},
+						topRightCity: {
+							x: Number(parsed.meta.anchors?.topRightCity?.x ?? TEMPLATE_REF.text.topRightCity.x),
+							y: Number(parsed.meta.anchors?.topRightCity?.y ?? TEMPLATE_REF.text.topRightCity.y)
+						},
+						bottomLeftTitle: {
+							x: Number(parsed.meta.anchors?.bottomLeftTitle?.x ?? TEMPLATE_REF.text.bottomLeftTitle.x),
+							y: Number(parsed.meta.anchors?.bottomLeftTitle?.y ?? TEMPLATE_REF.text.bottomLeftTitle.y)
+						},
+						bottomRightCity: {
+							x: Number(parsed.meta.anchors?.bottomRightCity?.x ?? TEMPLATE_REF.text.bottomRightCity.x),
+							y: Number(parsed.meta.anchors?.bottomRightCity?.y ?? TEMPLATE_REF.text.bottomRightCity.y)
+						},
+						bottomRightAirport: {
+							x: Number(parsed.meta.anchors?.bottomRightAirport?.x ?? TEMPLATE_REF.text.bottomRightAirport.x),
+							y: Number(parsed.meta.anchors?.bottomRightAirport?.y ?? TEMPLATE_REF.text.bottomRightAirport.y)
+						}
+					}
+				},
+				pieces: normalizedPieces
+					.filter((p) => getPartById(p.partId))
+					.map((p) => ({
+						id: String(p.id || `piece-${nextPieceId++}`),
+						partId: getPartById(p.partId).id,
+						x: Number(p.x || 100),
+						y: Number(p.y || 100),
+						scale: Number(p.scale || 0.2),
+						rotation: Number(p.rotation || 0),
+						alpha: Number(p.alpha || 1)
+					}))
+			};
+			state.textItems = (parsed.textItems || [])
+				.filter((t) => t && t.text && typeof t.x === "number" && typeof t.y === "number")
+				.map((t) => ({
+					id: String(t.id || `text-${nextTextItemId++}`),
+					text: String(t.text),
+					x: Number(t.x || 100),
+					y: Number(t.y || 100),
+					fontSize: Number(t.fontSize || 28),
+					align: t.align || "center",
+					lineHeight: Number(t.lineHeight || Math.round(Number(t.fontSize || 28) * 1.2)),
+					borderWidth: Number(t.borderWidth || 0),
+					borderColor: String(t.borderColor || "#000000"),
+					rotation: Number(t.rotation || 0)
+				}));
+			bumpIdCountersFromState();
 		}
 
 		function syncFormFromState() {
@@ -473,6 +772,7 @@
 			els.cityState.value = m.cityState;
 			els.docRef.value = m.docRef;
 			els.fontFamily.value = m.fontFamily || "Arial, Helvetica, sans-serif";
+			syncFontSelectToHidden();
 			els.titleFontSize.value = Number(m.fontSizes?.title ?? 42);
 			els.docRefFontSize.value = Number(m.fontSizes?.docRef ?? 18);
 			els.airportFontSize.value = Number(m.fontSizes?.airport ?? 34);
@@ -546,7 +846,8 @@
 		}
 
 		function getPartById(id) {
-			return PART_SOURCES.find((p) => p.id === id) || null;
+			const nid = normalizePartId(id);
+			return PART_CATALOG.find((p) => p.id === nid) || null;
 		}
 
 		function getTextLines(value) {
@@ -650,7 +951,7 @@
 			if (!def) return;
 			state.pieces.push({
 				id: `piece-${nextPieceId++}`,
-				partId,
+				partId: def.id,
 				x,
 				y,
 				scale: 0.2,
@@ -706,6 +1007,43 @@
 			ctx.restore();
 		}
 
+		function snapDragPosition(x, y) {
+			let nx = x;
+			let ny = y;
+			let gv = false;
+			let gh = false;
+			if (Math.abs(nx - SNAP_CENTER_X) <= SNAP_PX) {
+				nx = SNAP_CENTER_X;
+				gv = true;
+			}
+			if (Math.abs(ny - SNAP_CENTER_Y) <= SNAP_PX) {
+				ny = SNAP_CENTER_Y;
+				gh = true;
+			}
+			return { x: nx, y: ny, gv, gh };
+		}
+
+		function drawSnapGuides() {
+			if (!snapGuides.v && !snapGuides.h) return;
+			ctx.save();
+			ctx.strokeStyle = "rgba(220, 50, 50, 0.92)";
+			ctx.lineWidth = 1;
+			ctx.setLineDash([6, 5]);
+			if (snapGuides.v) {
+				ctx.beginPath();
+				ctx.moveTo(SNAP_CENTER_X + 0.5, 0);
+				ctx.lineTo(SNAP_CENTER_X + 0.5, els.canvas.height);
+				ctx.stroke();
+			}
+			if (snapGuides.h) {
+				ctx.beginPath();
+				ctx.moveTo(0, SNAP_CENTER_Y + 0.5);
+				ctx.lineTo(els.canvas.width, SNAP_CENTER_Y + 0.5);
+				ctx.stroke();
+			}
+			ctx.restore();
+		}
+
 		function render() {
 			syncStateFromForm();
 			sizeCanvas();
@@ -715,7 +1053,8 @@
 			for (const piece of state.pieces) {
 				const part = getPartById(piece.partId);
 				if (!part) continue;
-				const img = imageCache.get(part.src);
+				const src = partSrcForTheme(part, state.meta.theme);
+				const img = imageCache.get(src);
 				if (!img) continue;
 				const w = img.width * piece.scale;
 				const h = img.height * piece.scale;
@@ -735,17 +1074,22 @@
 			for (const item of state.textItems) {
 				drawTextItem(item);
 			}
+
+			drawSnapGuides();
+			scheduleChartUrlSync();
 		}
 
 		function buildPartsPanel() {
 			els.partsGrid.innerHTML = "";
-			for (const part of PART_SOURCES) {
+			const theme = state.meta.theme === "dark" ? "dark" : "light";
+			for (const part of PART_CATALOG) {
+				const thumbSrc = partSrcForTheme(part, theme);
 				const card = document.createElement("div");
 				card.className = "part-card";
 				card.draggable = true;
 				card.dataset.partId = part.id;
 				card.innerHTML = `
-					<img class="part-thumb" src="${part.src}" alt="${part.label}" />
+					<img class="part-thumb" src="${thumbSrc}" alt="${part.label}" />
 					<div class="part-name">${part.label}</div>
 				`;
 				card.addEventListener("click", () => addPiece(part.id));
@@ -768,7 +1112,8 @@
 			for (let i = state.pieces.length - 1; i >= 0; i -= 1) {
 				const piece = state.pieces[i];
 				const part = getPartById(piece.partId);
-				const img = part ? imageCache.get(part.src) : null;
+				const src = part ? partSrcForTheme(part, state.meta.theme) : null;
+				const img = src ? imageCache.get(src) : null;
 				if (!img) continue;
 				const w = img.width * piece.scale;
 				const h = img.height * piece.scale;
@@ -859,85 +1204,10 @@
 		function applyJson() {
 			try {
 				const parsed = JSON.parse(els.layoutJson.value);
-				if (!parsed.meta || !Array.isArray(parsed.pieces)) {
-					throw new Error("JSON must include { meta, pieces[] }.");
-				}
-				state = {
-					meta: {
-						layoutSize: "default",
-						theme: parsed.meta.theme === "dark" ? "dark" : "light",
-						airportName: String(parsed.meta.airportName || "AIRPORT NAME"),
-						airportCode: String(parsed.meta.airportCode || "ABRV"),
-						cityState: String(parsed.meta.cityState || "CITY, STATE"),
-						docRef: String(parsed.meta.docRef || "AL-289 (FAA)"),
-						runwayTop: String(parsed.meta.runwayTop || "RWY 12"),
-						runwayBottom: String(parsed.meta.runwayBottom || "RWY 30"),
-						fontFamily: String(parsed.meta.fontFamily || "Arial, Helvetica, sans-serif"),
-						fontSizes: {
-							title: Number(parsed.meta.fontSizes?.title ?? 42),
-							docRef: Number(parsed.meta.fontSizes?.docRef ?? 18),
-							airport: Number(parsed.meta.fontSizes?.airport ?? 34),
-							city: Number(parsed.meta.fontSizes?.city ?? 24),
-							runway: Number(parsed.meta.fontSizes?.runway ?? 28)
-						},
-						anchors: {
-							topLeftTitle: {
-								x: Number(parsed.meta.anchors?.topLeftTitle?.x ?? TEMPLATE_REF.text.topLeftTitle.x),
-								y: Number(parsed.meta.anchors?.topLeftTitle?.y ?? TEMPLATE_REF.text.topLeftTitle.y)
-							},
-							topCenterRef: {
-								x: Number(parsed.meta.anchors?.topCenterRef?.x ?? TEMPLATE_REF.text.topCenterRef.x),
-								y: Number(parsed.meta.anchors?.topCenterRef?.y ?? TEMPLATE_REF.text.topCenterRef.y)
-							},
-							topRightAirport: {
-								x: Number(parsed.meta.anchors?.topRightAirport?.x ?? TEMPLATE_REF.text.topRightAirport.x),
-								y: Number(parsed.meta.anchors?.topRightAirport?.y ?? TEMPLATE_REF.text.topRightAirport.y)
-							},
-							topRightCity: {
-								x: Number(parsed.meta.anchors?.topRightCity?.x ?? TEMPLATE_REF.text.topRightCity.x),
-								y: Number(parsed.meta.anchors?.topRightCity?.y ?? TEMPLATE_REF.text.topRightCity.y)
-							},
-							bottomLeftTitle: {
-								x: Number(parsed.meta.anchors?.bottomLeftTitle?.x ?? TEMPLATE_REF.text.bottomLeftTitle.x),
-								y: Number(parsed.meta.anchors?.bottomLeftTitle?.y ?? TEMPLATE_REF.text.bottomLeftTitle.y)
-							},
-							bottomRightCity: {
-								x: Number(parsed.meta.anchors?.bottomRightCity?.x ?? TEMPLATE_REF.text.bottomRightCity.x),
-								y: Number(parsed.meta.anchors?.bottomRightCity?.y ?? TEMPLATE_REF.text.bottomRightCity.y)
-							},
-							bottomRightAirport: {
-								x: Number(parsed.meta.anchors?.bottomRightAirport?.x ?? TEMPLATE_REF.text.bottomRightAirport.x),
-								y: Number(parsed.meta.anchors?.bottomRightAirport?.y ?? TEMPLATE_REF.text.bottomRightAirport.y)
-							}
-						}
-					},
-					pieces: parsed.pieces
-						.filter((p) => getPartById(p.partId))
-						.map((p) => ({
-							id: String(p.id || `piece-${nextPieceId++}`),
-							partId: p.partId,
-							x: Number(p.x || 100),
-							y: Number(p.y || 100),
-							scale: Number(p.scale || 0.2),
-							rotation: Number(p.rotation || 0),
-							alpha: Number(p.alpha || 1)
-						}))
-				};
-				state.textItems = (parsed.textItems || [])
-					.filter(t => t && t.text && typeof t.x === 'number' && typeof t.y === 'number')
-					.map((t) => ({
-						id: String(t.id || `text-${nextTextItemId++}`),
-						text: String(t.text),
-						x: Number(t.x || 100),
-						y: Number(t.y || 100),
-						fontSize: Number(t.fontSize || 28),
-						align: t.align || "center",
-						lineHeight: Number(t.lineHeight || Math.round(Number(t.fontSize || 28) * 1.2)),
-						borderWidth: Number(t.borderWidth || 0),
-						borderColor: String(t.borderColor || "#000000"),
-						rotation: Number(t.rotation || 0)
-					}));
+				ingestParsedLayout(parsed);
 				syncFormFromState();
+				void loadGoogleFontForStack(state.meta.fontFamily);
+				buildPartsPanel();
 				syncSelectedControls();
 				render();
 				syncJsonEditor();
@@ -950,7 +1220,7 @@
 		function bindEvents() {
 			for (const el of [
 				els.theme, els.airportName, els.airportCode, els.cityState, els.docRef,
-				els.fontFamily, els.titleFontSize, els.docRefFontSize, els.airportFontSize, els.cityFontSize, els.runwayFontSize,
+				els.titleFontSize, els.docRefFontSize, els.airportFontSize, els.cityFontSize, els.runwayFontSize,
 				els.topLeftTitleX, els.topLeftTitleY,
 				els.topCenterRefX, els.topCenterRefY,
 				els.topRightAirportX, els.topRightAirportY,
@@ -960,10 +1230,19 @@
 				els.bottomRightAirportX, els.bottomRightAirportY
 			]) {
 				el.addEventListener("input", () => {
+					if (el === els.theme) buildPartsPanel();
 					render();
 					syncJsonEditor();
 				});
 			}
+
+			els.fontFamilySelect.addEventListener("change", async () => {
+				els.fontFamily.value = els.fontFamilySelect.value;
+				state.meta.fontFamily = els.fontFamily.value;
+				await loadGoogleFontForStack(els.fontFamily.value);
+				render();
+				syncJsonEditor();
+			});
 
 			els.canvas.addEventListener("mousedown", (evt) => {
 				const pt = canvasPoint(evt);
@@ -994,12 +1273,16 @@
 				const piece = state.pieces.find((p) => p.id === drag.id);
 				const item = state.textItems.find((t) => t.id === drag.id);
 				if (!piece && !item) return;
+				const rawX = pt.x - drag.offX;
+				const rawY = pt.y - drag.offY;
+				const snapped = snapDragPosition(rawX, rawY);
+				snapGuides = { v: snapped.gv, h: snapped.gh };
 				if (piece) {
-					piece.x = pt.x - drag.offX;
-					piece.y = pt.y - drag.offY;
+					piece.x = snapped.x;
+					piece.y = snapped.y;
 				} else {
-					item.x = pt.x - drag.offX;
-					item.y = pt.y - drag.offY;
+					item.x = snapped.x;
+					item.y = snapped.y;
 				}
 				syncSelectedControls();
 				render();
@@ -1008,6 +1291,8 @@
 			window.addEventListener("mouseup", () => {
 				if (drag) syncJsonEditor();
 				drag = null;
+				snapGuides = { v: false, h: false };
+				render();
 			});
 
 			els.canvas.addEventListener("dragover", (e) => e.preventDefault());
@@ -1107,7 +1392,7 @@
 			});
 			document.keydownListener = (e) => {
 				const tag = e.target?.tagName;
-				if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) {
+				if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) {
 					return;
 				}
 				if (e.key === "Delete") {
@@ -1157,6 +1442,7 @@
 				state.meta.fontFamily = "Arial, Helvetica, sans-serif";
 				state.meta.fontSizes = { title: 28, docRef: 15, airport: 24, city: 24, runway: 28 };
 				syncFormFromState();
+				void loadGoogleFontForStack(state.meta.fontFamily);
 				render();
 				syncJsonEditor();
 				setStatus("Template text reset.", "ok");
@@ -1166,15 +1452,43 @@
 		async function init() {
 			try {
 				await preloadParts();
-			buildPartsPanel();
-			document.querySelectorAll('[data-text-type]').forEach(card => {
-				card.addEventListener('dragstart', (e) => {
-					e.dataTransfer.setData('text/text-type', card.dataset.textType);
+				let families = FONT_CATALOG_FALLBACK;
+				try {
+					const res = await fetch("/api/chart-maker/google-fonts");
+					const data = await res.json();
+					if (Array.isArray(data.families) && data.families.length) {
+						families = data.families;
+					}
+				} catch (_) {}
+				buildFontFamilySelect(families);
+
+				const fromHash = tryDecodeChartHash(location.hash);
+				if (fromHash) {
+					try {
+						ingestParsedLayout(fromHash);
+						setStatus("Loaded chart from URL.", "ok");
+					} catch {
+						state = structuredClone(defaultState);
+						nextPieceId = 1;
+						nextTextItemId = 1;
+						setStatus("Chart link was invalid; started blank.", "warn");
+					}
+				}
+
+				buildPartsPanel();
+				document.querySelectorAll('[data-text-type]').forEach(card => {
+					card.addEventListener('dragstart', (e) => {
+						e.dataTransfer.setData('text/text-type', card.dataset.textType);
+					});
 				});
-			});
-			syncFormFromState();
+				syncFormFromState();
+				await loadGoogleFontForStack(state.meta.fontFamily);
 				bindEvents();
-				setStatus("Editor ready. Drag parts onto the canvas.", "ok");
+				render();
+				syncJsonEditor();
+				if (!fromHash) {
+					setStatus("Editor ready. Drag parts onto the canvas.", "ok");
+				}
 			} catch (error) {
 				setStatus(error.message, "error");
 			}

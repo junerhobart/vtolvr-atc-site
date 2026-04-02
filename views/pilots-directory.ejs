@@ -424,7 +424,7 @@
 
         async function fetchPilots() {
             try {
-                const response = await fetch('/api/users', { credentials: 'same-origin' });
+                const response = await fetch('/api/pilots', { credentials: 'same-origin' });
                 if (!response.ok) {
                     throw new Error('Unable to load pilots data right now.');
                 }

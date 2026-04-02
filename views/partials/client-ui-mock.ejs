@@ -1,0 +1,258 @@
+<%# Non-production: append ?mock (or &mock) to the URL, then reload or navigate. Turn off with ?mock=0. Mock answers same-origin /api/* in the browser only. %>
+<script>
+(function () {
+    var KEY = 'arn:ui-mock';
+
+    function syncFromUrl() {
+        var params = new URLSearchParams(window.location.search);
+        if (!params.has('mock')) return;
+        var v = params.get('mock');
+        if (v === '0' || v === 'false') {
+            try { sessionStorage.removeItem(KEY); } catch (e) {}
+            return;
+        }
+        try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+    }
+
+    function isMockOn() {
+        try {
+            return sessionStorage.getItem(KEY) === '1';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    syncFromUrl();
+
+    function sameOriginApiPath(url) {
+        try {
+            var u = new URL(url, window.location.origin);
+            if (u.origin !== window.location.origin) return null;
+            return u.pathname + (u.search || '');
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function jsonResponse(obj, status) {
+        return new Response(JSON.stringify(obj), {
+            status: status || 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    function mockEvents() {
+        var start = new Date(Date.now() + 86400000);
+        var end = new Date(start.getTime() + 7200000);
+        var activeStart = new Date(Date.now() - 1800000);
+        var activeEnd = new Date(Date.now() + 5400000);
+        return {
+            data: [
+                {
+                    name: 'Mock Fly-In',
+                    airport: 'KSEA',
+                    timezone: 'America/Los_Angeles',
+                    pilots: 8,
+                    duration: 2,
+                    status: 'upcoming',
+                    startTime: start.toISOString(),
+                    endTime: end.toISOString(),
+                    description: 'Mock event.',
+                    map: 'Islands',
+                    hostName: 'MockHost',
+                    attendees: [{ id: '1', username: 'DevPilot' }]
+                },
+                {
+                    name: 'Mock Training',
+                    airport: 'PAJN',
+                    timezone: 'America/Juneau',
+                    pilots: 4,
+                    duration: 1.5,
+                    status: 'active',
+                    startTime: activeStart.toISOString(),
+                    endTime: activeEnd.toISOString(),
+                    description: 'Mock training.',
+                    map: 'Akutan',
+                    hostName: 'Trainer',
+                    attendees: []
+                }
+            ]
+        };
+    }
+
+    function mockApplications() {
+        var now = new Date().toISOString();
+        return {
+            data: [
+                {
+                    _id: 'mock-app-atc-1',
+                    name: 'Alex Controller',
+                    status: 'pending',
+                    date: now,
+                    type: 'atc',
+                    callsign: 'MOCK',
+                    discordHandle: 'alex#0000',
+                    discordId: '900000000000000001',
+                    experience: 'Mock.',
+                    whyJoin: 'Mock.'
+                },
+                {
+                    _id: 'mock-app-enf-1',
+                    name: 'Riley Guard',
+                    status: 'pending',
+                    date: now,
+                    type: 'enforcer',
+                    callsign: '\u2014',
+                    discordHandle: 'riley_vtol',
+                    discordId: '900000000000000002',
+                    experience: 'Mock.',
+                    whyJoin: 'Mock.'
+                }
+            ]
+        };
+    }
+
+    function mockAdminUsers() {
+        return {
+            data: [
+                {
+                    _id: 'mock-adm-1',
+                    Username: 'Mock Admin',
+                    Email: 'mock.admin@example.com',
+                    Flighthours: 200,
+                    Role: ['admin', 'user'],
+                    Callsign: 'ADM01',
+                    DiscordID: '800000000000000001',
+                    avatar: '/assets/logo.png',
+                    Hash: 'mock',
+                    Salt: 'mock',
+                    code: 'MOCKA1'
+                },
+                {
+                    _id: 'mock-adm-2',
+                    Username: 'Mock Pilot',
+                    Email: 'mock.pilot@example.com',
+                    Flighthours: 42,
+                    Role: ['user'],
+                    Callsign: 'PLT01',
+                    DiscordID: '800000000000000002',
+                    avatar: '/assets/logo.png',
+                    Hash: 'mock',
+                    Salt: 'mock',
+                    code: 'MOCKP1'
+                }
+            ]
+        };
+    }
+
+    function mockDiscord() {
+        return {
+            data: [
+                { username: 'mock_alpha', discriminator: '0', id: '700000000000000001', avatar: null, roles: ['Pilot', 'VTOL', '@everyone'] },
+                { username: 'mock_bravo', discriminator: '0', id: '700000000000000002', avatar: null, roles: ['ATC', '@everyone'] }
+            ]
+        };
+    }
+
+    function mockPilots() {
+        return {
+            data: [
+                { id: 'mock-1', Username: 'Mock Alpha', Callsign: 'MOCK1', Flighthours: 142, Role: ['user'], avatar: '/assets/logo.png' },
+                { id: 'mock-2', Username: 'Mock Tower', Callsign: 'TWR', Flighthours: 900, Role: ['atc', 'user'], avatar: '/assets/logo.png' },
+                { id: 'mock-3', Username: 'Mock Sierra', Callsign: 'ENF01', Flighthours: 55, Role: ['enforcer', 'user'], avatar: '/assets/logo.png' }
+            ]
+        };
+    }
+
+    function mockSessions() {
+        return [
+            { LobbyName: 'Mock \u2014 Public lobby', LobbyId: 'mock-pub', LobbyOwner: 'DevHost', IsPrivate: false, IsModded: false, LobbyPlayerCount: 6, LobbyMap: 'Islands' },
+            { LobbyName: 'Mock \u2014 Private training', LobbyId: 'mock-prv', LobbyOwner: 'Coach', IsPrivate: true, IsModded: false, LobbyPlayerCount: 2, LobbyMap: 'Akutan' },
+            { LobbyName: 'Mock \u2014 Modded', LobbyId: 'mock-mod', LobbyOwner: 'Modder', IsPrivate: false, IsModded: true, LobbyPlayerCount: 11, LobbyMap: 'Multiverse' }
+        ];
+    }
+
+    function mockMetar(sessionId) {
+        return {
+            data: {
+                sessionId: sessionId || 'mock',
+                stationId: 'KSEA',
+                timestamp: new Date().toISOString(),
+                windDirection: 280,
+                windSpeed: 12,
+                windGust: 18,
+                visibility: 10,
+                isRaining: false,
+                weatherNotes: 'SKC'
+            }
+        };
+    }
+
+    function resolveMock(fullPath, method) {
+        method = (method || 'GET').toUpperCase();
+        var path = fullPath.split('?')[0];
+
+        if (path === '/api/sessions' && method === 'GET') return jsonResponse(mockSessions());
+        if (path === '/api/users' && method === 'GET') return jsonResponse(mockPilots());
+        if (path === '/api/pilots' && method === 'GET') return jsonResponse(mockPilots());
+        if (path === '/api/events' && method === 'GET') return jsonResponse(mockEvents());
+        if (path === '/api/applications' && method === 'GET') return jsonResponse(mockApplications());
+        if (path.indexOf('/api/applications/') === 0 && path.endsWith('/approve') && method === 'POST') {
+            return jsonResponse({ message: 'Application approved successfully' });
+        }
+        if (path.indexOf('/api/applications/') === 0 && path.endsWith('/reject') && method === 'POST') {
+            return jsonResponse({ message: 'Application rejected successfully' });
+        }
+        if (path === '/api/applications/submit' && method === 'POST') {
+            return jsonResponse({ message: 'Application submitted successfully' });
+        }
+        if (path === '/api/events/create' && method === 'POST') {
+            return jsonResponse({ message: 'Event created successfully' });
+        }
+        if (path === '/api/metar/submit' && method === 'POST') {
+            return jsonResponse({ message: 'METAR submitted successfully' });
+        }
+        if (path === '/api/metar/clear' && method === 'POST') {
+            return jsonResponse({ message: 'METAR data cleared successfully' });
+        }
+        if (path.indexOf('/api/metar/') === 0 && method === 'GET') {
+            var sid = path.replace(/^\/api\/metar\//, '');
+            return jsonResponse(mockMetar(decodeURIComponent(sid)));
+        }
+        if (path === '/api/admin/users' && method === 'GET') return jsonResponse(mockAdminUsers());
+        if (path === '/api/users/discord' && method === 'GET') return jsonResponse(mockDiscord());
+        if (path.indexOf('/api/admin/users/') === 0 && path.endsWith('/updateRole') && method === 'POST') {
+            return jsonResponse({ message: 'User role updated successfully' });
+        }
+        if (path.indexOf('/api/admin/users/') === 0 && path.endsWith('/updateCallsign') && method === 'POST') {
+            return jsonResponse({ message: 'User callsign updated successfully' });
+        }
+        if (path.indexOf('/api/admin/users/') === 0 && path.endsWith('/removeRole') && method === 'POST') {
+            return jsonResponse({ message: 'User role removed successfully' });
+        }
+        if (path.indexOf('/api/admin/users/') === 0 && path.endsWith('/updateFlighthours') && method === 'POST') {
+            return jsonResponse({ message: 'User flighthours updated successfully' });
+        }
+        if (path === '/api/profile/update' && method === 'POST') {
+            return jsonResponse({ message: 'Profile updated successfully' });
+        }
+        if (path === '/api/chart-maker/google-fonts' && method === 'GET') {
+            return jsonResponse({ families: ['Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins'] });
+        }
+        return null;
+    }
+
+    var _fetch = window.fetch;
+    window.fetch = function (input, init) {
+        if (!isMockOn()) return _fetch.call(this, input, init);
+        var urlStr = typeof input === 'string' ? input : input && input.url;
+        if (!urlStr) return _fetch.call(this, input, init);
+        var full = sameOriginApiPath(urlStr);
+        if (!full) return _fetch.call(this, input, init);
+        var method = (init && init.method) || (typeof input !== 'string' && input && input.method) || 'GET';
+        var mockRes = resolveMock(full, String(method).toUpperCase());
+        if (mockRes) return Promise.resolve(mockRes);
+        return _fetch.call(this, input, init);
+    };
+})();
+</script>

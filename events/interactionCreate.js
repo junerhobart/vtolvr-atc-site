@@ -8,8 +8,6 @@ module.exports = {
 	async execute(interaction, client) {
 const command = client.commands.get(interaction.commandName);
 
-// check if is a button intertion for going to or declining an event
-
 if (interaction.isButton()) {
   const [action, eventId] = interaction.customId.split("_");
   if (action === "join") {
@@ -22,7 +20,6 @@ if (interaction.isButton()) {
 	}
 	event.attendees.push({ id: interaction.user.id, username: interaction.user.tag });
 	await event.save();
-	//update the event message to show the new attendee count
 	const channel = await client.channels.fetch("1462570082793160867");
 	const message = await channel.messages.fetch(event.messageId);
 	const Event = EmbedBuilder.from(message.embeds[0])
@@ -46,7 +43,6 @@ if (interaction.isButton()) {
 	}
 	event.attendees = event.attendees.filter(attendee => attendee.id !== interaction.user.id);
 	await event.save();
-	//update the event message to show the new attendee count and remove the user from the attendee list to the already existing attendees field
 	const channel = await client.channels.fetch("1462570082793160867");
 	const message = await channel.messages.fetch(event.messageId);
 	const Event = EmbedBuilder.from(message.embeds[0])

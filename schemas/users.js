@@ -49,7 +49,6 @@ const schema = new mongoose.Schema({
     uppercase: true,
     default: "None"
     },
-    // For account linking generats a unique code that the user can use to link their account to the system
     code: {
     type: String,
     default: function() {

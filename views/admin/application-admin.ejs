@@ -194,6 +194,13 @@
             font-size: 0.88rem;
         }
 
+        .list-status {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #ffb0b0;
+            padding: 20px 16px;
+        }
+
         /* Modal */
         .modal {
             display: none;
@@ -297,8 +304,25 @@
             <p class="page-subtitle">Manage ATC and Enforcer applications for the Aviation Realism Network.</p>
         </div>
 
-        <div style="margin-bottom: 16px; max-width: 1100px; width: 100%; margin-left: auto; margin-right: auto; text-align: center;">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search by name, callsign, or Discord handle…" onkeyup="filterApplications()" style="max-width: 420px;">
+        <div style="max-width: 1100px; width: 100%; margin: 0 auto 20px;">
+            <div class="search-toolbar-row" style="margin-bottom: 0;">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search by name, callsign, or Discord handle…" onkeyup="filterApplications()">
+                </div>
+                <section class="filters filters--in-search" aria-label="Application status filters">
+                    <div class="filter-toolbar">
+                        <%- include('../partials/filter-popover', {
+                            triggerLabel: 'Status',
+                            panelId: 'appFilterStatusPanel',
+                            items: [
+                                { id: 'appFilterPending', label: 'Pending', checked: true },
+                                { id: 'appFilterApproved', label: 'Approved', checked: true },
+                                { id: 'appFilterRejected', label: 'Rejected', checked: true }
+                            ]
+                        }) %>
+                    </div>
+                </section>
+            </div>
         </div>
 
         <div class="content-grid">
@@ -336,15 +360,23 @@
         let allApplications = [];
         let filteredApplications = [];
 
+        function applicationStatusFilterPass(app) {
+            const s = (app.status || '').toLowerCase();
+            if (s === 'pending') return !!(document.getElementById('appFilterPending') && document.getElementById('appFilterPending').checked);
+            if (s === 'approved') return !!(document.getElementById('appFilterApproved') && document.getElementById('appFilterApproved').checked);
+            if (s === 'rejected') return !!(document.getElementById('appFilterRejected') && document.getElementById('appFilterRejected').checked);
+            return true;
+        }
+
         function filterApplications() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            filteredApplications = searchTerm === ''
-                ? allApplications
-                : allApplications.filter(app =>
+            filteredApplications = allApplications.filter(app => {
+                const searchOk = searchTerm === '' ||
                     app.name.toLowerCase().includes(searchTerm) ||
                     app.callsign.toLowerCase().includes(searchTerm) ||
-                    app.discordHandle.toLowerCase().includes(searchTerm)
-                );
+                    app.discordHandle.toLowerCase().includes(searchTerm);
+                return searchOk && applicationStatusFilterPass(app);
+            });
 
             renderApplications(filteredApplications.filter(a => a.type === 'atc'), 'atcList', 'ATC');
             renderApplications(filteredApplications.filter(a => a.type === 'enforcer'), 'enforcerList', 'Enforcer');
@@ -448,16 +480,23 @@
             if (event.target === modal) modal.classList.remove('show');
         };
 
+        var appFilterStatusPanel = document.getElementById('appFilterStatusPanel');
+        if (appFilterStatusPanel) {
+            appFilterStatusPanel.addEventListener('change', function (ev) {
+                if (ev.target && ev.target.matches && ev.target.matches('input[type="checkbox"]')) filterApplications();
+            });
+        }
+
         fetch('/api/applications')
             .then(r => { if (!r.ok) throw new Error('Failed to load applications.'); return r.json(); })
             .then(payload => {
                 allApplications = payload.data || payload || [];
-                filteredApplications = allApplications;
-                renderApplications(allApplications.filter(a => a.type === 'atc'), 'atcList', 'ATC');
-                renderApplications(allApplications.filter(a => a.type === 'enforcer'), 'enforcerList', 'Enforcer');
+                filterApplications();
             })
-            .catch(error => {
-                document.getElementById('atcList').innerHTML = '<div class="empty-state">Failed to load: ' + error.message + '</div>';
+            .catch(() => {
+                const msg = '<p class="list-status">Unable to load applications right now.</p>';
+                document.getElementById('atcList').innerHTML = msg;
+                document.getElementById('enforcerList').innerHTML = msg;
             });
     </script>
 </body>

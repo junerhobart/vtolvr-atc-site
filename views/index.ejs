@@ -180,6 +180,14 @@
             margin-bottom: 8px;
         }
 
+        .sessions-preview > .list-status {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #ffb0b0;
+            padding: 16px;
+        }
+
         .session-card {
             padding: 22px;
             border-radius: 8px;
@@ -199,6 +207,21 @@
 
         .session-card p {
             margin-bottom: 8px;
+            color: var(--muted);
+        }
+
+        .session-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: var(--muted);
+        }
+
+        .session-meta .material-symbols-rounded {
+            flex-shrink: 0;
+            font-size: 1.125rem;
+            opacity: 0.9;
             color: var(--muted);
         }
 
@@ -411,19 +434,20 @@
                             <div class="session-card">
                                 <h4>${session.name}</h4>
                                 <p>Hosted by: ${session.hostName}</p>
-                                <p>📍 Location: ${session.map}</p>
-                                <p>🛫 Airport: ${session.airport}</p>
-                                <p>👤 Expected Pilots: ${session.pilots}</p>
-                                <p>🕐 Start: ${startTime}</p>
-                                <p>⏱️ Duration: ${formattedDuration}</p>
+                                <p class="session-meta"><span class="material-symbols-rounded" aria-hidden="true">location_on</span><span>Location: ${session.map}</span></p>
+                                <p class="session-meta"><span class="material-symbols-rounded" aria-hidden="true">flight_takeoff</span><span>Airport: ${session.airport}</span></p>
+                                <p class="session-meta"><span class="material-symbols-rounded" aria-hidden="true">person</span><span>Expected Pilots: ${session.pilots}</span></p>
+                                <p class="session-meta"><span class="material-symbols-rounded" aria-hidden="true">schedule</span><span>Start: ${startTime}</span></p>
+                                <p class="session-meta"><span class="material-symbols-rounded" aria-hidden="true">timer</span><span>Duration: ${formattedDuration}</span></p>
                                 <span class="session-status ${statusClass}">${(session.status || 'upcoming').toUpperCase()}</span>
                             </div>
                         `;
                         sessionsList.innerHTML += sessionHTML;
                     });
                 })
-                .catch(error => {
-                    document.getElementById('sessionsList').innerHTML = '<p>' + error.message + '</p>';
+                .catch(() => {
+                    document.getElementById('sessionsList').innerHTML =
+                        '<p class="list-status">Unable to load events right now.</p>';
                 });
         </script>
         </main>

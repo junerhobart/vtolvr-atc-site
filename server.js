@@ -1,8 +1,11 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const Application = require('./schemas/application');
 const Users = require('./schemas/users');
@@ -11,9 +14,6 @@ const authHandler = require('./functions/AuthHandler');
 const discord = require('discord.js');
 const { GatewayIntentBits, EmbedBuilder, Collection, ActionRowBuilder, ButtonStyle } = require('discord.js');
 
-
-
-//Discord bot setup
 const botIntents = [
   GatewayIntentBits.Guilds,
   GatewayIntentBits.GuildMembers,
@@ -70,10 +70,21 @@ bot.handleEvents(eventFiles, path.join(__dirname, './events'));
 
 
 const app = express();
+if (isProduction) {
+  app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS) || 1);
+}
 const PORT = process.env.PORT || 3000;
 const passwordResetRequests = new Map();
 
-// SendGrid Configuration (Primary Email Provider)
+const IFR_FLIGHT_PLAN_CHANNEL_ID = '1471159799227088978';
+
+function ifrText(v) {
+  if (v === undefined || v === null) return '—';
+  const s = String(v).trim();
+  if (!s || s === 'undefined' || s === 'null') return '—';
+  return s;
+}
+
 const sendgridApiKey = process.env.SENDGRID_API_KEY;
 const sendgridConfigured = Boolean(sendgridApiKey && sendgridApiKey.trim());
 
@@ -105,6 +116,46 @@ function generateResetCode() {
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
+}
+
+const LOGOUT_RETURN_QUERY_SAFE = /^[\w&=.%-]+$/;
+
+function postLogoutRedirect(req) {
+  const fromQuery = req.query.return;
+  let pathname = null;
+  let search = '';
+  if (typeof fromQuery === 'string' && fromQuery.startsWith('/') && !fromQuery.startsWith('//')) {
+    const qMark = fromQuery.indexOf('?');
+    if (qMark === -1) {
+      pathname = fromQuery.split('#')[0];
+    } else {
+      pathname = fromQuery.slice(0, qMark).split('#')[0];
+      const rawSearch = fromQuery.slice(qMark).split('#')[0];
+      if (rawSearch.length > 1 && LOGOUT_RETURN_QUERY_SAFE.test(rawSearch.slice(1))) {
+        search = rawSearch;
+      }
+    }
+  }
+  if (!pathname) {
+    const ref = req.get('referer');
+    if (ref) {
+      try {
+        const u = new URL(ref);
+        if (u.host === req.get('host')) {
+          pathname = u.pathname || null;
+          const s = u.search || '';
+          if (s.length > 1 && LOGOUT_RETURN_QUERY_SAFE.test(s.slice(1))) {
+            search = s;
+          }
+        }
+      } catch (_) {}
+    }
+  }
+  if (!pathname || pathname === '/logout') return '/';
+  if (pathname.startsWith('/admin')) return '/';
+  if (pathname === '/applications/admin' || pathname.startsWith('/applications/admin/')) return '/';
+  if (pathname === '/atc/metar' || pathname.startsWith('/atc/metar/')) return '/';
+  return pathname + search;
 }
 
 function sendPasswordResetEmail(email, code) {
@@ -180,35 +231,66 @@ async function sendDM(userId, message) {
   await user.send(message);
 }
 
-// Set EJS as the view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use("/assets", express.static(path.join(__dirname, 'assets')));
 app.use("/scripts", express.static(path.join(__dirname, 'scripts')));
 app.use("/styles", express.static(path.join(__dirname, 'css')));
-// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Parse JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
 const session = require('express-session');
+
+if (isProduction && !process.env.SESSION_SECRET?.trim()) {
+  console.error('FATAL: SESSION_SECRET must be set in production');
+  process.exit(1);
+}
+
+const sessionSecret =
+  process.env.SESSION_SECRET?.trim() || 'dev-only-session-secret-do-not-use-in-production';
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: sessionSecret,
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, httpOnly: true, maxAge: 1800000 } // 30 minutes
+  saveUninitialized: false,
+  cookie: {
+    secure: isProduction,
+    httpOnly: true,
+    maxAge: 1800000,
+    sameSite: 'lax'
+  }
 }));
 
-// Make session user available in all templates automatically
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.hasAtcPlusAccess = authHandler.hasAtcPlusRole(req.session.user);
+  res.locals.isProduction = isProduction;
+  const url = req.originalUrl.split('#')[0];
+  res.locals.logoutReturn = req.path === '/logout' ? '/' : url;
   next();
 });
 
-// Fast-fail common internet scanner probes to reduce noise and prevent unnecessary route work.
+function isLoopbackRemoteAddress(addr) {
+  if (!addr || typeof addr !== 'string') return false;
+  const normalized = addr.replace(/^::ffff:/i, '');
+  return normalized === '127.0.0.1' || addr === '::1';
+}
+
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    if (req.query.test !== undefined && isLoopbackRemoteAddress(req.socket?.remoteAddress || '')) {
+      const name = req.query.test || 'devuser';
+      const mock = { id: 'dev', username: name, role: ['admin', 'owner', 'atc', 'enforcer'], flighthours: 999, Callsign: name.toUpperCase(), code: 'DEV', avatar: null, DiscordID: null };
+      req.session.user = mock;
+      res.locals.user = mock;
+      res.locals.hasAtcPlusAccess = authHandler.hasAtcPlusRole(mock);
+    }
+    next();
+  });
+}
+
 app.use((req, res, next) => {
   const pathLower = req.path.toLowerCase();
   const isLikelyProbe =
@@ -228,7 +310,247 @@ app.use((req, res, next) => {
   return next();
 });
 
-// Routes
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isProduction ? 500 : 3000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: isProduction },
+  skip: (req) => req.method === 'OPTIONS',
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many requests. Try again later.' });
+  }
+});
+
+const rateLimitTrust = { trustProxy: isProduction };
+
+const passwordResetIpLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: Number(process.env.PASSWORD_RESET_IP_MAX || 25),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => `pwreset:ip:${req.ip}`,
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many password reset attempts from this network. Try again later.' });
+  }
+});
+
+function passwordResetIpLimitIfEnabled(req, res, next) {
+  if (process.env.PASSWORD_RESET_IP_LIMIT === 'true') {
+    return passwordResetIpLimiter(req, res, next);
+  }
+  return next();
+}
+
+const passwordResetRequestPerEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: Number(process.env.PASSWORD_RESET_EMAIL_REQUEST_MAX || 4),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => {
+    const e = normalizeEmail(req.body?.email);
+    return e ? `pwreset:email:req:${e}` : `pwreset:email:req:empty:${req.ip}`;
+  },
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many reset code requests for this email. Try again later.' });
+  }
+});
+
+const passwordResetVerifyPerEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: Number(process.env.PASSWORD_RESET_EMAIL_VERIFY_MAX || 40),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => {
+    const e = normalizeEmail(req.body?.email);
+    return e ? `pwreset:email:verify:${e}` : `pwreset:email:verify:empty:${req.ip}`;
+  },
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many verification attempts for this email. Try again later.' });
+  }
+});
+
+const passwordResetCompletePerEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: Number(process.env.PASSWORD_RESET_EMAIL_RESET_MAX || 8),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => {
+    const e = normalizeEmail(req.body?.email);
+    return e ? `pwreset:email:reset:${e}` : `pwreset:email:reset:empty:${req.ip}`;
+  },
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many password reset completions for this email. Try again later.' });
+  }
+});
+
+const REGISTER_WINDOW_MS = 15 * 60 * 1000;
+const REGISTER_GLOBAL_MAX = 5;
+
+const registerGlobalLimiter = rateLimit({
+  windowMs: REGISTER_WINDOW_MS,
+  max: REGISTER_GLOBAL_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: () => 'register:global',
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Registration is temporarily limited. Try again later.' });
+  }
+});
+
+const registerIpLimiter = rateLimit({
+  windowMs: REGISTER_WINDOW_MS,
+  max: Number(process.env.REGISTER_IP_MAX || 5),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => `register:ip:${req.ip}`,
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many registration attempts from this network. Try again later.' });
+  }
+});
+
+function applicationSubmitDiscordKey(req) {
+  const raw = req.body?.discordId;
+  const id = raw != null ? String(raw).trim() : '';
+  if (/^\d{17,20}$/.test(id)) {
+    return `appsubmit:discord:${id}`;
+  }
+  return `appsubmit:discord:invalid:${req.ip}`;
+}
+
+const applicationSubmitIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.APPLICATION_SUBMIT_IP_MAX || 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => `appsubmit:ip:${req.ip}`,
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many application submissions from this network. Try again later.' });
+  }
+});
+
+const applicationSubmitPerAccountLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: Number(process.env.APPLICATION_SUBMIT_DISCORD_MAX || 4),
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => applicationSubmitDiscordKey(req),
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many applications for this Discord account. Try again later.' });
+  }
+});
+
+const LOGIN_IP_WINDOW_MS = Number(process.env.LOGIN_IP_WINDOW_MS || 15 * 60 * 1000);
+const LOGIN_IP_MAX = Number(
+  process.env.LOGIN_IP_MAX || (isProduction ? 60 : 500)
+);
+
+const loginIpLimiter = rateLimit({
+  windowMs: LOGIN_IP_WINDOW_MS,
+  max: LOGIN_IP_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => `login:ip:${req.ip}`,
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many sign-in attempts from this network. Try again later.' });
+  }
+});
+
+const API_ROUTE_WINDOW_MS = 15 * 60 * 1000;
+const API_ROUTE_MAX = Number(
+  process.env.API_ROUTE_MAX || (isProduction ? 320 : 4000)
+);
+
+const apiPerRouteLimiter = rateLimit({
+  windowMs: API_ROUTE_WINDOW_MS,
+  max: API_ROUTE_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: rateLimitTrust,
+  skip: (req) => req.method === 'OPTIONS',
+  keyGenerator: (req) => {
+    const pathOnly = String(req.originalUrl || '').split('?')[0];
+    return `api-route:${req.ip}:${req.method}:${pathOnly}`;
+  },
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many requests to this API. Try again later.' });
+  }
+});
+
+const LOGIN_USERNAME_KEY_MAX = 128;
+const LOGIN_FAIL_THRESHOLD = Math.max(1, Number(process.env.LOGIN_FAIL_THRESHOLD || 5));
+const LOGIN_BACKOFF_BASE_MS = Number(process.env.LOGIN_BACKOFF_BASE_MS || 60 * 1000);
+const LOGIN_BACKOFF_MAX_MS = Number(process.env.LOGIN_BACKOFF_MAX_MS || 15 * 60 * 1000);
+
+const loginFailureByUsername = new Map();
+
+function normalizeLoginUsernameKey(name) {
+  const s = String(name ?? '').trim();
+  if (!s) return '';
+  return s.length > LOGIN_USERNAME_KEY_MAX ? s.slice(0, LOGIN_USERNAME_KEY_MAX) : s;
+}
+
+function loginUsernameBackoffGuard(req, res, next) {
+  const key = normalizeLoginUsernameKey(req.body?.username);
+  if (!key) return next();
+  const entry = loginFailureByUsername.get(key);
+  if (!entry || !entry.lockedUntil) return next();
+  const now = Date.now();
+  if (now >= entry.lockedUntil) {
+    entry.lockedUntil = 0;
+    return next();
+  }
+  const retrySec = Math.ceil((entry.lockedUntil - now) / 1000);
+  res.set('Retry-After', String(retrySec));
+  return res.status(429).json({
+    error: 'Too many failed sign-in attempts for this username. Try again later.',
+    retryAfterSeconds: retrySec
+  });
+}
+
+function recordLoginFailureForUsername(name) {
+  const key = normalizeLoginUsernameKey(name);
+  if (!key) return;
+  let entry = loginFailureByUsername.get(key);
+  if (!entry) {
+    entry = { failures: 0, lockedUntil: 0 };
+  }
+  entry.failures += 1;
+  if (entry.failures >= LOGIN_FAIL_THRESHOLD) {
+    const exp = entry.failures - LOGIN_FAIL_THRESHOLD;
+    const duration = Math.min(LOGIN_BACKOFF_MAX_MS, LOGIN_BACKOFF_BASE_MS * 2 ** exp);
+    entry.lockedUntil = Date.now() + duration;
+  }
+  loginFailureByUsername.set(key, entry);
+}
+
+function clearLoginFailureForUsername(name) {
+  const key = normalizeLoginUsernameKey(name);
+  if (!key) return;
+  loginFailureByUsername.delete(key);
+}
+
+app.use(globalLimiter);
+app.use('/api', apiPerRouteLimiter);
+
 app.get('/', (req, res) => {
   res.render('index', { 
     title: 'Aviation Realism Network',
@@ -291,77 +613,49 @@ app.get("/api/sessions", async (req, res) => {
 
 
 
-app.post('/api/ifr/submit', async function(req,res){
+app.post('/api/ifr/submit', authHandler.restrictApi, async function (req, res) {
+  let data = req.body;
+  if (data.data != null && data.data !== undefined) {
+    data = data.data;
+  }
 
-const data= req.body
-var title = "Flight Plan for " + data.flightName
-console.log(data)
-if(data.data !=null && data.data != undefined){
+  const nav = data.navigationLog;
+  const hasNav =
+    nav !== undefined &&
+    nav !== null &&
+    String(nav).trim() !== '' &&
+    String(nav).trim().toLowerCase() !== 'none';
+  const mode = hasNav ? 'IFR' : 'VFR';
+  const callsign = ifrText(data.flightName);
+  const squawk = ifrText(data.squawkCode);
 
-  data = data.data
-  console.log(data)
-}
-if (data.navigationLog === undefined || data.navigationLog === null || data.navigationLog === 'None') {
-  title += " VFR";
-}else {
-  title += " IFR";
-}
+  const embed = new EmbedBuilder()
+    .setColor(0xffb800)
+    .setTitle(`${callsign} · ${mode}`)
+    .setDescription(
+      `**ID:** ${squawk}\n` +
+        `**Session:** ${ifrText(data.sessionID)} · ${ifrText(data.sessionMap)}\n` +
+        `**Aircraft:** ${ifrText(data.aircraftType)} · **Alt:** ${ifrText(data.altitude)}\n` +
+        `**Route:** ${ifrText(data.departure)} → ${ifrText(data.destination)}`
+    )
+    .setTimestamp();
 
-
-  const embedBody = {
-        content: '<@&1474153893872009339> incoming ATC Flight Plan', // Empty content field
-        "embeds": [{
-            title: title,
-            description: `Here is the flight plan for callsign ${data.flightName || '(Not specified)'} || Flight ID: ${data.squawkCode}`,
-            color: 0xFFA500,
-            fields: [
-                { name: 'SessionID', value: data.sessionID || '(Not specified)' },
-                { name: 'Session Map', value: data.sessionMap || '(Not specified)' },
-                { name: 'Flight Callsign', value: data.flightName || '(Not specified)' },
-                { name: 'Aircraft Type', value: data.aircraftType || '(Not specified)' },
-                { name: 'Cruising Altitude', value: data.altitude || '(Not specified)' },
-                { name: 'Departure Location', value: data.departure || '(Not specified)' },
-                { name: 'Destination', value: data.destination || '(Not specified)' },
-                { name: 'Total Fuel Onboard', value: data.totalFuel || '(Not specified)' },
-                { name: 'Bingo Fuel Level', value: data.bingoFuel || '(Not specified)' },
-                { name: 'Weather Briefing', value: data.weatherBriefing || '(Not specified)' },
-                { name: 'Navigation Log', value: data.navigationLog !== undefined && data.navigationLog !== null ? data.navigationLog.toString() : 'None' },
-                { name: 'Pilot in Command', value: data.pic + " " + data["role"] || '(Not specified)' },
-                { name: 'Co-Pilot', value: data.copilot + " " + data["co-role"] || 'None' },
-                { name: 'Radio Frequencies', value: data.radioFrequencies || '(Not specified)' },
-                { name: 'Additional Notes', value: data.additionalNotes || '(Not specified)' }
-            ],
-            
-            timestamp: new Date().toISOString()
-        }]
-    };
- 
-    try{
-        const body = JSON.stringify(embedBody);
-        const webhookURL =process.env.DISCORD_WEBHOOK_URL;
-        const response = await fetch(webhookURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body:body
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return res.send("Flight plan submitted successfully!")
-            
-            } catch(error){
-              console.log(error)
-              res.status(500).send("Error submitting flight plan: " + error.message)
-              }
-        
-  
-  
-  })
+  try {
+    if (!bot.isReady()) {
+      return res.status(503).send('Discord bot is not ready. Try again in a moment.');
+    }
+    const channel = await bot.channels.fetch(IFR_FLIGHT_PLAN_CHANNEL_ID);
+    if (!channel || !channel.isTextBased()) {
+      console.error('IFR submit: channel missing or not text-based', IFR_FLIGHT_PLAN_CHANNEL_ID);
+      return res.status(500).send('Flight plan channel is not available.');
+    }
+    await channel.send({ embeds: [embed] });
+    return res.send('Flight plan submitted successfully!');
+  } catch (error) {
+    console.error('IFR submit Discord error:', error);
+    res.status(500).send('Error submitting flight plan: ' + error.message);
+  }
+});
   app.get("/builder", (req, res) => {
     res.render('builder', {
       title: 'Builder',
@@ -370,11 +664,12 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
   });
   
 
-//application endpoints
-  app.post("/api/applications/submit", async (req, res) => {
+  app.post(
+    "/api/applications/submit",
+    applicationSubmitIpLimiter,
+    applicationSubmitPerAccountLimiter,
+    async (req, res) => {
     const data = req.body;
-    console.log('Received application data:', data);
-    // check if application is for ATC or Enforcer and validate required fields make a new application object based on the schema
     if (data.type === 'atc') {
       if (!data.callsign) {
         return res.status(400).json({ error: 'Callsign is required for ATC applications' });
@@ -430,7 +725,8 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
       console.error('Error submitting application:', error);
       res.status(500).json({ error: 'Failed to submit application' });
     }
-  });
+  }
+  );
 
 
 app.get("/applications/admin", authHandler.AdminOnly("Admin"), (req, res) => {
@@ -447,7 +743,7 @@ app.get("/applications",authHandler.restrict, (req, res) => {
     user: req.session.user
   });
 });
-  app.get("/api/applications", async (req, res) => {
+  app.get("/api/applications", authHandler.AdminOnly("Admin"), async (req, res) => {
     try {
       const applications = await Application.find();
       res.json({ data: applications });
@@ -457,8 +753,7 @@ app.get("/applications",authHandler.restrict, (req, res) => {
     }
   });
 
-  //endpoints for approving/rejecting applications
-  app.post("/api/applications/:id/approve", async (req, res) => {
+  app.post("/api/applications/:id/approve", authHandler.AdminOnly("Admin"), async (req, res) => {
     const applicationId = req.params.id;
     try {
       const application = await Application.findById(applicationId);
@@ -493,7 +788,7 @@ app.get("/applications",authHandler.restrict, (req, res) => {
       res.status(500).json({ error: 'Failed to approve application' });
     }
   });
-  app.post("/api/applications/:id/reject", async (req, res) => {
+  app.post("/api/applications/:id/reject", authHandler.AdminOnly("Admin"), async (req, res) => {
     const applicationId = req.params.id;
     try {
       const application = await Application.findById(applicationId);
@@ -529,23 +824,31 @@ app.get("/applications",authHandler.restrict, (req, res) => {
     }
   });
 
-// Intentionally return 404 for scanner probe routes hitting /test and /test/*.
 app.get("/test", async (req, res) => {
   return res.status(404).send('Not found');
 });
 app.get("/test/*splat", async (req, res) => {
   return res.status(404).send('Not found');
 });
-//events endpoints 
 
 app.get("/events", (req, res) => {
-  res.render('atc/events', {
-    title: 'Events',
-    message: 'View upcoming and past events here'
-  });
+  res.render(
+    "atc/events",
+    {
+      title: "Events",
+      message: "View upcoming and past events here",
+    },
+    (err, html) => {
+      if (err) {
+        return res.status(500).send(String(err));
+      }
+      const inj =
+        '<script src="/form-url-draft.js"></script>\n<script src="/events-form-draft.js"></script>\n';
+      res.send(String(html).replace("</body>", `${inj}</body>`));
+    }
+  );
 });
 app.get("/api/events", (req, res) => {
-
   Events.find().then(events => {
     res.json({ data: events });
   }).catch(error => {
@@ -556,10 +859,8 @@ app.get("/api/events", (req, res) => {
 
 const EVENT_DELETE_DELAY_MS = 60 * 60 * 1000;
 
-// a interval checks every minute for events that have a start time in the past and an end time in the future and updates their status to active, and if the end time is in the past it updates their status to completed
 setInterval(() => {
 
-  //ajust event statuses based on current time and time zones
   Events.find().then(events => {
     const now = new Date();
     events.forEach(event => {
@@ -569,7 +870,6 @@ setInterval(() => {
         if (event.status !== 'active') {
           event.status = 'active';
 
-          //open a thread in the events channel for this event and post the event details in the thread while mentioning the attendees
             bot.channels.fetch("1462570082793160867").then(channel => {
               channel.threads.create({
                 name: `Event: ${event.name}`,
@@ -634,12 +934,9 @@ setInterval(() => {
 
 }, 10000);
 
-
-// event creation endpoint for atcs
-app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
+app.post("/api/events/create", authHandler.AtcPlusApiOnly, (req, res) => {
   const data = req.body;
 
-  // create local dates for the server to reference when updating event statuses based on time zones
   const startTime = new Date(data.startTime);
   const endTime = new Date(data.endTime);
   
@@ -660,7 +957,6 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
   }).then(event => {
 
     if (data.alertServer != null && data.alertServer != undefined && data.alertServer === true) {
-      //check if event contains the word "atc"
       if (event.name.toLowerCase().includes("atc")) {
           var ping = "<@&1475600280308416523>"}
           else if (event.name.toLowerCase().includes("formation")){
@@ -670,12 +966,6 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
             var ping = "no ping"
           }
 
-          //convert time in to discord timestamp format
-
-          
-
-        //send a message to the events channel with the event details and a ping for the appropriate role based on the event name containing certain keywords like "atc" or "formation"
-        // also add buttons to the message for users to sign up for the event as attendees, and when they click the button it adds them to the attendees list in the database and updates the message with the new list of attendees and pings them in the thread
         const embed = new EmbedBuilder()
           .setTitle(event.name)
           .setDescription(event.description || 'No description provided')
@@ -692,7 +982,6 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
           .setColor("#87cefa")
 
           .setTimestamp();
-          //add buttons for users to sign up for the event as attendees, and when they click the button it adds them to the attendees list in the database and updates the message with the new list of attendees and pings them in the thread
           const row = new ActionRowBuilder()
             .addComponents(
               new discord.ButtonBuilder()
@@ -722,32 +1011,28 @@ app.post("/api/events/create", authHandler.ATCOnly, (req, res) => {
 });
 var metarSubmissions = {}
 
-app.post("/api/metar/submit", authHandler.ATCOnly, (req, res) => {
+app.post("/api/metar/submit", authHandler.MetarStaffApiOnly, (req, res) => {
   const data = req.body;
-  console.log('Received METAR data:', data);
-  //store the metar submission in an array with the session id and the metar data
   metarSubmissions[data.sessionId] = data;
   res.json({ message: 'METAR submitted successfully' });
 });
 
-app.get("/api/metar/:sessionId", (req, res) => {
+app.get("/api/metar/:sessionId", authHandler.MetarStaffApiOnly, (req, res) => {
   const sessionId = req.params.sessionId;
-  console.log('Received request for METAR data for session:', sessionId);
   const metarData = metarSubmissions[sessionId];
-  console.log('METAR data for session:', metarData);
   if (metarData) {
     res.json({ data: metarData });
   } else {
     res.status(404).json({ error: 'METAR data not found for this session' });
   }
 });
-app.get("/atc/metar", authHandler.ATCOnly, (req, res) => {
+app.get("/atc/metar", authHandler.MetarStaffOnly, (req, res) => {
   res.render('atc/METAR', {
     title: 'METAR Submission',
     message: 'Submit METAR data for your current session'
   });
 });
-app.post("/api/metar/clear", (req, res) => {
+app.post("/api/metar/clear", authHandler.MetarStaffApiOnly, (req, res) => {
   const { sessionId } = req.body;
   if (sessionId && metarSubmissions[sessionId]) {
     delete metarSubmissions[sessionId];
@@ -767,13 +1052,70 @@ app.get("/profile", authHandler.restrict, (req, res) => {
 }
 );
 
-//admin routes
+const ADMIN_PANEL_AUTOSAVE_INJECT = `
+<style>
+.admin-undo-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #c8c8c8;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.admin-undo-toast[hidden] { display: none !important; }
+.admin-undo-toast__btn {
+  margin: 0;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
+  color: #e8e8e8;
+  cursor: pointer;
+}
+.admin-undo-toast__btn:hover { background: rgba(255,255,255,0.12); }
+</style>
+<div id="adminUndoToast" class="admin-undo-toast" role="status" aria-live="polite" hidden>
+  <span class="admin-undo-toast__text">Saved changes.</span>
+  <button type="button" class="admin-undo-toast__btn" id="adminUndoBtn">Undo</button>
+</div>
+<script src="/admin-panel-member-autosave.js"></script>
+`;
 
 app.get("/admin", authHandler.AdminOnly("mod"), (req, res) => {
-  res.render('admin/panel-admin', {
-    title: 'Admin Dashboard',
-    message: 'Welcome to the admin dashboard'
-  });});
+  res.render(
+    "admin/panel-admin",
+    {
+      title: "Admin Dashboard",
+      message: "Welcome to the admin dashboard",
+    },
+    (err, html) => {
+      if (err) {
+        return res.status(500).send(String(err));
+      }
+      let h = String(html);
+      h = h.replace("let allMembers = [];", "var allMembers = [];");
+      h = h.replace("let filteredMembers = [];", "var filteredMembers = [];");
+      h = h.replace("let currentEditingMemberId = null;", "var currentEditingMemberId = null;");
+      h = h.replace("let currentEditingMemberRoles = [];", "var currentEditingMemberRoles = [];");
+      h = h.replace(
+        "if (event.target === modal) modal.classList.remove('show');",
+        "if (event.target === modal) closeEditModal();"
+      );
+      h = h.replace("</body>", `${ADMIN_PANEL_AUTOSAVE_INJECT}</body>`);
+      res.send(h);
+    }
+  );
+});
 
 app.get("/api/admin/users", authHandler.AdminOnly("mod"), async (req, res) => {
   try {
@@ -789,7 +1131,6 @@ app.get("/api/admin/users", authHandler.AdminOnly("mod"), async (req, res) => {
 
 app.get("/api/users/discord",authHandler.AdminOnly("mod"), async (req, res) => {
 
-  //grabs all the users from the discord server and returns their username, discriminator, id, and avatar url
   try {
     if (!bot.isReady()) {
       return res.status(503).json({ error: 'Discord bot is not ready yet' });
@@ -828,7 +1169,7 @@ app.get("/admin/discord", authHandler.AdminOnly("mod"), (req, res) => {
 
 
 
-app.get("/api/users", async (req, res) => {
+app.get("/api/users", authHandler.AdminOnly("mod"), async (req, res) => {
   try {
     const users = await Users.find();
     var userList = []
@@ -852,20 +1193,41 @@ app.get("/api/users", async (req, res) => {
   
 });
 
+app.get("/api/pilots", authHandler.restrict, async (req, res) => {
+  try {
+    const users = await Users.find();
+    const list = users.map((user) => ({
+      Username: user.Username,
+      Flighthours: user.Flighthours,
+      Role: user.Role,
+      Callsign: user.Callsign,
+      avatar: user.avatar
+    }));
+    res.json({ data: list });
+  } catch (error) {
+    console.error('Error fetching pilots directory:', error);
+    res.status(500).json({ error: 'Failed to fetch pilots' });
+  }
+});
 
-app.get("/pilots", (req, res) => {
-  res.render('pilots', {
+
+app.get("/pilots", authHandler.restrict, (req, res) => {
+  res.render('pilots-directory', {
     title: 'Pilots',
     message: 'View all registered pilots here',
     user: req.session.user
   });
 })
 
-//!SECTION Endpoint for updating a user's role
 app.post("/api/admin/users/:id/updateRole", authHandler.AdminOnly("admin"), async (req, res) => {
   const userId = req.params.id;
   const { role } = req.body;
-  if (!['admin', 'atc', 'enforcer', 'user', 'mod', "owner"].includes(role)) {
+  const standardAssignableRoles = ['admin', 'atc', 'enforcer', 'user', 'mod'];
+  if (role === 'owner') {
+    if (!req.session.user.role.includes('owner')) {
+      return res.status(403).json({ error: 'Only owners may assign the owner role.' });
+    }
+  } else if (!standardAssignableRoles.includes(role)) {
     return res.status(400).json({ error: 'Invalid role specified' });
   }
   try {
@@ -928,13 +1290,15 @@ app.post("/api/admin/users/:id/updateCallsign", authHandler.AdminOnly("admin"), 
   }
 });
 
-
-//!SECTION Endpoint for removing a role from a user
 app.post("/api/admin/users/:id/removeRole", authHandler.AdminOnly("admin"), async (req, res) => {
   const userId = req.params.id;
   const { role } = req.body;
-  if (!['admin', 'atc', 'enforcer', 'user', 'mod', "owner"].includes(role)) {
+  const removableRoles = ['admin', 'atc', 'enforcer', 'user', 'mod', 'owner'];
+  if (!removableRoles.includes(role)) {
     return res.status(400).json({ error: 'Invalid role specified' });
+  }
+  if (role === 'owner' && !req.session.user.role.includes('owner')) {
+    return res.status(403).json({ error: 'Only owners may remove the owner role.' });
   }
   try {
     const user = await Users.findById(userId);
@@ -998,15 +1362,17 @@ app.post("/api/admin/users/:id/updateFlighthours", authHandler.AdminOnly("mod"),
 });
   
 
-//auth endpoints
-app.post("/api/auth/register", async (req, res) => {
-  const { username, password, email, role } = req.body;
+app.post("/api/auth/register", registerGlobalLimiter, registerIpLimiter, async (req, res) => {
+  const { username, password, email } = req.body;
   try{
-  const result = await authHandler.register(username, password, email, role);
+  const result = await authHandler.register(username, password, email);
   if (typeof result === 'string') {
     res.status(400).json({ error: result });
   } else {
-    res.json({ message: 'User registered successfully', user: result });  
+    res.json({
+      message: 'User registered successfully',
+      user: authHandler.publicUserSummary(result)
+    });
   }
 }catch(err){
   console.error('Error registering user:', err);
@@ -1016,70 +1382,70 @@ app.post("/api/auth/register", async (req, res) => {
 
 
 
-app.post("/api/auth/login", async (req, res) => {
-  const { username, password } = req.body;
+app.post(
+  '/api/auth/login',
+  loginIpLimiter,
+  loginUsernameBackoffGuard,
+  async (req, res) => {
+    const { username, password } = req.body;
 
-  try{
- await authHandler.authenticate(username, password, function(err, user){
-  
-    if (err) {
+    try {
+      await authHandler.authenticate(username, password, function (err, user) {
+        if (err) {
+          console.error('Error during login:', err);
+          return res.status(500).json({ error: 'Failed to login' });
+        }
+        if (!user) {
+          recordLoginFailureForUsername(username);
+          return res.status(401).json({ error: 'Invalid username or password' });
+        }
+        clearLoginFailureForUsername(username);
+        req.session.user = {
+          id: user._id,
+          username: user.Username,
+          role: user.Role,
+          flighthours: user.Flighthours,
+          Callsign: user.Callsign,
+          code: user.code,
+          avatar: user.avatar,
+          DiscordID: user.DiscordID
+        };
+        res.json({ message: 'Login successful', user: req.session.user });
+      });
+    } catch (err) {
       console.error('Error during login:', err);
-      return res.status(500).json({ error: 'Failed to login' });
+      res.status(500).json({ error: 'Failed to login' });
     }
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid username or password' });
-    }
-    // Set user session
-    req.session.user = {
-      id: user._id,
-      username: user.Username,
-      role: user.Role,
-      flighthours: user.Flighthours,
-      Callsign: user.Callsign,
-      code: user.code,
-      avatar: user.avatar,
-      DiscordID: user.DiscordID
-    };
-    console.log('User logged in:', req.session.user);
-    res.json({ message: 'Login successful', user: req.session.user });
-  })
-}catch(err){
-  console.error('Error during login:', err);
-  res.status(500).json({ error: 'Failed to login' });
-}
- 
+  }
+);
+
+app.get("/login", (req, res) => {
+  const redirectUrl = req.query.redirect || '/';
+  res.render('auth/login', { title: 'Login', message: 'Login to your account', redirect: redirectUrl });
 });
 
 app.get("/login/:redirect", (req, res) => {
-
-  if (req.params.redirect ==="home") {
-    var redirectUrl = "/"
-  }
-  else{
-    var redirectUrl = `/${req.params.redirect}`;
-  }
-  res.render('auth/login', {
-    title: 'Login',
-    message: 'Login to your account',
-    redirect: redirectUrl
-   });
+  const redirectUrl = req.params.redirect === 'home' ? '/' : `/${req.params.redirect}`;
+  res.redirect('/login?redirect=' + encodeURIComponent(redirectUrl));
 });
 
 app.get("/logout", (req, res) => {
+  const target = postLogoutRedirect(req);
   req.session.destroy(err => {
     if (err) {
       console.error('Error during logout:', err);
       return res.status(500).json({ error: 'Failed to logout' });
     }
-    res.redirect('/');
-
-  });});
+    res.redirect(target);
+  });
+});
 
   app.get("/register", (req, res) => {
     res.render('auth/register', {
       title: 'Register',
-      message: 'Create a new account'
-     });
+      message: 'Create a new account',
+      redirect: req.query.redirect || ''
+    });
    });
 
   app.get('/forgot-password', (req, res) => {
@@ -1089,7 +1455,11 @@ app.get("/logout", (req, res) => {
     });
   });
 
-  app.post('/api/auth/forgot-password/request-code', async (req, res) => {
+  app.post(
+    '/api/auth/forgot-password/request-code',
+    passwordResetIpLimitIfEnabled,
+    passwordResetRequestPerEmailLimiter,
+    async (req, res) => {
     const email = normalizeEmail(req.body?.email);
     if (!email) {
       return res.status(400).json({ error: 'Email is required.' });
@@ -1122,9 +1492,14 @@ app.get("/logout", (req, res) => {
       console.error('Error generating password reset code:', error);
       return res.status(500).json({ error: 'Failed to process password reset request.' });
     }
-  });
+  }
+  );
 
-  app.post('/api/auth/forgot-password/verify-code', async (req, res) => {
+  app.post(
+    '/api/auth/forgot-password/verify-code',
+    passwordResetIpLimitIfEnabled,
+    passwordResetVerifyPerEmailLimiter,
+    async (req, res) => {
     const email = normalizeEmail(req.body?.email);
     const code = String(req.body?.code || '').trim();
 
@@ -1157,9 +1532,14 @@ app.get("/logout", (req, res) => {
     entry.attempts = 0;
     passwordResetRequests.set(email, entry);
     return res.json({ message: 'Code verified successfully.' });
-  });
+  }
+  );
 
-  app.post('/api/auth/forgot-password/reset', async (req, res) => {
+  app.post(
+    '/api/auth/forgot-password/reset',
+    passwordResetIpLimitIfEnabled,
+    passwordResetCompletePerEmailLimiter,
+    async (req, res) => {
     const email = normalizeEmail(req.body?.email);
     const code = String(req.body?.code || '').trim();
     const newPassword = String(req.body?.newPassword || '');
@@ -1204,12 +1584,10 @@ app.get("/logout", (req, res) => {
       console.error('Error resetting password:', error);
       return res.status(500).json({ error: 'Failed to reset password.' });
     }
-  });
+  }
+  );
 
 
-
-
-// !SECTION Endpoint for user profile updates
 app.post("/api/profile/update", async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -1236,6 +1614,46 @@ app.post("/api/profile/update", async (req, res) => {
   }
 });
 
+const CHART_MAKER_GOOGLE_FONTS_CACHE_MS = 1000 * 60 * 60 * 24;
+const CHART_MAKER_FONTS_FALLBACK = [
+  'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Source Sans 3',
+  'Noto Sans', 'IBM Plex Sans', 'DM Sans', 'Barlow', 'Work Sans', 'Rubik', 'Oswald',
+  'Raleway', 'Merriweather', 'Playfair Display', 'PT Sans', 'Ubuntu', 'Nunito'
+];
+
+let chartMakerGoogleFontsCache = { families: null, fetchedAt: 0 };
+
+app.get('/api/chart-maker/google-fonts', async (req, res) => {
+  try {
+    const now = Date.now();
+    if (
+      chartMakerGoogleFontsCache.families &&
+      now - chartMakerGoogleFontsCache.fetchedAt < CHART_MAKER_GOOGLE_FONTS_CACHE_MS
+    ) {
+      return res.json({ families: chartMakerGoogleFontsCache.families });
+    }
+    const upstream = await fetch('https://fonts.google.com/metadata/fonts');
+    if (!upstream.ok) {
+      throw new Error(`metadata ${upstream.status}`);
+    }
+    const raw = await upstream.text();
+    const json = JSON.parse(raw.replace(/^\)\]\}'\s*/, ''));
+    const list = json.familyMetadataList;
+    if (!Array.isArray(list)) {
+      throw new Error('missing familyMetadataList');
+    }
+    const families = list
+      .map((x) => x && x.family)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    chartMakerGoogleFontsCache = { families, fetchedAt: now };
+    res.json({ families });
+  } catch (err) {
+    console.error('[chart-maker] google-fonts catalog:', err.message || err);
+    res.json({ families: CHART_MAKER_FONTS_FALLBACK });
+  }
+});
+
 app.get("/chart-maker", (req, res) => {
   res.render('admin/chartMaker', {
     title: 'Chart Maker',
@@ -1243,11 +1661,7 @@ app.get("/chart-maker", (req, res) => {
   });
 });
 
-
-
-// Start the server
 app.listen(PORT, async () => {
- 
  bot.login(process.env.Discord_TOKEN).then(() => {
   console.log('Discord bot logged in successfully');
 }).catch(err => {
@@ -1256,39 +1670,3 @@ app.listen(PORT, async () => {
 
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-/*Users.find().then(users => {
- 
-  users.forEach(user => { 
-    if (user.DiscordID){
-
-      bot.guilds.fetch("1462567359792283691").then(guild => {
-        guild.members.fetch(user.DiscordID).then(member => {
-          if (member) {   
-            user.avatar = member.user.avatarURL();
-            user.save().then(() => {
-              console.log(`Updated avatar for user ${user.Username}`);
-            }
-            ).catch(err => {
-              console.error(`Error saving user ${user.Username}:`, err);
-            }
-            );
-          } else {
-            console.warn(`User ${user.Username} with Discord ID ${user.DiscordID} not found in guild`);
-          }
-        }).catch(err => {
-          console.error(`Error fetching member for user ${user.Username}:`, err);
-        }
-        );
-      }
-      ).catch(err => {
-        console.error(`Error fetching guild for user ${user.Username}:`, err);
-        
-
-
-    }
-  )
-}
-
-  });
-})*/

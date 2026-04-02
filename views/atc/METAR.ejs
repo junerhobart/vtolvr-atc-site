@@ -487,10 +487,43 @@
         </div>
     </div>
 
+    <script src="/form-url-draft.js"></script>
     <script>
         const form = document.getElementById('metarForm');
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
+
+        (function metarUrlDraft() {
+            if (!window.FormUrlDraft) return;
+            const draft = window.FormUrlDraft.bind(
+                'metarDraft',
+                function getState() {
+                    return {
+                        sessionId: document.getElementById('sessionId').value,
+                        windDirection: document.getElementById('windDirection').value,
+                        windSpeed: document.getElementById('windSpeed').value,
+                        windGust: document.getElementById('windGust').value,
+                        visibility: document.getElementById('visibility').value,
+                        isRaining: document.getElementById('isRaining').checked,
+                        weatherNotes: document.getElementById('weatherNotes').value
+                    };
+                },
+                function applyState(s) {
+                    if (!s || typeof s !== 'object') return;
+                    const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+                    set('sessionId', s.sessionId);
+                    set('windDirection', s.windDirection);
+                    set('windSpeed', s.windSpeed);
+                    set('windGust', s.windGust);
+                    set('visibility', s.visibility);
+                    const rain = document.getElementById('isRaining');
+                    if (rain) rain.checked = !!s.isRaining;
+                    set('weatherNotes', s.weatherNotes);
+                },
+                form
+            );
+            window.__metarDraftClear = draft.clearDraft;
+        })();
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -533,6 +566,7 @@
             try {
                 const response = await fetch('/api/metar/submit', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(metarData)
                 });
@@ -541,6 +575,7 @@
 
                 showSuccess('METAR report submitted successfully!');
                 form.reset();
+                if (window.__metarDraftClear) window.__metarDraftClear();
                 setTimeout(() => successMessage.classList.remove('show'), 3000);
             } catch (error) {
                 showError('Error submitting METAR report: ' + error.message);
@@ -550,6 +585,7 @@
         function clearMetar() {
             fetch('/api/metar/clear', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionId: document.getElementById('sessionId').value.trim() || null })
             })
@@ -560,6 +596,7 @@
             .then(() => {
                 showSuccess('Current METAR data cleared successfully!');
                 form.reset();
+                if (window.__metarDraftClear) window.__metarDraftClear();
             })
             .catch(error => {
                 showError('Error clearing METAR data: ' + error.message);

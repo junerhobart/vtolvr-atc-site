@@ -489,6 +489,7 @@
         </footer>
     </div>
 
+    <script src="/form-url-draft.js"></script>
     <script>
         const aircraftType = document.getElementById('aircraftType');
         aircraftType.addEventListener('change', function() {
@@ -520,14 +521,15 @@
             setTimeout(() => el.style.display = 'none', 6000);
         }
 
-        function takeScreenshot() {
-            html2canvas(document.getElementById('capture-area')).then(canvas => {
-                const link = document.createElement('a');
-                link.href = canvas.toDataURL('image/png');
-                link.download = 'ifr-flight-plan.png';
-                link.click();
-            });
-        }
+        // Temporarily disabled: auto-download PNG of flight plan after submit.
+        // function takeScreenshot() {
+        //     html2canvas(document.getElementById('capture-area')).then(canvas => {
+        //         const link = document.createElement('a');
+        //         link.href = canvas.toDataURL('image/png');
+        //         link.download = 'ifr-flight-plan.png';
+        //         link.click();
+        //     });
+        // }
 
         function generateSquawk(aircraftType, flightName, flightType) {
             const type = aircraftType.toUpperCase();
@@ -572,29 +574,89 @@
                 return;
             }
 
-            const endpoint = 'https://atc-vtolvr.site/api/ifr/submit';
+            const endpoint = '/api/ifr/submit';
             try {
                 const res = await fetch(endpoint, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                showAlert('success', 'Flight plan submitted! Downloading screenshot...');
-                takeScreenshot();
-            } catch {
-                try {
-                    const fd = new FormData();
-                    fd.append('payload', JSON.stringify(data));
-                    const res2 = await fetch(endpoint, { method: 'POST', body: fd });
-                    if (res2.type === 'opaque' || res2.ok) {
-                        showAlert('success', 'Flight plan submitted.');
-                    } else throw new Error();
-                } catch {
-                    showAlert('success', 'Flight plan submitted.');
+                if (res.status === 401) {
+                    showAlert('error', 'You need to be logged in to submit a flight plan.');
+                    return;
                 }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                if (window.__ifrDraftClear) window.__ifrDraftClear();
+                showAlert('success', 'Flight plan submitted.');
+                // takeScreenshot();
+            } catch {
+                showAlert('error', 'Could not submit flight plan. Check your connection and try again.');
             }
         }
-    </script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.FormUrlDraft) return;
+            const wrap = document.getElementById('capture-area');
+            if (!wrap) return;
+
+            function getNavRows() {
+                const rows = document.getElementById('navigationLog').querySelectorAll('tbody tr');
+                return Array.from(rows).map(function (row) {
+                    var cells = row.querySelectorAll('input');
+                    return {
+                        waypoint: cells[0] ? cells[0].value : '',
+                        distance: cells[1] ? cells[1].value : '',
+                        heading: cells[2] ? cells[2].value : '',
+                        groundSpeed: cells[3] ? cells[3].value : ''
+                    };
+                });
+            }
+
+            function setNavRows(arr) {
+                var tbody = document.getElementById('navigationLog').getElementsByTagName('tbody')[0];
+                tbody.innerHTML = '';
+                var list = Array.isArray(arr) && arr.length ? arr : [{ waypoint: '', distance: '', heading: '', groundSpeed: '' }];
+                list.forEach(function (row) {
+                    var tr = tbody.insertRow();
+                    tr.innerHTML =
+                        '<td><input type="text" name="waypoint" placeholder="Waypoint"></td>' +
+                        '<td><input type="number" name="distance" placeholder="NM"></td>' +
+                        '<td><input type="text" name="heading" placeholder="°"></td>' +
+                        '<td><input type="number" name="groundSpeed" placeholder="KTS"></td>' +
+                        '<td><button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button></td>';
+                    var cells = tr.querySelectorAll('input');
+                    if (cells[0]) cells[0].value = row.waypoint || '';
+                    if (cells[1]) cells[1].value = row.distance || '';
+                    if (cells[2]) cells[2].value = row.heading || '';
+                    if (cells[3]) cells[3].value = row.groundSpeed || '';
+                });
+            }
+
+            var ifrDraft = window.FormUrlDraft.bind(
+                'ifrDraft',
+                function getState() {
+                    var fields = {};
+                    wrap.querySelectorAll('input:not(#navigationLog input), select, textarea').forEach(function (el) {
+                        if (el.name) fields[el.name] = el.value;
+                    });
+                    return { fields: fields, nav: getNavRows() };
+                },
+                function applyState(s) {
+                    if (!s || typeof s !== 'object') return;
+                    if (s.fields && typeof s.fields === 'object') {
+                        Object.keys(s.fields).forEach(function (name) {
+                            if (!/^[a-zA-Z0-9_-]+$/.test(name)) return;
+                            var el = wrap.querySelector('[name="' + name + '"]');
+                            if (el && !el.closest('#navigationLog')) el.value = s.fields[name] == null ? '' : String(s.fields[name]);
+                        });
+                    }
+                    if (Array.isArray(s.nav)) setNavRows(s.nav);
+                    aircraftType.dispatchEvent(new Event('change', { bubbles: true }));
+                },
+                wrap
+            );
+            window.__ifrDraftClear = ifrDraft.clearDraft;
+        });
 </body>
 </html>

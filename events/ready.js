@@ -1,11 +1,4 @@
-
-//const mongoose = require("mongoose");
-const ActivityType = require("discord.js");
-//const { Logtail } = require("@logtail/node");
-//const logtail = new Logtail("XiL5Vq7qxdBP3pYTnLzqkMCX");
-
-
-
+const { ActivityType } = require("discord.js");
 
 module.exports = {
 	name: "ready",
@@ -28,10 +21,8 @@ module.exports = {
     
 		setInterval(() => {
 			const status = activities[Math.floor(Math.random() * activities.length)];
-			client.user.setActivity(status, { type: ActivityType.watching });
+			client.user.setActivity(status, { type: ActivityType.Watching });
 		}, 5000);
-        
-		//logtail.flush();
     
 	},
 };

@@ -169,6 +169,17 @@
             font-size: 0.9rem;
         }
 
+        .list-status {
+            text-align: center;
+            font-size: 0.875rem;
+            color: rgba(245,243,239,0.45);
+            padding: 24px 16px;
+        }
+
+        .list-status--error {
+            color: #ffb0b0;
+        }
+
         /* Modal */
         .modal {
             display: none;
@@ -367,7 +378,20 @@
         <div class="panel">
             <div class="panel-title">Members Management</div>
 
-            <input type="text" class="search-input" id="searchInput" placeholder="Search by username or Discord ID…" onkeyup="filterMembers()">
+            <div class="search-toolbar-row" style="margin-bottom: 16px;">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search by username or Discord ID…" onkeyup="filterMembers()">
+                </div>
+                <section class="filters filters--in-search" aria-label="Role filters">
+                    <div class="filter-toolbar">
+                        <%- include('../partials/filter-popover', {
+                            triggerLabel: 'Roles',
+                            panelId: 'adminMemberRoleFilterPanel',
+                            items: []
+                        }) %>
+                    </div>
+                </section>
+            </div>
 
             <div class="members-list" id="membersList">
                 <div class="empty-state">Loading members…</div>
@@ -432,14 +456,58 @@
         let currentEditingMemberId = null;
         let currentEditingMemberRoles = [];
 
+        function buildAdminMemberRoleFilterCheckboxes() {
+            const panel = document.getElementById('adminMemberRoleFilterPanel');
+            if (!panel) return;
+            panel.querySelectorAll('[data-role-filter-dynamic]').forEach(function (el) { el.remove(); });
+
+            const roleSet = new Set();
+            allMembers.forEach(function (m) {
+                const roles = m.Role && m.Role.length ? m.Role : ['user'];
+                roles.forEach(function (r) { if (r) roleSet.add(r); });
+            });
+            const sorted = Array.from(roleSet).sort(function (a, b) { return a.localeCompare(b); });
+            sorted.forEach(function (role) {
+                const safeId = 'adminRole_' + role.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const label = document.createElement('label');
+                label.className = 'filter-popover__row';
+                label.setAttribute('data-role-filter-dynamic', '1');
+                label.setAttribute('for', safeId);
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = safeId;
+                input.checked = true;
+                input.setAttribute('data-role-name', role);
+                const span = document.createElement('span');
+                span.className = 'filter-popover__row-label';
+                span.textContent = role;
+                label.appendChild(input);
+                label.appendChild(span);
+                panel.appendChild(label);
+                input.addEventListener('change', filterMembers);
+            });
+        }
+
+        function adminMemberRoleFilterPass(member) {
+            const panel = document.getElementById('adminMemberRoleFilterPanel');
+            if (!panel) return true;
+            const checked = Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"]'))
+                .filter(function (cb) { return cb.checked; })
+                .map(function (cb) { return cb.getAttribute('data-role-name'); })
+                .filter(Boolean);
+            if (checked.length === 0) return true;
+            const roles = member.Role && member.Role.length ? member.Role : ['user'];
+            return roles.some(function (r) { return checked.indexOf(r) !== -1; });
+        }
+
         function filterMembers() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            filteredMembers = searchTerm === ''
-                ? allMembers
-                : allMembers.filter(m =>
+            filteredMembers = allMembers.filter(m => {
+                const searchOk = searchTerm === '' ||
                     m.Username.toLowerCase().includes(searchTerm) ||
-                    (m.DiscordId && m.DiscordId.toString().includes(searchTerm))
-                );
+                    (m.DiscordId && m.DiscordId.toString().includes(searchTerm));
+                return searchOk && adminMemberRoleFilterPass(m);
+            });
             renderMembers();
         }
 
@@ -601,11 +669,12 @@
                 .then(r => { if (!r.ok) throw new Error('Failed to load members.'); return r.json(); })
                 .then(payload => {
                     allMembers = payload.data || payload || [];
-                    filteredMembers = allMembers;
-                    renderMembers();
+                    buildAdminMemberRoleFilterCheckboxes();
+                    filterMembers();
                 })
-                .catch(error => {
-                    document.getElementById('membersList').innerHTML = '<div class="empty-state">Failed to load members: ' + error.message + '</div>';
+                .catch(() => {
+                    document.getElementById('membersList').innerHTML =
+                        '<p class="list-status list-status--error">Unable to load members right now.</p>';
                 });
         }
 

@@ -41,39 +41,6 @@
             opacity: 0.9;
         }
 
-        .kb-selector {
-            width: 100%;
-            margin-bottom: 24px;
-        }
-
-        .kb-selector-select {
-            width: 100%;
-            padding: 12px 16px;
-            background: #232323;
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 8px;
-            color: #f5f3ef;
-            font-family: "Inter", sans-serif;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(245,243,239,0.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 40px;
-        }
-
-        .kb-selector-select:focus {
-            outline: none;
-            border-color: rgba(255,255,255,0.25);
-        }
-
-        .kb-selector-select option {
-            background: #232323;
-            color: #f5f3ef;
-        }
-
         .pdf-viewer {
             width: 100%;
             height: 78vh;
@@ -109,10 +76,20 @@
                 <p>Role-based manuals, procedures, and operational documentation.</p>
             </div>
 
-            <div class="kb-selector">
-                <select class="kb-selector-select" id="kbSelect">
-                    <option value="">Select a document...</option>
-                </select>
+            <div class="kb-doc-toolbar">
+                <div class="sidebar-chart-picker charts-inline-chart-picker kb-doc-picker">
+                    <span class="sidebar-chart-label">Select document</span>
+                    <button
+                        type="button"
+                        id="kbDropdownToggle"
+                        class="sidebar-chart-dropdown-toggle"
+                        aria-expanded="false"
+                        aria-controls="kbDocList"
+                    >
+                        Select a document...
+                    </button>
+                    <ul id="kbDocList" class="sidebar-chart-list" role="listbox" aria-label="Knowledge base documents"></ul>
+                </div>
             </div>
 
             <iframe class="pdf-viewer" id="pdfViewer" src="" title="Document viewer"></iframe>
@@ -150,24 +127,90 @@
 
         const available = knowledgeBase.filter(tab => tab.roles.some(r => userRoles.includes(r)));
 
-        const select = document.getElementById('kbSelect');
+        const kbPicker = document.querySelector('.kb-doc-picker');
+        const kbToggle = document.getElementById('kbDropdownToggle');
+        const kbList = document.getElementById('kbDocList');
         const viewer = document.getElementById('pdfViewer');
+        const pdfFallback = 'assets/pdfs/placeholder.pdf';
+        const setViewerPdf = (url) => fetch(url, { method: 'HEAD' }).then(r => { viewer.src = r.ok ? url : pdfFallback; }).catch(() => { viewer.src = pdfFallback; });
 
-        available.forEach((tab, i) => {
-            const opt = document.createElement('option');
-            opt.value = tab.pdfPath;
-            opt.textContent = tab.title;
-            if (i === 0) opt.selected = true;
-            select.appendChild(opt);
-        });
+        let selectedKbIndex = null;
 
-        if (available.length > 0) {
-            viewer.src = available[0].pdfPath;
+        function setKbDropdownLabel(label) {
+            if (kbToggle) kbToggle.textContent = label;
         }
 
-        select.addEventListener('change', () => {
-            if (select.value) viewer.src = select.value;
-        });
+        function setActiveKbInList(index) {
+            if (!kbList) return;
+            kbList.querySelectorAll('.sidebar-chart-item').forEach((item) => {
+                const isActive = parseInt(item.dataset.index, 10) === index;
+                item.classList.toggle('active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+        }
+
+        function selectKbByIndex(index) {
+            const tab = available[index];
+            if (!tab) return;
+            selectedKbIndex = index;
+            setKbDropdownLabel(tab.title);
+            setActiveKbInList(index);
+            setViewerPdf(tab.pdfPath);
+        }
+
+        function renderKbList() {
+            if (!kbList) return;
+            kbList.innerHTML = '';
+            if (available.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'sidebar-chart-empty';
+                li.textContent = 'No documents for your role.';
+                kbList.appendChild(li);
+                setKbDropdownLabel('No documents');
+                return;
+            }
+            available.forEach((tab, index) => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'sidebar-chart-item';
+                btn.dataset.index = String(index);
+                btn.setAttribute('role', 'option');
+                btn.setAttribute('aria-selected', 'false');
+                btn.textContent = tab.title;
+                li.appendChild(btn);
+                kbList.appendChild(li);
+            });
+            if (selectedKbIndex !== null) setActiveKbInList(selectedKbIndex);
+        }
+
+        renderKbList();
+        if (available.length > 0) selectKbByIndex(0);
+
+        if (kbToggle && kbPicker) {
+            kbToggle.addEventListener('click', function () {
+                const isOpen = kbPicker.classList.toggle('open');
+                kbToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        }
+
+        if (kbList && kbPicker && kbToggle) {
+            kbList.addEventListener('click', function (event) {
+                const target = event.target.closest('.sidebar-chart-item');
+                if (!target) return;
+                const index = parseInt(target.dataset.index, 10);
+                selectKbByIndex(index);
+                kbPicker.classList.remove('open');
+                kbToggle.setAttribute('aria-expanded', 'false');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!kbPicker.contains(event.target)) {
+                    kbPicker.classList.remove('open');
+                    kbToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
     </script>
 </body>
 

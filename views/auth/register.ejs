@@ -153,7 +153,7 @@
             <h2>Create account</h2>
             <div class="error-message" id="errorMessage"></div>
             <div class="success-message" id="successMessage"></div>
-            <form id="registerForm">
+            <form id="registerForm" data-redirect="<%= typeof redirect !== 'undefined' && redirect ? redirect : '' %>">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required autocomplete="username">
@@ -175,7 +175,7 @@
                 </div>
             </form>
             <div class="auth-links">
-                Already have an account? <a href="/login/home">Sign in</a>
+                Already have an account? <a href="/login<% if (typeof redirect !== 'undefined' && redirect) { %>?redirect=<%= encodeURIComponent(redirect) %><% } %>">Sign in</a>
             </div>
         </div>
 
@@ -217,12 +217,12 @@
                     throw new Error(payload.error || 'Error creating account. Please try again.');
                 }
 
-                document.getElementById('successMessage').textContent = 'Account created successfully! Redirecting to login...';
+                document.getElementById('successMessage').textContent = 'Account created successfully! Redirecting to sign in...';
                 document.getElementById('successMessage').style.display = 'block';
                 document.getElementById('errorMessage').style.display = 'none';
-                setTimeout(() => {
-                    window.location.href = '/login/home';
-                }, 2000);
+                const r = document.getElementById('registerForm').dataset.redirect || '';
+                const loginUrl = '/login' + (r ? '?redirect=' + encodeURIComponent(r) : '');
+                setTimeout(() => { window.location.href = loginUrl; }, 2000);
             })
             .catch(error => {
                 document.getElementById('errorMessage').textContent = error.message;

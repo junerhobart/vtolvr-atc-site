@@ -264,7 +264,7 @@
 			</div>
 
 		<div class="auth-links">
-			Remembered it? <a href="/login/home">Back to login</a>
+			Remembered it? <a href="/login">Back to login</a>
 		</div>
 	</div>
 
@@ -448,7 +448,7 @@
 
 				showSuccess('Password reset successful! Redirecting to login...');
 				setTimeout(() => {
-					window.location.href = '/login/home';
+					window.location.href = '/login';
 				}, 1800);
 			} catch (err) {
 				showError('Error resetting password. Please try again.');

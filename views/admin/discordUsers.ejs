@@ -38,75 +38,21 @@
             margin-bottom: 40px;
         }
 
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            flex: 1;
-            padding: 12px 16px;
-            background-color: #333;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: #e0e0e0;
-            font-size: 1em;
-            transition: all 0.3s;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: rgba(255,255,255,0.3);
-            background-color: #3a3a3a;
-        }
-
-        .search-box button {
-            padding: 12px 24px;
-            background-color: rgba(255,255,255,0.1);
-            color: #e0e0e0;
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .search-box button:hover {
-            background-color: rgba(255,255,255,0.16);
-        }
-
-        .filter-options {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            background-color: #333;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #b0b0b0;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-
-        .filter-btn:hover,
-        .filter-btn.active {
-            background-color: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.22);
-            color: #f5f3ef;
-        }
-
         .results-count {
             color: #888;
             font-size: 0.9em;
             margin-bottom: 20px;
             text-align: center;
+        }
+
+        .list-status {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #ffb0b0;
+            padding: 20px 16px;
+            margin: 0 auto;
+            max-width: 28rem;
+            grid-column: 1 / -1;
         }
 
         .users-container {
@@ -213,8 +159,6 @@
 
         @media (max-width: 768px) {
             .users-container { grid-template-columns: 1fr; }
-            .search-box { flex-direction: column; }
-            .search-box input, .search-box button { padding: 12px; font-size: 1em; }
             .search-container { max-width: 100%; }
             .hero h1 { font-size: 1.8em; }
         }
@@ -239,18 +183,25 @@
         </div>
 
         <div class="search-container">
-            <div class="search-box">
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Search by username or Discord ID…"
-                    onkeyup="searchUsers()"
-                >
-                <button onclick="searchUsers()">Search</button>
-            </div>
-
-            <div class="filter-options" id="filterOptions">
-                <button class="filter-btn active" onclick="filterByRole('all', event)">All Members</button>
+            <div class="search-toolbar-row">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search by username or Discord ID…"
+                        onkeyup="searchUsers()"
+                    >
+                    <button type="button" onclick="searchUsers()">Search</button>
+                </div>
+                <section class="filters filters--in-search" aria-label="Member filters">
+                    <div class="filter-toolbar">
+                        <%- include('../partials/filter-popover', {
+                            triggerLabel: 'Filters',
+                            panelId: 'discordRoleFilterPanel',
+                            items: []
+                        }) %>
+                    </div>
+                </section>
             </div>
 
             <div class="results-count">
@@ -268,7 +219,6 @@
 
     <script>
         let allUsers = [];
-        let currentFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchUsers();
@@ -283,33 +233,59 @@
 
                 const data = await response.json();
                 allUsers = data.data || [];
-                buildRoleFilters(allUsers);
+                buildDiscordRoleFilterCheckboxes();
                 displayUsers(allUsers);
-            } catch (error) {
-                document.getElementById('usersContainer').innerHTML = `
-                    <div class="no-results">
-                        <h3>Error loading Discord users</h3>
-                        <p>Unable to load data. Please try again later.</p>
-                    </div>
-                `;
+            } catch {
+                document.getElementById('resultsCount').textContent = '';
+                document.getElementById('usersContainer').innerHTML =
+                    '<p class="list-status">Unable to load Discord users right now.</p>';
             }
         }
 
-        function buildRoleFilters(users) {
-            const roleSet = new Set();
-            users.forEach(u => {
-                if (u.roles) u.roles.filter(r => r !== '@everyone').forEach(r => roleSet.add(r));
-            });
+        function buildDiscordRoleFilterCheckboxes() {
+            const panel = document.getElementById('discordRoleFilterPanel');
+            if (!panel) return;
+            panel.querySelectorAll('[data-role-filter-dynamic]').forEach(function (el) { el.remove(); });
 
-            const container = document.getElementById('filterOptions');
-            const existing = container.querySelector('.filter-btn.active');
-            roleSet.forEach(role => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn';
-                btn.textContent = role;
-                btn.onclick = (e) => filterByRole(role, e);
-                container.appendChild(btn);
+            const roleSet = new Set();
+            allUsers.forEach(function (u) {
+                (u.roles || []).forEach(function (r) {
+                    if (r && r !== '@everyone') roleSet.add(r);
+                });
             });
+            var sorted = Array.from(roleSet).sort(function (a, b) { return a.localeCompare(b); });
+            sorted.forEach(function (role) {
+                var safeId = 'discordRole_' + role.replace(/[^a-zA-Z0-9_-]/g, '_');
+                var label = document.createElement('label');
+                label.className = 'filter-popover__row';
+                label.setAttribute('data-role-filter-dynamic', '1');
+                label.setAttribute('for', safeId);
+                var input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = safeId;
+                input.checked = true;
+                input.setAttribute('data-role-name', role);
+                var span = document.createElement('span');
+                span.className = 'filter-popover__row-label';
+                span.textContent = role;
+                label.appendChild(input);
+                label.appendChild(span);
+                panel.appendChild(label);
+                input.addEventListener('change', searchUsers);
+            });
+        }
+
+        function discordRoleFilterPass(user) {
+            var panel = document.getElementById('discordRoleFilterPanel');
+            if (!panel) return true;
+            var checked = Array.prototype.slice.call(panel.querySelectorAll('input[type="checkbox"]'))
+                .filter(function (cb) { return cb.checked; })
+                .map(function (cb) { return cb.getAttribute('data-role-name'); })
+                .filter(Boolean);
+            if (checked.length === 0) return true;
+            var visible = (user.roles || []).filter(function (r) { return r && r !== '@everyone'; });
+            if (visible.length === 0) return true;
+            return visible.some(function (r) { return checked.indexOf(r) !== -1; });
         }
 
         function displayUsers(users) {
@@ -351,21 +327,12 @@
         function searchUsers() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allUsers.filter(user => {
-                const matchesSearch = !query ||
+                const textOk = !query ||
                     (user.username && user.username.toLowerCase().includes(query)) ||
                     (user.id && user.id.toLowerCase().includes(query));
-                const matchesRole = currentFilter === 'all' ||
-                    (user.roles && user.roles.includes(currentFilter));
-                return matchesSearch && matchesRole;
+                return textOk && discordRoleFilterPass(user);
             });
             displayUsers(filtered);
-        }
-
-        function filterByRole(role, event) {
-            currentFilter = role;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            if (event && event.target) event.target.classList.add('active');
-            searchUsers();
         }
     </script>
 </body>

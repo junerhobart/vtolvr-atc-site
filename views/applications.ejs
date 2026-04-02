@@ -197,7 +197,7 @@
         }
 
         .btn-primary {
-            background: #3a3a3a;
+            background: #222222;
             color: #f5f3ef;
         }
 
@@ -256,14 +256,14 @@
 
             <div class="position-grid">
                 <button class="position-btn" id="atcBtn" onclick="selectPosition('atc')">
-                    <svg class="position-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="position-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 14h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a9 9 0 0 1 18 0v4a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h2"/>
                     </svg>
                     <span class="position-name">ATC Controller</span>
                     <span class="position-desc">Manage airspace and guide pilots through controlled zones</span>
                 </button>
                 <button class="position-btn" id="enforcerBtn" onclick="selectPosition('enforcer')">
-                    <svg class="position-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="position-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                     <span class="position-name">Enforcer</span>
@@ -318,8 +318,10 @@
         </footer>
     </div>
 
+    <script src="/form-url-draft.js"></script>
     <script>
         let selectedPosition = null;
+        let applicationDraftApi = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             const user = <%- JSON.stringify(user || null) %>;
@@ -327,6 +329,40 @@
                 const discordIdInput = document.getElementById('discordId');
                 discordIdInput.value = user.DiscordID;
                 discordIdInput.readOnly = true;
+            }
+
+            if (window.FormUrlDraft) {
+                const formPanel = document.getElementById('formPanel');
+                applicationDraftApi = window.FormUrlDraft.bind(
+                    'applicationDraft',
+                    function getState() {
+                        return {
+                            selectedPosition: selectedPosition,
+                            fullName: document.getElementById('fullName').value,
+                            callsign: document.getElementById('callsign').value,
+                            discord: document.getElementById('discord').value,
+                            discordId: document.getElementById('discordId').value,
+                            experience: document.getElementById('experience').value,
+                            whyJoin: document.getElementById('whyJoin').value
+                        };
+                    },
+                    function applyState(s) {
+                        if (!s || typeof s !== 'object') return;
+                        if (s.selectedPosition === 'atc' || s.selectedPosition === 'enforcer') {
+                            selectPosition(s.selectedPosition);
+                        }
+                        const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+                        set('fullName', s.fullName);
+                        set('callsign', s.callsign);
+                        set('discord', s.discord);
+                        if (document.getElementById('discordId') && !document.getElementById('discordId').readOnly) {
+                            set('discordId', s.discordId);
+                        }
+                        set('experience', s.experience);
+                        set('whyJoin', s.whyJoin);
+                    },
+                    formPanel || document
+                );
             }
         });
 
@@ -346,6 +382,7 @@
             document.getElementById('formPanel').style.display = 'none';
             document.getElementById('atcBtn').classList.remove('active');
             document.getElementById('enforcerBtn').classList.remove('active');
+            if (applicationDraftApi && applicationDraftApi.clearDraft) applicationDraftApi.clearDraft();
         }
 
         function showAlert(type, message) {
@@ -384,6 +421,7 @@
                 }
 
                 showAlert('success', 'Application submitted successfully!');
+                if (applicationDraftApi && applicationDraftApi.clearDraft) applicationDraftApi.clearDraft();
                 resetForm();
             })
             .catch(error => showAlert('error', error.message))

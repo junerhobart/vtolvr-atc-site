@@ -76,80 +76,6 @@
             gap: 24px;
         }
 
-        .sidebar-chart-picker {
-            margin-top: 16px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(245,243,239,0.12);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            position: relative;
-        }
-
-        .sidebar-chart-label {
-            font-size: 0.75rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(245,243,239,0.6);
-            font-weight: 600;
-        }
-
-        .sidebar-chart-dropdown-toggle {
-            width: 100%;
-            padding: 10px 12px;
-            background: #232323;
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 8px;
-            color: #f5f3ef;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .sidebar-chart-list {
-            list-style: none;
-            margin: 0;
-            padding: 4px;
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 8px;
-            background: #1b1b1b;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            pointer-events: none;
-            transition: max-height 0.2s ease, opacity 0.2s ease;
-        }
-
-        .sidebar-chart-picker.open .sidebar-chart-list {
-            max-height: 320px;
-            opacity: 1;
-            pointer-events: auto;
-            overflow-y: auto;
-        }
-
-        .sidebar-chart-item {
-            width: 100%;
-            background: transparent;
-            color: #f5f3ef;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 10px;
-            text-align: left;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .sidebar-chart-item:hover,
-        .sidebar-chart-item.active {
-            background: rgba(255,255,255,0.1);
-        }
-
-        .sidebar-chart-empty {
-            color: rgba(245,243,239,0.6);
-            font-size: 0.8rem;
-            padding: 8px 10px;
-        }
-
         .chart-display {
             width: 100%;
             display: flex;
@@ -171,26 +97,13 @@
             padding: 40px 0;
         }
 
-        .metar-input-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .chart-area .search-container {
             width: 100%;
-            max-width: 600px;
-        }
-
-        .metar-input-container label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: rgba(245,243,239,0.6);
-            white-space: nowrap;
+            margin-bottom: 8px;
         }
 
         .metar-display {
-            background: #1e1e1e;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 18px 20px;
+            padding: 16px 18px;
             width: 100%;
             font-family: "JetBrains Mono", "Fira Mono", "Courier New", monospace;
         }
@@ -200,15 +113,13 @@
             font-weight: 600;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            color: rgba(245,243,239,0.4);
             margin-bottom: 8px;
             font-family: "Inter", sans-serif;
         }
 
         .metar-code {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 500;
-            color: #f5f3ef;
             letter-spacing: 0.04em;
             margin-bottom: 12px;
             word-break: break-all;
@@ -219,7 +130,6 @@
             flex-wrap: wrap;
             gap: 6px 20px;
             font-size: 0.8rem;
-            color: rgba(245,243,239,0.45);
             font-family: "Inter", sans-serif;
         }
 
@@ -302,10 +212,19 @@
         @media (max-width: 768px) {
             .page-wrap { padding: 32px 16px; }
             .hero h1 { font-size: 1.8em; }
-            .metar-input-container { flex-wrap: wrap; }
         }
 
         <%- include('partials/fixed-sidebar-theme') %>
+
+        .chart-area .chart-display {
+            position: relative;
+            z-index: 0;
+        }
+
+        .search-toolbar-row {
+            position: relative;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -315,18 +234,46 @@
         <div class="page-wrap">
             <div class="hero">
                 <h1>Raven's Airport Charts</h1>
-                <p>Select a chart from the sidebar to view it. Voice commands: "Select chart [name]" (Chrome).</p>
+                <p>Select a chart, enter a METAR session ID, then fetch. Voice: &quot;Select chart [name]&quot; (Chrome).</p>
             </div>
 
             <div class="chart-area">
-                <div class="metar-input-container">
-                    <label for="sessionIdInput">Session ID for METAR</label>
-                    <input type="text" id="sessionIdInput" placeholder="Enter session ID">
-                    <button id="fetchMetarBtn">Fetch METAR</button>
+                <div class="search-container">
+                    <div class="search-toolbar-row">
+                        <section class="filters filters--in-search" aria-label="Chart selection">
+                            <div class="filter-toolbar">
+                                <div class="sidebar-chart-picker charts-inline-chart-picker">
+                                    <button
+                                        type="button"
+                                        id="sidebarChartDropdownToggle"
+                                        class="sidebar-chart-dropdown-toggle"
+                                        aria-expanded="false"
+                                        aria-controls="sidebarChartList"
+                                        aria-label="Select chart"
+                                    >
+                                        Select a chart...
+                                    </button>
+                                    <ul id="sidebarChartList" class="sidebar-chart-list" role="listbox" aria-label="Chart list">
+                                        <li class="sidebar-chart-empty">Loading charts...</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        <div class="search-box">
+                            <input
+                                type="text"
+                                id="sessionIdInput"
+                                placeholder="METAR session ID"
+                                autocomplete="off"
+                                aria-label="METAR session ID"
+                            >
+                            <button type="button" id="fetchMetarBtn">Fetch METAR</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="chart-display" id="chartDisplay">
-                    <div class="placeholder">Select a chart from the sidebar to display it</div>
+                    <div class="placeholder">Choose a chart from the dropdown above.</div>
                 </div>
 
                 <div id="metarDisplay" class="metar-display" style="display:none"></div>
@@ -594,11 +541,14 @@
         async function fetchMetarData(sessionId) {
             const metarDisplay = document.getElementById('metarDisplay');
             try {
-                const response = await fetch(`/api/metar/${sessionId}`);
+                const response = await fetch(`/api/metar/${sessionId}`, { credentials: 'same-origin' });
                 if (response.ok) {
                     const payload = await response.json();
                     // You can display this data on the page as needed
                     displayMetarData(payload.data);
+                } else if (response.status === 401 || response.status === 403) {
+                    metarDisplay.style.display = '';
+                    metarDisplay.innerHTML = '<p class="metar-label">Sign in with ATC staff access to load METAR.</p>';
                 } else {
                     metarDisplay.style.display = '';
                     metarDisplay.innerHTML = '<p class="metar-label">No METAR found for that session.</p>';
