@@ -6,184 +6,31 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="author" content="Caleb Thomas (TheRavenSeb)">
     <meta name="description" content="Discord Users Directory - Browse and search all Discord members.">
-    <meta name="keywords" content="Discord, Users, Directory, VTOL VR">
     <title>Discord Users Directory</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-            margin: 0;
-            line-height: 1.6;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         .main-content {
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            overflow-y: auto;
+            min-height: 100vh;
         }
 
-        .hamburger-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 1.5em;
-            cursor: pointer;
-            padding: 10px 0;
-            margin-bottom: 0;
-            transition: all 0.2s;
-            margin-right: 15px;
-        }
-
-        .hamburger-btn:hover {
-            color: #667eea;
-        }
-
-        .hamburger-btn.active {
-            color: #667eea;
-        }
-
-        .close-sidebar-btn {
-            display: none;
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            z-index: 1002;
-        }
-
-        .close-sidebar-btn:hover {
-            color: #667eea;
-        }
-
-        .sidebar {
-            width: 280px;
-            background-color: #2a2a2a;
-            border-right: 1px solid #444;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 25px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .sidebar.hidden {
-            transform: translateX(-100%);
-        }
-
-        .sidebar-logo {
-            width: 120px;
-            height: 120px;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            color: #2a2a2a;
-        }
-
-        .sidebar-title {
-            text-align: center;
-            color: #e0e0e0;
-            font-size: 1.3em;
-            font-weight: bold;
-            line-height: 1.3;
-        }
-
-        .sidebar-title a {
-            color: #e0e0e0;
-            text-decoration: none;
-        }
-
-        .sidebar-title a:hover {
-            color: #667eea;
-        }
-
-        .sidebar-menu {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .sidebar-menu-item {
-            padding: 12px 16px;
-            color: #b0b0b0;
-            text-decoration: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            font-size: 0.95em;
-        }
-
-        .sidebar-menu-item:hover {
-            background-color: #3a3a3a;
-            color: #e0e0e0;
-        }
-
-        .sidebar-menu-item.active {
-            background-color: #667eea;
-            color: #ffffff;
-        }
-
-        .sidebar-login-btn {
-            width: 100%;
-            padding: 12px 16px;
-            background-color: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95em;
-            margin-top: auto;
-            transition: all 0.2s;
-        }
-
-        .sidebar-login-btn:hover {
-            background-color: #5569d8;
-        }
-
-        header {
+        .hero {
             text-align: center;
             color: #e0e0e0;
             margin-bottom: 30px;
             padding-top: 20px;
         }
 
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
+        .hero h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .hero p   { font-size: 1.1em; opacity: 0.9; }
 
         .search-container {
             width: 100%;
@@ -210,23 +57,56 @@
 
         .search-box input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: rgba(255,255,255,0.3);
             background-color: #3a3a3a;
         }
 
         .search-box button {
             padding: 12px 24px;
-            background-color: #667eea;
-            color: white;
-            border: none;
+            background-color: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
         .search-box button:hover {
-            background-color: #5569d8;
+            background-color: rgba(255,255,255,0.16);
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background-color: #333;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #b0b0b0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background-color: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.22);
+            color: #f5f3ef;
+        }
+
+        .results-count {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .users-container {
@@ -238,98 +118,89 @@
             margin-bottom: 40px;
         }
 
+        /* Card — mirrors pilot-card exactly */
         .user-card {
-            background: #333;
-            border-radius: 12px;
+            background: #232323;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s;
-            border: 1px solid #444;
+            transition: border-color 0.15s;
         }
 
-        .user-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
+        .user-card:hover { border-color: rgba(255,255,255,0.16); }
 
         .user-avatar {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 14px;
+            background: #2e2e2e;
+            border: 1px solid rgba(255,255,255,0.08);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
-            color: white;
-            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .user-avatar-initials {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: rgba(245,243,239,0.5);
+            letter-spacing: -0.02em;
         }
 
         .user-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #e0e0e0;
-            margin-bottom: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f5f3ef;
+            margin-bottom: 4px;
+            letter-spacing: -0.01em;
             word-break: break-word;
         }
 
         .user-id {
-            color: #667eea;
-            font-size: 0.85em;
-            font-weight: 600;
-            margin-bottom: 12px;
-            font-family: monospace;
+            color: rgba(245,243,239,0.4);
+            font-size: 0.78rem;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 14px;
             word-break: break-all;
         }
 
-        .user-info {
-            font-size: 0.9em;
-            color: #999;
-            margin-bottom: 6px;
-            word-break: break-word;
-        }
-
         .user-info-label {
-            font-weight: 600;
-            color: #b0b0b0;
+            font-size: 0.8rem;
+            color: rgba(245,243,239,0.45);
+            margin-bottom: 2px;
         }
 
-        .user-status {
-            font-size: 0.9em;
+        .user-roles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #444;
-            color: #b0b0b0;
+            border-top: 1px solid rgba(255,255,255,0.07);
         }
 
-        .status-badge {
+        .user-role-badge {
             display: inline-block;
-            padding: 4px 10px;
-            background-color: #667eea;
-            color: white;
-            border-radius: 4px;
-            font-size: 0.75em;
+            padding: 3px 10px;
+            background: rgba(255,255,255,0.07);
+            color: rgba(245,243,239,0.75);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: 0.72rem;
             font-weight: 600;
             text-transform: uppercase;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .no-results h3 {
-            color: #e0e0e0;
-            margin-bottom: 10px;
-        }
-
-        .results-count {
-            color: #999;
-            font-size: 0.95em;
-            margin-bottom: 20px;
-            text-align: center;
+            letter-spacing: 0.04em;
         }
 
         footer {
@@ -337,297 +208,108 @@
             margin-top: 40px;
             text-align: center;
             opacity: 0.8;
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                width: calc(100% - 280px);
-            }
+            font-size: 0.8rem;
         }
 
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            .hamburger-btn {
-                display: block;
-            }
-
-            .main-content {
-                width: 100%;
-                padding: 15px;
-                padding-top: 0;
-            }
-
-            .sidebar {
-                width: 250px;
-                height: auto;
-                position: fixed;
-                top: 0;
-                left: 0;
-                transform: translateX(-100%);
-                padding: 70px 20px 20px 20px;
-                z-index: 1001;
-                max-height: 100vh;
-                overflow-y: auto;
-                border-right: 1px solid #444;
-                transition: transform 0.3s ease-in-out;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .close-sidebar-btn {
-                display: block;
-            }
-
-            .users-container {
-                grid-template-columns: 1fr;
-            }
-
-            header h1 {
-                font-size: 1.8em;
-            }
-
-            header p {
-                font-size: 0.95em;
-            }
-
-            .search-box {
-                flex-direction: column;
-            }
-
-            .search-box input {
-                padding: 12px;
-                font-size: 16px;
-            }
-
-            .search-box button {
-                padding: 12px;
-                font-size: 1em;
-            }
-
-            .search-container {
-                max-width: 100%;
-            }
+            .users-container { grid-template-columns: 1fr; }
+            .search-box { flex-direction: column; }
+            .search-box input, .search-box button { padding: 12px; font-size: 1em; }
+            .search-container { max-width: 100%; }
+            .hero h1 { font-size: 1.8em; }
         }
 
         @media (max-width: 480px) {
-            .main-content {
-                padding: 12px;
-                padding-top: 0;
-            }
-
-            header {
-                margin-bottom: 20px;
-                padding-top: 10px;
-            }
-
-            header h1 {
-                font-size: 1.6em;
-                margin-bottom: 5px;
-            }
-
-            header p {
-                font-size: 0.9em;
-            }
-
-            .sidebar-logo {
-                width: 80px;
-                height: 80px;
-                font-size: 40px;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-title {
-                font-size: 1.05em;
-                line-height: 1.2;
-                margin-bottom: 15px;
-            }
-
-            .sidebar-menu {
-                width: 100%;
-            }
-
-            .sidebar-menu-item {
-                width: 100%;
-                padding: 12px 16px;
-                font-size: 0.95em;
-            }
-
-            .search-box {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .search-box input {
-                padding: 12px;
-                font-size: 16px;
-                width: 100%;
-            }
-
-            .search-box button {
-                padding: 12px;
-                font-size: 0.95em;
-                width: 100%;
-            }
-
-            .users-container {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                max-width: 100%;
-            }
-
-            .user-card {
-                padding: 15px;
-            }
-
-            .user-avatar {
-                width: 60px;
-                height: 60px;
-                font-size: 30px;
-            }
-
-            .user-name {
-                font-size: 1.1em;
-            }
-
-            .user-id {
-                font-size: 0.8em;
-            }
-
-            .user-info {
-                font-size: 0.85em;
-            }
-
-            .results-count {
-                font-size: 0.85em;
-            }
-
-            footer {
-                font-size: 0.85em;
-                margin-top: 30px;
-            }
+            .hero h1 { font-size: 1.6em; }
+            .users-container { gap: 15px; max-width: 100%; }
+            .user-card { padding: 15px; }
         }
+
+        <%- include('../partials/fixed-sidebar-theme') %>
     </style>
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
-        <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
-        <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
-        <div class="sidebar-menu">
-            <a class="sidebar-menu-item" href="/profile">Profile</a>
-            <a class="sidebar-menu-item" href="/announcements">Announcements</a>
-            <a class="sidebar-menu-item" href="/pilots">Pilots</a>
-            <a class="sidebar-menu-item" href="/applications">Applications</a>
-            <a class="sidebar-menu-item" href="/information">Information</a>
-        </div>
-        <% if (user) { %>
-            <a href="/logout" class="sidebar-login-btn">Logout</a>
-        <% } else { %>
-            <a href="/login/home" class="sidebar-login-btn">Login</a>
-        <% } %>
-    </div>
+    <%- include('../partials/sidebar', { page: 'discordUsers' }) %>
 
     <div class="main-content">
-        <div style="display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px;">
-            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
-        </div>
-        <header>
-            <h1>Discord Users Directory</h1>
+
+        <div class="hero">
+            <h1>Discord Users</h1>
             <p>Browse and search all Discord members in our network</p>
-        </header>
+        </div>
 
         <div class="search-container">
             <div class="search-box">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search users by username or Discord ID..." 
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search by username or Discord ID…"
                     onkeyup="searchUsers()"
                 >
                 <button onclick="searchUsers()">Search</button>
             </div>
 
+            <div class="filter-options" id="filterOptions">
+                <button class="filter-btn active" onclick="filterByRole('all', event)">All Members</button>
+            </div>
+
             <div class="results-count">
-                <span id="resultsCount">Loading Discord users...</span>
+                <span id="resultsCount"></span>
             </div>
         </div>
 
-        <div class="users-container" id="usersContainer">
-            <div class="no-results">
-                <h3>Loading Discord users...</h3>
-            </div>
-        </div>
+        <div class="users-container" id="usersContainer"></div>
 
         <footer>
-            <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p>
+            <%# <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p> %>
+            <p>Bringing realistic aviation simulation to VTOL VR</p>
         </footer>
     </div>
 
     <script>
         let allUsers = [];
+        let currentFilter = 'all';
 
-        // Toggle sidebar on mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            sidebar.classList.toggle('active');
-            hamburgerBtn.classList.toggle('active');
-            // Show close button when sidebar is active
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            if (sidebar.classList.contains('active')) {
-                closeBtn.style.display = 'block';
-            } else {
-                closeBtn.style.display = 'none';
-            }
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            sidebar.classList.remove('active');
-            hamburgerBtn.classList.remove('active');
-            closeBtn.style.display = 'none';
-        }
-
-        // Close sidebar when menu item is clicked on mobile
         document.addEventListener('DOMContentLoaded', function() {
-            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
-            sidebarMenuItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        const sidebar = document.getElementById('sidebar');
-                        const hamburgerBtn = document.getElementById('hamburgerBtn');
-                        const closeBtn = document.getElementById('closeSidebarBtn');
-                        sidebar.classList.remove('active');
-                        hamburgerBtn.classList.remove('active');
-                        closeBtn.style.display = 'none';
-                    }
-                });
-            });
             fetchUsers();
         });
 
         async function fetchUsers() {
             try {
                 const response = await fetch('/api/users/discord');
+                if (!response.ok) {
+                    throw new Error('Unable to load Discord users right now.');
+                }
+
                 const data = await response.json();
                 allUsers = data.data || [];
+                buildRoleFilters(allUsers);
                 displayUsers(allUsers);
             } catch (error) {
-                console.error('Error fetching Discord users:', error);
                 document.getElementById('usersContainer').innerHTML = `
                     <div class="no-results">
                         <h3>Error loading Discord users</h3>
-                        <p>Unable to load Discord users data. Please try again later.</p>
+                        <p>Unable to load data. Please try again later.</p>
                     </div>
                 `;
             }
+        }
+
+        function buildRoleFilters(users) {
+            const roleSet = new Set();
+            users.forEach(u => {
+                if (u.roles) u.roles.filter(r => r !== '@everyone').forEach(r => roleSet.add(r));
+            });
+
+            const container = document.getElementById('filterOptions');
+            const existing = container.querySelector('.filter-btn.active');
+            roleSet.forEach(role => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.textContent = role;
+                btn.onclick = (e) => filterByRole(role, e);
+                container.appendChild(btn);
+            });
         }
 
         function displayUsers(users) {
@@ -635,41 +317,55 @@
             const resultsCount = document.getElementById('resultsCount');
 
             if (users.length === 0) {
-                container.innerHTML = `
-                    <div class="no-results">
-                        <h3>No Discord users found</h3>
-                        <p>Try adjusting your search criteria.</p>
-                    </div>
-                `;
+                container.innerHTML = '';
                 resultsCount.textContent = 'No results found';
                 return;
             }
 
-            resultsCount.textContent = `Showing ${users.length} user(s)`;
+            resultsCount.textContent = `Showing ${users.length} member${users.length !== 1 ? 's' : ''}`;
 
-            container.innerHTML = users.map(user => `
-                <div class="user-card">
-                    <div class="user-avatar">${user.avatar ? `<img src="${user.avatar}" alt="avatar" style="width: 40px; height: 40px; border-radius: 50%;"/>` : '<i class="fas fa-user"></i>'}</div>
-                    <div class="user-name">${user.username || 'Unknown'}</div>
-                    <div class="user-id">ID: ${user.id || 'N/A'}</div>
-                    
-                    ${user.roles && user.roles.length > 0 ? `<div class="user-info"><strong>Roles:</strong> ${user.roles.filter(role => role !== '@everyone').join(', ')}</div>` : ''}
-                </div>
-            `).join('');
+            const initials = (name) => (name || '?').slice(0, 2).toUpperCase();
+
+            container.innerHTML = users.map(user => {
+                const visibleRoles = (user.roles || []).filter(r => r !== '@everyone');
+                return `
+                    <div class="user-card">
+                        <div class="user-avatar">
+                            ${user.avatar
+                                ? `<img src="${user.avatar}" alt="${user.username || ''}" />`
+                                : `<span class="user-avatar-initials">${initials(user.username)}</span>`
+                            }
+                        </div>
+                        <div class="user-name">${user.username || 'Unknown'}</div>
+                        <div class="user-id">${user.id || 'N/A'}</div>
+                        ${visibleRoles.length > 0 ? `
+                            <div class="user-roles">
+                                ${visibleRoles.map(role => `<span class="user-role-badge">${role}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
         }
 
         function searchUsers() {
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-            
-            let filtered = allUsers.filter(user => {
-                const matchesSearch = !searchQuery || 
-                    (user.username && user.username.toLowerCase().includes(searchQuery)) ||
-                    (user.id && user.id.toLowerCase().includes(searchQuery));
-
-                return matchesSearch;
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allUsers.filter(user => {
+                const matchesSearch = !query ||
+                    (user.username && user.username.toLowerCase().includes(query)) ||
+                    (user.id && user.id.toLowerCase().includes(query));
+                const matchesRole = currentFilter === 'all' ||
+                    (user.roles && user.roles.includes(currentFilter));
+                return matchesSearch && matchesRole;
             });
-
             displayUsers(filtered);
+        }
+
+        function filterByRole(role, event) {
+            currentFilter = role;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            searchUsers();
         }
     </script>
 </body>

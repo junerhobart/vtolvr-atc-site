@@ -5,644 +5,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knowledge Base</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-            color: #e0e0e0;
+        .main-content {
+            display: flex;
+            flex-direction: column;
             min-height: 100vh;
-            line-height: 1.6;
         }
 
-        header {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        nav {
-            max-width: 1200px;
+        .page-wrap {
+            flex: 1;
+            max-width: 960px;
             margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 48px 24px;
+            width: 100%;
         }
 
-        .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #667eea;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
+        .hero {
+            margin-bottom: 28px;
+            text-align: center;
+            padding-top: 20px;
         }
 
-        .logo img {
-            height: 50px;
-            width: 50px;
-            object-fit: contain;
+        .hero h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #f5f3ef;
+            margin-bottom: 10px;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 14px;
-            list-style: none;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: flex-end;
+        .hero p {
+            color: rgba(245,243,239,0.7);
+            font-size: 1.1em;
+            opacity: 0.9;
         }
 
-        .nav-links > li {
-            list-style: none;
+        .kb-selector {
+            width: 100%;
+            margin-bottom: 24px;
         }
 
-        .nav-links > li > a,
-        .nav-dropdown > summary {
-            color: #e0e0e0;
-            text-decoration: none;
-            transition: color 0.3s;
+        .kb-selector-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #232323;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #f5f3ef;
+            font-family: "Inter", sans-serif;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            list-style: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(245,243,239,0.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
         }
 
-        .nav-links > li > a:hover,
-        .nav-dropdown > summary:hover {
-            color: #667eea;
+        .kb-selector-select:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.25);
         }
 
-        .nav-dropdown {
-            position: relative;
-        }
-
-        .nav-dropdown > summary {
-            user-select: none;
-        }
-
-        .nav-dropdown > summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .nav-dropdown > summary::after {
-            content: '▾';
-            font-size: 0.75em;
-            transition: transform 0.2s ease;
-        }
-
-        .nav-dropdown[open] > summary::after {
-            transform: rotate(180deg);
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            min-width: 210px;
-            list-style: none;
-            padding: 8px;
-            border-radius: 10px;
-            background: rgba(20, 20, 30, 0.98);
-            border: 1px solid rgba(102, 126, 234, 0.35);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
-            z-index: 120;
-        }
-
-        .nav-dropdown[open] .dropdown-menu {
-            display: block;
-        }
-
-        .dropdown-menu li {
-            list-style: none;
-        }
-
-        .dropdown-menu a {
-            display: block;
-            color: #e0e0e0;
-            text-decoration: none;
-            border-radius: 8px;
-            padding: 9px 12px;
-            transition: all 0.25s;
-            white-space: nowrap;
-        }
-
-        .dropdown-menu a:hover {
-            background: rgba(102, 126, 234, 0.2);
-            color: #8ea2ff;
-        }
-
-        .hamburger-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 1.8em;
-            cursor: pointer;
-            padding: 10px;
-            transition: color 0.3s;
-        }
-
-        .hamburger-btn:hover {
-            color: #667eea;
-        }
-
-        .sidebar {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 280px;
-            height: 100vh;
-            background-color: rgba(20, 20, 30, 0.98);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(102, 126, 234, 0.3);
-            padding: 80px 20px 20px 20px;
-            z-index: 999;
-            overflow-y: auto;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .sidebar.active {
-            display: flex;
-        }
-
-        .sidebar-close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 1.8em;
-            cursor: pointer;
-            padding: 5px 10px;
-            transition: color 0.3s;
-        }
-
-        .sidebar-close-btn:hover {
-            color: #667eea;
-        }
-
-        .sidebar a {
-            color: #e0e0e0;
-            text-decoration: none;
-            padding: 12px 16px;
-            border-radius: 6px;
-            transition: all 0.3s;
-            display: block;
-        }
-
-        .sidebar a:hover {
-            background-color: rgba(102, 126, 234, 0.2);
-            color: #667eea;
-        }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 998;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        .content-wrap {
-            padding: 30px 20px;
-        }
-
-        .page-shell {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .brand-header {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        .brand-logo {
-            height: 150px;
-            width: 150px;
-            object-fit: contain;
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
-        }
-
-        .page-title {
-            font-size: 1.8em;
-            text-align: center;
-            margin-bottom: 6px;
-            color: #e0e0e0;
-        }
-
-        .page-subtitle {
-            text-align: center;
-            color: #b0b0b0;
-            margin-bottom: 24px;
-        }
-
-        .tabs-container {
-            background: transparent;
-        }
-
-        .tabs-header {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            overflow-x: auto;
-            background: transparent;
-            padding: 0;
-            gap: 18px;
-            margin-bottom: 26px;
-            scrollbar-width: thin;
-        }
-
-        .content-divider {
-            border: 0;
-            border-top: 1px solid rgba(102, 126, 234, 0.25);
-            margin-bottom: 30px;
-        }
-
-        .tab-button {
-            min-height: 58px;
-            padding: 12px 16px;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 6px;
-            background: rgba(51, 51, 51, 0.55);
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-            transition: all 0.3s;
-            color: #e0e0e0;
-        }
-
-        .tab-button:hover {
-            background: rgba(102, 126, 234, 0.25);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
-
-        .tab-button.active {
-            background: #667eea;
-            color: #fff;
-            border-color: #667eea;
-            box-shadow: 0 8px 18px rgba(102, 126, 234, 0.4);
-        }
-
-        #tabsContent {
-            background: rgba(51, 51, 51, 0.55);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(102, 126, 234, 0.25);
-            box-shadow: 0 12px 28px rgba(10, 10, 18, 0.35);
-            overflow: hidden;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 24px;
-            min-height: 600px;
-        }
-
-        .tab-content.active {
-            display: block;
+        .kb-selector-select option {
+            background: #232323;
+            color: #f5f3ef;
         }
 
         .pdf-viewer {
             width: 100%;
-            height: 700px;
-            border: 1px solid rgba(102, 126, 234, 0.25);
-            border-radius: 10px;
+            height: 78vh;
+            border: none;
+            border-radius: 0;
             background: #fff;
+            display: block;
         }
 
-        h2 {
-            color: #e0e0e0;
-            margin-top: 0;
-            margin-bottom: 14px;
-            font-size: 1.5rem;
-            letter-spacing: -0.02em;
-        }
-
-        .section-copy {
-            color: #b0b0b0;
-            margin-bottom: 18px;
-        }
-
-        .section-divider {
-            border: 0;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-            margin-bottom: 20px;
+        footer {
+            text-align: center;
+            padding: 24px 20px;
+            font-size: 0.8rem;
+            color: rgba(245,243,239,0.3);
         }
 
         @media (max-width: 768px) {
-            .hamburger-btn {
-                display: block;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            nav {
-                justify-content: space-between;
-            }
-
-            .logo {
-                font-size: 1.5em;
-            }
-
-            .logo img {
-                height: 40px;
-                width: 40px;
-            }
-
-            .content-wrap {
-                padding: 18px 14px;
-            }
-
-            .brand-logo {
-                height: 120px;
-                width: 120px;
-            }
-
-            .page-title {
-                font-size: 1.5em;
-            }
-
-            .tabs-header {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .tab-content {
-                padding: 16px;
-                min-height: 420px;
-            }
-
-            .pdf-viewer {
-                height: 62vh;
-            }
+            .page-wrap { padding: 24px 16px; }
+            .hero h1 { font-size: 1.6rem; }
+            .pdf-viewer { height: 62vh; }
         }
+        <%- include('partials/fixed-sidebar-theme') %>
     </style>
 </head>
 
 <body>
-    <%
-        const navRoles = Array.isArray(user?.role)
-            ? user.role
-            : Array.isArray(user?.Role)
-                ? user.Role
-                : typeof user?.role === 'string'
-                    ? [user.role]
-                    : typeof user?.Role === 'string'
-                        ? [user.Role]
-                        : [];
-    %>
+    <%- include('partials/sidebar', { page: 'information' }) %>
 
-    <div class="overlay" id="overlay"></div>
+    <div class="main-content">
+        <div class="page-wrap">
+            <div class="hero">
+                <h1>Knowledge Base</h1>
+                <p>Role-based manuals, procedures, and operational documentation.</p>
+            </div>
 
-    <div class="sidebar" id="sidebar">
-        <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="closeSidebar()">&times;</button>
-        <a href="/profile">Profile</a>
-        <a href="/sessions">Sessions</a>
-        <a href="/charts">Charts</a>
-        <a href="/announcements">Announcements</a>
-        <% if (user && navRoles.includes('atc')) { %>
-            <a href="/events">Create Events</a>
-            <a href="/atc/metar">Submit METAR</a>
-        <% } %>
-        <% if (user && navRoles.includes('admin')) { %>
-            <a href="/admin">Admin Panel</a>
-            <a href="/applications/admin">Review Applications</a>
-            <a href="/admin/discord">Discord Users</a>
-        <% } %>
-        <a href="/information">Information</a>
-        <% if (user) { %>
-            <a href="/logout">Logout</a>
-        <% } else { %>
-            <a href="/login/home">Login</a>
-            <a href="/register">Register</a>
-        <% } %>
-    </div>
+            <div class="kb-selector">
+                <select class="kb-selector-select" id="kbSelect">
+                    <option value="">Select a document...</option>
+                </select>
+            </div>
 
-    <header>
-        <nav>
-            <a href="/" class="logo"><img src="https://atc-vtolvr.site/assets/logo.png" alt="ARN Logo">ARN</a>
-            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle navigation menu">☰</button>
-            <ul class="nav-links">
-                <li><a href="/profile">Profile</a></li>
-                <li><a href="/sessions">Sessions</a></li>
-                <li>
-                    <details class="nav-dropdown">
-                        <summary>Resources</summary>
-                        <ul class="dropdown-menu">
-                            <li><a href="/charts">Charts</a></li>
-                            <li><a href="/announcements">Announcements</a></li>
-                            <li><a href="/information">Information</a></li>
-                        </ul>
-                    </details>
-                </li>
-                <% if (user && navRoles.includes('atc')) { %>
-                    <li>
-                        <details class="nav-dropdown">
-                            <summary>ATC Tools</summary>
-                            <ul class="dropdown-menu">
-                                <li><a href="/events">Create Events</a></li>
-                                <li><a href="/atc/metar">Submit METAR</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                <% } %>
-                <% if (user && navRoles.includes('admin')) { %>
-                    <li>
-                        <details class="nav-dropdown">
-                            <summary>Admin</summary>
-                            <ul class="dropdown-menu">
-                                <li><a href="/admin">Admin Panel</a></li>
-                                <li><a href="/applications/admin">Apps Panel</a></li>
-                                <li><a href="/admin/discord">Discord Users</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                <% } %>
-                <li>
-                    <details class="nav-dropdown">
-                        <summary>Account</summary>
-                        <ul class="dropdown-menu">
-                            <% if (user) { %>
-                                <li><a href="/logout">Logout</a></li>
-                            <% } else { %>
-                                <li><a href="/login/home">Login</a></li>
-                                <li><a href="/register">Register</a></li>
-                            <% } %>
-                        </ul>
-                    </details>
-                </li>
-            </ul>
-        </nav>
-    </header>
-
-    <div class="content-wrap">
-    <div class="page-shell">
-        <div class="brand-header">
-            <img class="brand-logo" src="https://atc-vtolvr.site/assets/logo.png" alt="ARN Badge">
+            <iframe class="pdf-viewer" id="pdfViewer" src="" title="Document viewer"></iframe>
         </div>
-        <h1 class="page-title">Knowledge Base</h1>
-        <p class="page-subtitle">Role-based manuals, procedures, and operational documentation.</p>
 
-        <div class="tabs-container">
-            <div class="tabs-header" id="tabsHeader"></div>
-            <hr class="content-divider">
-            <div id="tabsContent"></div>
-        </div>
-    </div>
+        <footer>
+            <p>Bringing realistic aviation simulation to VTOL VR</p>
+        </footer>
     </div>
 
     <script>
-        // Get user roles from template variable (supports both user.role and user.Role)
         const currentUser = JSON.parse('<%- JSON.stringify(user || {}) %>');
         const normalizedRoles = Array.isArray(currentUser.role)
             ? currentUser.role
             : Array.isArray(currentUser.Role)
                 ? currentUser.Role
-                : typeof currentUser.role === "string"
+                : typeof currentUser.role === 'string'
                     ? [currentUser.role]
-                    : typeof currentUser.Role === "string"
+                    : typeof currentUser.Role === 'string'
                         ? [currentUser.Role]
                         : [];
 
-        const userRoles = normalizedRoles.map((role) => String(role).toLowerCase());
-        if (userRoles.length === 0) userRoles.push("user");
+        const userRoles = normalizedRoles.map(r => String(r).toLowerCase());
+        if (userRoles.length === 0) userRoles.push('user');
 
-        // Knowledge base content based on roles
         const knowledgeBase = [
-            {
-                title: 'General Information',
-                pdfPath: 'assets/pdfs/GeneralGuide.pdf',
-                roles: ['user', 'atc', 'enforcer', 'interceptor', 'mod', 'admin', 'owner']
-            },
-            {
-                title: 'ATC Operations',
-                pdfPath: 'assets/pdfs/AtcHandbook.pdf',
-                roles: ['atc', 'mod', 'admin', 'owner']
-            },
-            {
-                title: 'Enforcer Guide',
-                pdfPath: 'assets/pdfs/enforcer-guide.pdf',
-                roles: ['enforcer', 'mod', 'admin', 'owner']
-            },
-            {
-                title: 'Interceptor Manual',
-                pdfPath: 'assets/pdfs/interceptor-manual.pdf',
-                roles: ['interceptor', 'mod', 'admin', 'owner']
-            },
-            {
-                title: 'Moderation Guidelines',
-                pdfPath: 'assets/pdfs/ModerationHandbook.pdf',
-                roles: ['mod', 'admin', 'owner']
-            },
-            {
-                title: 'Admin Panel',
-                pdfPath: 'assets/pdfs/admin-panel.pdf',
-                roles: ["mod", "admin", "owner"]
-            },
-            {
-                title: 'Owner Documentation',
-                pdfPath: 'assets/pdfs/owner-docs.pdf',
-                roles: ['owner']
-            }
+            { title: 'General Information',    pdfPath: 'assets/pdfs/GeneralGuide.pdf',        roles: ['user','atc','enforcer','interceptor','mod','admin','owner'] },
+            { title: 'ATC Operations',         pdfPath: 'assets/pdfs/AtcHandbook.pdf',          roles: ['atc','mod','admin','owner'] },
+            { title: 'Enforcer Guide',         pdfPath: 'assets/pdfs/enforcer-guide.pdf',       roles: ['enforcer','mod','admin','owner'] },
+            { title: 'Interceptor Manual',     pdfPath: 'assets/pdfs/interceptor-manual.pdf',   roles: ['interceptor','mod','admin','owner'] },
+            { title: 'Moderation Guidelines',  pdfPath: 'assets/pdfs/ModerationHandbook.pdf',   roles: ['mod','admin','owner'] },
+            { title: 'Admin Panel',            pdfPath: 'assets/pdfs/admin-panel.pdf',          roles: ['mod','admin','owner'] },
+            { title: 'Owner Documentation',    pdfPath: 'assets/pdfs/owner-docs.pdf',           roles: ['owner'] }
         ];
 
-        // Filter knowledge base by user role
-        const availableTabs = knowledgeBase.filter((tab) =>
-            tab.roles.some(role => userRoles.includes(role))
-        );
+        const available = knowledgeBase.filter(tab => tab.roles.some(r => userRoles.includes(r)));
 
-        // Render tabs
-        const tabsHeader = document.getElementById('tabsHeader');
-        const tabsContent = document.getElementById('tabsContent');
+        const select = document.getElementById('kbSelect');
+        const viewer = document.getElementById('pdfViewer');
 
-        availableTabs.forEach((tab, index) => {
-            // Create tab button
-            const button = document.createElement('button');
-            button.className = `tab-button ${index === 0 ? "active" : ""}`;
-            button.textContent = tab.title;
-            button.onclick = () => selectTab(index);
-            tabsHeader.appendChild(button);
-
-            // Create tab content
-            const content = document.createElement('div');
-            content.className = `tab-content ${index === 0 ? "active" : ""}`;
-            content.innerHTML = `
-                <h2>${tab.title}</h2>
-                <p class="section-copy">Review this document carefully and follow all listed procedures and guidance.</p>
-                <hr class="section-divider">
-                <iframe class="pdf-viewer" src="${tab.pdfPath}" type="application/pdf"></iframe>
-            `;
-            tabsContent.appendChild(content);
+        available.forEach((tab, i) => {
+            const opt = document.createElement('option');
+            opt.value = tab.pdfPath;
+            opt.textContent = tab.title;
+            if (i === 0) opt.selected = true;
+            select.appendChild(opt);
         });
 
-        function selectTab(index) {
-            // Remove active class from all tabs
-            document.querySelectorAll(".tab-button").forEach((btn) => btn.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach((content) => content.classList.remove("active"));
-
-            // Add active class to selected tab
-            document.querySelectorAll(".tab-button")[index].classList.add("active");
-            document.querySelectorAll(".tab-content")[index].classList.add("active");
+        if (available.length > 0) {
+            viewer.src = available[0].pdfPath;
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-        }
-
-        // Close sidebar when clicking overlay
-        document.getElementById('overlay').addEventListener('click', closeSidebar);
-
-        // Close sidebar when clicking a link
-        const sidebarLinks = document.querySelectorAll('.sidebar a');
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', closeSidebar);
-        });
-
-        // Close sidebar on window resize if screen is large
-        window.addEventListener('resize', function () {
-            if (window.innerWidth > 768) {
-                closeSidebar();
-            }
+        select.addEventListener('change', () => {
+            if (select.value) viewer.src = select.value;
         });
     </script>
 </body>

@@ -8,6 +8,10 @@
     <meta name="description" content="Pilots Directory - Browse and search all pilots.">
     <meta name="keywords" content="Pilots, Directory, Aviation, VTOL VR">
     <title>Pilots Directory</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,172 +19,46 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-            margin: 0;
-            line-height: 1.6;
-        }
-
         .main-content {
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            overflow-y: auto;
+            min-height: 100vh;
         }
 
         .hamburger-btn {
             display: none;
-            background: none;
-            border: none;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
             color: #e0e0e0;
-            font-size: 1.5em;
+            font-size: 1rem;
             cursor: pointer;
-            padding: 10px 0;
-            margin-bottom: 0;
-            transition: all 0.2s;
+            padding: 10px;
             margin-right: 15px;
+            transition: all 0.2s;
         }
 
-        .hamburger-btn:hover {
-            color: #667eea;
-        }
-
+        .hamburger-btn:hover,
         .hamburger-btn.active {
-            color: #667eea;
+            color: #f5f3ef;
+            background: #202020;
         }
 
-        .close-sidebar-btn {
-            display: none;
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            z-index: 1002;
-        }
-
-        .close-sidebar-btn:hover {
-            color: #667eea;
-        }
-
-        .sidebar {
-            width: 280px;
-            background-color: #2a2a2a;
-            border-right: 1px solid #444;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 25px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .sidebar.hidden {
-            transform: translateX(-100%);
-        }
-
-        .sidebar-logo {
-            width: 120px;
-            height: 120px;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            color: #2a2a2a;
-        }
-
-        .sidebar-title {
-            text-align: center;
-            color: #e0e0e0;
-            font-size: 1.3em;
-            font-weight: bold;
-            line-height: 1.3;
-        }
-
-        .sidebar-title a {
-            color: #e0e0e0;
-            text-decoration: none;
-        }
-
-        .sidebar-title a:hover {
-            color: #667eea;
-        }
-
-        .sidebar-menu {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .sidebar-menu-item {
-            padding: 12px 16px;
-            color: #b0b0b0;
-            text-decoration: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            font-size: 0.95em;
-        }
-
-        .sidebar-menu-item:hover {
-            background-color: #3a3a3a;
-            color: #e0e0e0;
-        }
-
-        .sidebar-menu-item.active {
-            background-color: #667eea;
-            color: #ffffff;
-        }
-
-        .sidebar-login-btn {
-            width: 100%;
-            padding: 12px 16px;
-            background-color: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95em;
-            margin-top: auto;
-            transition: all 0.2s;
-        }
-
-        .sidebar-login-btn:hover {
-            background-color: #5569d8;
-        }
-
-        header {
+        .hero {
             text-align: center;
             color: #e0e0e0;
             margin-bottom: 30px;
             padding-top: 20px;
         }
 
-        header h1 {
+        .hero h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
         }
 
-        header p {
+        .hero p {
             font-size: 1.1em;
             opacity: 0.9;
         }
@@ -264,60 +142,62 @@
         }
 
         .pilot-card {
-            background: #333;
-            border-radius: 12px;
+            background: #232323;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s;
-            border: 1px solid #444;
+            transition: border-color 0.15s;
         }
 
         .pilot-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
+            border-color: rgba(255,255,255,0.16);
         }
 
         .pilot-avatar {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: white;
-            margin-bottom: 15px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            background: #2e2e2e;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .pilot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .pilot-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #e0e0e0;
-            margin-bottom: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f5f3ef;
+            margin-bottom: 4px;
+            letter-spacing: -0.01em;
         }
 
         .pilot-callsign {
-            color: #667eea;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-bottom: 12px;
+            color: rgba(245,243,239,0.45);
+            font-size: 0.825rem;
+            font-weight: 500;
+            margin-bottom: 14px;
         }
 
         .pilot-info {
-            font-size: 0.9em;
-            color: #999;
-            margin-bottom: 6px;
+            font-size: 0.8rem;
+            color: rgba(245,243,239,0.45);
+            margin-bottom: 2px;
         }
 
         .pilot-hours {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f5f3ef;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #444;
+            border-top: 1px solid rgba(255,255,255,0.07);
         }
 
         .pilot-roles {
@@ -326,18 +206,20 @@
             gap: 6px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #444;
+            border-top: 1px solid rgba(255,255,255,0.07);
         }
 
         .pilot-role-badge {
             display: inline-block;
-            padding: 4px 10px;
-            background-color: #667eea;
-            color: white;
-            border-radius: 4px;
-            font-size: 0.75em;
+            padding: 3px 10px;
+            background: rgba(255,255,255,0.07);
+            color: rgba(245,243,239,0.75);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: 0.72rem;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .no-results {
@@ -363,61 +245,19 @@
             margin-top: 40px;
             text-align: center;
             opacity: 0.8;
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                width: calc(100% - 280px);
-            }
+            font-size: 0.8rem;
         }
 
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            .hamburger-btn {
-                display: block;
-            }
-
-            .main-content {
-                width: 100%;
-                padding: 15px;
-                padding-top: 0;
-            }
-
-            .sidebar {
-                width: 250px;
-                height: auto;
-                position: fixed;
-                top: 0;
-                left: 0;
-                transform: translateX(-100%);
-                padding: 70px 20px 20px 20px;
-                z-index: 1001;
-                max-height: 100vh;
-                overflow-y: auto;
-                border-right: 1px solid #444;
-                transition: transform 0.3s ease-in-out;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .close-sidebar-btn {
-                display: block;
-            }
-
             .pilots-container {
                 grid-template-columns: 1fr;
             }
 
-            header h1 {
+            .hero h1 {
                 font-size: 1.8em;
             }
 
-            header p {
+            .hero p {
                 font-size: 0.95em;
             }
 
@@ -455,41 +295,18 @@
                 padding-top: 0;
             }
 
-            header {
+            .hero {
                 margin-bottom: 20px;
                 padding-top: 10px;
             }
 
-            header h1 {
+            .hero h1 {
                 font-size: 1.6em;
                 margin-bottom: 5px;
             }
 
-            header p {
+            .hero p {
                 font-size: 0.9em;
-            }
-
-            .sidebar-logo {
-                width: 80px;
-                height: 80px;
-                font-size: 40px;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-title {
-                font-size: 1.05em;
-                line-height: 1.2;
-                margin-bottom: 15px;
-            }
-
-            .sidebar-menu {
-                width: 100%;
-            }
-
-            .sidebar-menu-item {
-                width: 100%;
-                padding: 12px 16px;
-                font-size: 0.95em;
             }
 
             .search-box {
@@ -566,35 +383,17 @@
                 margin-top: 30px;
             }
         }
+        <%- include('partials/fixed-sidebar-theme') %>
     </style>
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
-        <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
-        <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
-        <div class="sidebar-menu">
-            <a class="sidebar-menu-item" href="/profile">Profile</a>
-            <a class="sidebar-menu-item" href="/announcements">Announcements</a>
-            <a class="sidebar-menu-item active" href="/pilots">Pilots</a>
-            <a class="sidebar-menu-item" href="/applications">Applications</a>
-            <a class="sidebar-menu-item" href="/information">Information</a>
-        </div>
-        <% if (user) { %>
-            <a href="/logout" class="sidebar-login-btn">Logout</a>
-        <% } else { %>
-            <a href="/login/home" class="sidebar-login-btn">Login</a>
-        <% } %>
-    </div>
+        <%- include('partials/sidebar', { page: 'pilots' }) %>
 
     <div class="main-content">
-        <div style="display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px;">
-            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
-        </div>
-        <header>
+        <div class="hero">
             <h1>Pilots Directory</h1>
             <p>Browse and search all pilots in our network</p>
-        </header>
+        </div>
 
         <div class="search-container">
             <div class="search-box">
@@ -619,14 +418,11 @@
             </div>
         </div>
 
-        <div class="pilots-container" id="pilotsContainer">
-            <div class="no-results">
-                <h3>Loading pilots...</h3>
-            </div>
-        </div>
+        <div class="pilots-container" id="pilotsContainer"></div>
 
         <footer>
-            <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p>
+            <%#  <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p> %>
+            <p>Bringing realistic aviation simulation to VTOL VR</p>
         </footer>
     </div>
 
@@ -634,60 +430,25 @@
         let allPilots = [];
         let currentFilter = 'all';
 
-        // Toggle sidebar on mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            sidebar.classList.toggle('active');
-            hamburgerBtn.classList.toggle('active');
-            // Show close button when sidebar is active
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            if (sidebar.classList.contains('active')) {
-                closeBtn.style.display = 'block';
-            } else {
-                closeBtn.style.display = 'none';
-            }
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            sidebar.classList.remove('active');
-            hamburgerBtn.classList.remove('active');
-            closeBtn.style.display = 'none';
-        }
-
-        // Close sidebar when menu item is clicked on mobile
         document.addEventListener('DOMContentLoaded', function() {
-            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
-            sidebarMenuItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        const sidebar = document.getElementById('sidebar');
-                        const hamburgerBtn = document.getElementById('hamburgerBtn');
-                        const closeBtn = document.getElementById('closeSidebarBtn');
-                        sidebar.classList.remove('active');
-                        hamburgerBtn.classList.remove('active');
-                        closeBtn.style.display = 'none';
-                    }
-                });
-            });
             fetchPilots();
         });
 
         async function fetchPilots() {
             try {
                 const response = await fetch('/api/users');
+                if (!response.ok) {
+                    throw new Error('Unable to load pilots data right now.');
+                }
+
                 const data = await response.json();
                 allPilots = data.data || [];
                 displayPilots(allPilots);
             } catch (error) {
-                console.error('Error fetching pilots:', error);
                 document.getElementById('pilotsContainer').innerHTML = `
                     <div class="no-results">
                         <h3>Error loading pilots</h3>
-                        <p>Unable to load pilots data. Please try again later.</p>
+                        <p>${error.message}</p>
                     </div>
                 `;
             }
@@ -705,29 +466,27 @@
                     </div>
                 `;
                 resultsCount.textContent = 'No results found';
-                return;
-            }
-
-            resultsCount.textContent = `Showing ${pilots.length} pilot(s)`;
-
-            container.innerHTML = pilots.map(pilot => `
-                <div class="pilot-card">
-                    <div class="pilot-avatar"><img src="${pilot.avatar || '/assets/logo.png' }" alt="Avatar" width="60" height="60" style="border-radius: 50%;" /></div>
-                    <div class="pilot-name">${pilot.Username || 'Unknown'}</div>
-                    <div class="pilot-callsign">${pilot.Callsign || 'N/A'}</div>
-                    <div class="pilot-info">
-                        <strong>Flight Hours:</strong>
-                    </div>
-                    <div class="pilot-hours">${pilot.Flighthours || 0} hrs</div>
-                    ${pilot.Role && pilot.Role.length > 0 ? `
-                        <div class="pilot-roles">
-                            ${pilot.Role.map(role => `
-                                <span class="pilot-role-badge">${role}</span>
-                            `).join('')}
+            } else {
+                resultsCount.textContent = `Showing ${pilots.length} pilot(s)`;
+                container.innerHTML = pilots.map(pilot => `
+                    <div class="pilot-card">
+                        <div class="pilot-avatar"><img src="${pilot.avatar || '/assets/logo.png' }" alt="Avatar" width="60" height="60" style="border-radius: 50%;" /></div>
+                        <div class="pilot-name">${pilot.Username || 'Unknown'}</div>
+                        <div class="pilot-callsign">${pilot.Callsign || 'N/A'}</div>
+                        <div class="pilot-info">
+                            <strong>Flight Hours:</strong>
                         </div>
-                    ` : ''}
-                </div>
-            `).join('');
+                        <div class="pilot-hours">${pilot.Flighthours || 0} hrs</div>
+                        ${pilot.Role && pilot.Role.length > 0 ? `
+                            <div class="pilot-roles">
+                                ${pilot.Role.map(role => `
+                                    <span class="pilot-role-badge">${role}</span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            }
         }
 
         function searchPilots() {

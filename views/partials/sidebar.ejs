@@ -1,0 +1,94 @@
+<style>
+    .sidebar-overlay {
+        display: none;
+    }
+
+    .mobile-top-bar {
+        display: none !important;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-top-bar {
+            display: flex !important;
+        }
+    }
+</style>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="mobile-top-bar">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">☰</button>
+    <a href="/" class="mobile-brand">
+        <img src="/assets/logo.png" alt="ARN Logo">
+        <span>ARN</span>
+    </a>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close">✕</button>
+    <a href="/" class="sidebar-brand">
+        <img src="/assets/logo.png" alt="ARN Logo">
+        <span>Aviation Realism Network</span>
+    </a>
+    <div class="sidebar-menu">
+        <a class="sidebar-menu-item <%= locals.page === 'sessions' ? 'active' : '' %>" href="/sessions">Sessions</a>
+        <a class="sidebar-menu-item <%= locals.page === 'pilots'   ? 'active' : '' %>" href="/pilots">Pilots</a>
+        <a class="sidebar-menu-item <%= locals.page === 'charts'      ? 'active' : '' %>" href="/charts">Charts</a>
+        <a class="sidebar-menu-item <%= locals.page === 'chart-maker' ? 'active' : '' %>" href="/chart-maker">Chart Maker</a>
+        <% if (locals.user) { %>
+            <a class="sidebar-menu-item <%= locals.page === 'profile'      ? 'active' : '' %>" href="/profile">Profile</a>
+            <a class="sidebar-menu-item <%= locals.page === 'applications' ? 'active' : '' %>" href="/applications">Applications</a>
+            <a class="sidebar-menu-item <%= locals.page === 'information'  ? 'active' : '' %>" href="/information">Information</a>
+            <a class="sidebar-menu-item <%= locals.page === 'ifr'          ? 'active' : '' %>" href="/ifr">IFR</a>
+        <% } %>
+        <% if (locals.user && locals.user.role && locals.user.role.includes('atc')) { %>
+            <a class="sidebar-menu-item <%= locals.page === 'events' ? 'active' : '' %>" href="/events">Events</a>
+            <a class="sidebar-menu-item <%= locals.page === 'metar'  ? 'active' : '' %>" href="/atc/metar">METAR</a>
+        <% } %>
+        <% if (locals.user && locals.user.role && (locals.user.role.includes('admin') || locals.user.role.includes('mod'))) { %>
+            <a class="sidebar-menu-item <%= locals.page === 'admin'            ? 'active' : '' %>" href="/admin">Admin</a>
+            <a class="sidebar-menu-item <%= locals.page === 'applicationsAdmin'? 'active' : '' %>" href="/applications/admin">Apps Admin</a>
+            <a class="sidebar-menu-item <%= locals.page === 'discordUsers'     ? 'active' : '' %>" href="/admin/discord">Discord Users</a>
+        <% } %>
+    </div>
+
+    <div class="sidebar-auth">
+        <% if (locals.user) { %>
+            <a class="sidebar-auth-item sidebar-auth-signout" href="/logout">Sign out</a>
+        <% } else { %>
+            <a class="sidebar-auth-item <%= locals.page === 'login'    ? 'active' : '' %>" href="/login/home">Login</a>
+            <a class="sidebar-auth-item <%= locals.page === 'register' ? 'active' : '' %>" href="/register">Register</a>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay') || document.getElementById('overlay');
+        const btn = document.getElementById('hamburgerBtn');
+        const isOpen = sidebar.classList.toggle('active');
+        if (overlay) overlay.classList.toggle('active', isOpen);
+        if (btn) btn.classList.toggle('active', isOpen);
+    }
+
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay') || document.getElementById('overlay');
+        const btn = document.getElementById('hamburgerBtn');
+        sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        if (btn) btn.classList.remove('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.sidebar-menu-item, .sidebar-auth-item').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
+        });
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 768) closeSidebar();
+        });
+    });
+</script>

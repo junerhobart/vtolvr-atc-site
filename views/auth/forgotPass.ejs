@@ -8,466 +8,203 @@
 	<meta name="description" content="Reset your Aviation Realism Network account password.">
 	<meta name="keywords" content="Forgot Password, Reset Password, ATC, Aviation, Discord, Vtol VR">
 	<title>Forgot Password</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 	<style>
-		* {
-			margin: 0;
-			padding: 0;
-			box-sizing: border-box;
-		}
-
-		body {
-			font-family: Arial, sans-serif;
-			background-color: #1e1e1e;
-			color: #e0e0e0;
-			min-height: 100vh;
-			display: flex;
-			flex-direction: row;
-			padding: 0;
-			margin: 0;
-		}
-
 		.main-content {
-			flex: 1;
-			display: flex;
+			display: flex !important;
 			flex-direction: column;
-			align-items: center;
 			justify-content: center;
-			padding: 20px;
-			overflow-y: auto;
+			align-items: center;
 			min-height: 100vh;
-			width: calc(100% - 280px);
 		}
 
-		.sidebar {
-			width: 280px;
-			background-color: #2a2a2a;
-			border-right: 1px solid #444;
-			padding: 30px 20px;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 25px;
-			overflow-y: auto;
-			position: fixed;
-			left: 0;
-			top: 0;
-			height: 100vh;
-			z-index: 999;
-			transition: transform 0.3s ease-in-out;
-		}
-
-		.sidebar.active {
-			transform: translateX(0);
-		}
-
-		.sidebar-logo {
-			width: 120px;
-			height: 120px;
-			background-color: #e0e0e0;
-			border-radius: 50%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 60px;
-			color: #2a2a2a;
-		}
-
-		.sidebar-logo img {
-			width: 100%;
-			height: 100%;
-			border-radius: 50%;
-			object-fit: cover;
-		}
-
-		.sidebar-title {
-			text-align: center;
-			color: #e0e0e0;
-			font-size: 1.3em;
-			font-weight: bold;
-			line-height: 1.3;
-		}
-
-		.sidebar-title a {
-			color: #e0e0e0;
-			text-decoration: none;
-		}
-
-		.sidebar-title a:hover {
-			color: #667eea;
-		}
-
-		.sidebar-menu {
-			width: 100%;
-			display: flex;
-			flex-direction: column;
-			gap: 3px;
-		}
-
-		.sidebar-menu-item {
-			padding: 12px 16px;
-			color: #b0b0b0;
-			text-decoration: none;
-			border-radius: 6px;
-			cursor: pointer;
-			transition: all 0.2s;
-			text-align: left;
-			font-size: 0.95em;
-		}
-
-		.sidebar-menu-item:hover {
-			background-color: #3a3a3a;
-			color: #e0e0e0;
-		}
-
-		.sidebar-menu-item.active {
-			background-color: #667eea;
-			color: #ffffff;
-		}
-
-		.header-container {
-			width: 100%;
-			display: flex;
-			align-items: center;
-			gap: 15px;
-			margin-bottom: 20px;
-		}
-
-		.hamburger-btn {
-			display: none;
-			background: none;
-			border: none;
-			color: #e0e0e0;
-			font-size: 1.5em;
-			cursor: pointer;
-			margin-right: 15px;
-			transition: all 0.2s;
-			padding: 10px 0;
-		}
-
-		.hamburger-btn:hover,
-		.hamburger-btn.active {
-			color: #667eea;
-		}
-
-		.close-sidebar-btn {
-			display: none;
-			position: absolute;
-			top: 15px;
-			right: 15px;
-			background: none;
-			border: none;
-			color: #e0e0e0;
-			font-size: 28px;
-			cursor: pointer;
-			padding: 0;
-			width: 30px;
-			height: 30px;
-			z-index: 1002;
-		}
-
-		.close-sidebar-btn:hover {
-			color: #667eea;
-		}
-
-		header {
-			text-align: center;
-			color: #e0e0e0;
-			margin-bottom: 30px;
-		}
-
-		header h1 {
-			font-size: 2.2em;
-			margin-bottom: 8px;
-		}
-
-		header p {
-			font-size: 1.05em;
-			opacity: 0.9;
-		}
+		.hamburger-btn { display: none !important; }
+		@media (max-width: 768px) { .hamburger-btn { display: flex !important; } }
 
 		.reset-panel {
-			background: #333;
-			border-radius: 12px;
-			padding: 35px;
-			box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+			padding: 36px 32px;
 			width: 100%;
-			max-width: 460px;
+			max-width: 440px;
 		}
 
 		.reset-panel h2 {
-			color: #e0e0e0;
-			font-size: 1.4em;
-			margin-bottom: 22px;
-			text-align: center;
-			border-bottom: 2px solid #667eea;
-			padding-bottom: 14px;
+			font-size: 1.25rem;
+			font-weight: 700;
+			letter-spacing: -0.02em;
+			margin-bottom: 20px;
+			color: #f5f3ef;
 		}
 
 		.step-indicator {
 			display: flex;
-			justify-content: space-between;
-			gap: 8px;
+			gap: 6px;
 			margin-bottom: 22px;
 		}
 
 		.step-pill {
 			flex: 1;
 			text-align: center;
-			font-size: 0.8em;
-			padding: 7px 8px;
+			font-size: 0.75rem;
+			font-weight: 500;
+			padding: 6px 8px;
 			border-radius: 999px;
-			background: #2a2a2a;
-			color: #a8a8a8;
-			border: 1px solid #444;
+			background: #1e1e1e;
+			color: rgba(245,243,239,0.4);
+			border: 1px solid rgba(255,255,255,0.08);
+			transition: all 0.15s;
 		}
 
 		.step-pill.active {
-			background: #667eea;
-			color: #fff;
-			border-color: #667eea;
+			background: #3a3a3a;
+			color: #f5f3ef;
+			border-color: rgba(255,255,255,0.18);
 		}
 
 		.step-pill.complete {
-			background: #2f6548;
-			color: #dcffe9;
-			border-color: #3f8f66;
+			background: rgba(50,180,80,0.12);
+			color: #b6f3be;
+			border-color: rgba(50,180,80,0.25);
 		}
 
-		.form-step {
-			display: none;
-		}
+		.form-step { display: none; }
+		.form-step.active { display: block; }
 
-		.form-step.active {
-			display: block;
-		}
-
-		.form-group {
-			margin-bottom: 18px;
-		}
+		.form-group { margin-bottom: 16px; }
 
 		.form-group label {
 			display: block;
-			margin-bottom: 8px;
-			font-weight: bold;
-			color: #e0e0e0;
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: rgba(245,243,239,0.6);
+			margin-bottom: 6px;
 		}
 
 		.form-group input {
 			width: 100%;
-			padding: 12px;
-			background-color: #2a2a2a;
-			border: 1px solid #444;
-			border-radius: 4px;
-			color: #e0e0e0;
-			font-family: Arial, sans-serif;
-			font-size: 1em;
+			padding: 11px 14px;
+			background: #1e1e1e;
+			border: 1px solid rgba(255,255,255,0.1);
+			border-radius: 8px;
+			color: #f5f3ef;
+			font-family: "Inter", sans-serif;
+			font-size: 0.95rem;
+			transition: border-color 0.15s;
 		}
 
 		.form-group input:focus {
 			outline: none;
-			border-color: #667eea;
-			background-color: #323232;
+			border-color: rgba(255,255,255,0.25);
+			background: #242424;
 		}
 
 		.hint {
-			font-size: 0.88em;
-			color: #b0b0b0;
-			margin-top: -4px;
-			margin-bottom: 16px;
+			font-size: 0.8rem;
+			color: rgba(245,243,239,0.35);
+			margin: -8px 0 14px;
 		}
 
 		.form-actions {
 			display: flex;
-			gap: 10px;
-			margin-top: 18px;
-		}
-
-		.form-actions button {
-			flex: 1;
-			padding: 12px;
-			border: none;
-			border-radius: 4px;
-			cursor: pointer;
-			font-size: 1em;
-			font-weight: bold;
-			transition: all 0.2s;
+			gap: 8px;
+			margin-top: 20px;
 		}
 
 		.submit-btn {
-			background-color: #667eea;
-			color: white;
+			flex: 1;
+			padding: 12px;
+			background: #3a3a3a;
+			border: 1px solid rgba(255,255,255,0.1);
+			border-radius: 8px;
+			color: #f5f3ef;
+			font-family: "Inter", sans-serif;
+			font-size: 0.95rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.15s;
 		}
 
 		.submit-btn:hover {
-			background-color: #5568d3;
+			background: #444;
+			border-color: rgba(255,255,255,0.18);
 		}
 
 		.secondary-btn {
-			background-color: #3f3f3f;
-			color: #e8e8e8;
-			border: 1px solid #555;
+			flex: 1;
+			padding: 12px;
+			background: transparent;
+			border: 1px solid rgba(255,255,255,0.08);
+			border-radius: 8px;
+			color: rgba(245,243,239,0.6);
+			font-family: "Inter", sans-serif;
+			font-size: 0.95rem;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.15s;
 		}
 
 		.secondary-btn:hover {
-			background-color: #4a4a4a;
+			background: #2a2a2a;
+			color: #f5f3ef;
 		}
 
-		.error-message,
-		.success-message,
-		.info-message {
-			padding: 12px;
-			border-radius: 4px;
+		.error-message, .success-message, .info-message {
+			padding: 10px 14px;
+			border-radius: 8px;
+			font-size: 0.875rem;
 			margin-bottom: 16px;
 			display: none;
-			font-size: 0.95em;
 		}
 
 		.error-message {
-			background-color: #f44336;
-			color: white;
+			background: rgba(220,50,50,0.15);
+			border: 1px solid rgba(220,50,50,0.3);
+			color: #ffb0b0;
 		}
 
 		.success-message {
-			background-color: #2e7d32;
-			color: white;
+			background: rgba(50,180,80,0.12);
+			border: 1px solid rgba(50,180,80,0.3);
+			color: #b6f3be;
 		}
 
 		.info-message {
-			background-color: #304a72;
-			color: #e3ecff;
-			border: 1px solid #456295;
+			background: rgba(100,150,255,0.1);
+			border: 1px solid rgba(100,150,255,0.2);
+			color: rgba(200,220,255,0.9);
 		}
 
-		.login-link {
-			text-align: center;
+		.auth-links {
 			margin-top: 18px;
-			color: #b0b0b0;
+			text-align: center;
+			font-size: 0.875rem;
+			color: rgba(245,243,239,0.5);
 		}
 
-		.login-link a {
-			color: #667eea;
+		.auth-links a {
+			color: rgba(245,243,239,0.75);
 			text-decoration: none;
-			font-weight: bold;
+			font-weight: 500;
+			transition: color 0.15s;
 		}
 
-		.login-link a:hover {
-			color: #7c8ff0;
-		}
+		.auth-links a:hover { color: #f5f3ef; }
 
 		footer {
-			color: white;
-			margin-top: 34px;
+			margin-top: 32px;
 			text-align: center;
-			opacity: 0.8;
+			font-size: 0.8rem;
+			color: rgba(245,243,239,0.3);
 		}
-
-		@media (max-width: 768px) {
-			body {
-				flex-direction: column;
-			}
-
-			.hamburger-btn {
-				display: block;
-			}
-
-			.main-content {
-				width: 100%;
-				padding: 15px;
-				align-items: center;
-			}
-
-			.sidebar {
-				width: 250px;
-				position: fixed;
-				top: 0;
-				left: 0;
-				transform: translateX(-100%);
-				padding: 70px 20px 20px 20px;
-				z-index: 1001;
-				max-height: 100vh;
-				overflow-y: auto;
-				border-right: 1px solid #444;
-				transition: transform 0.3s ease-in-out;
-			}
-
-			.sidebar.active {
-				transform: translateX(0);
-			}
-
-			.close-sidebar-btn {
-				display: block;
-			}
-
-			.reset-panel {
-				padding: 24px;
-				width: 100%;
-			}
-
-			header h1 {
-				font-size: 1.8em;
-			}
-		}
-
-		@media (max-width: 480px) {
-			.main-content {
-				padding: 12px;
-			}
-
-			.reset-panel {
-				padding: 18px;
-				max-width: 100%;
-				width: 100%;
-			}
-
-			header {
-				margin-bottom: 20px;
-			}
-
-			header h1 {
-				font-size: 1.45em;
-			}
-
-			.reset-panel h2 {
-				font-size: 1.2em;
-				margin-bottom: 18px;
-			}
-
-			.form-group input {
-				font-size: 16px;
-			}
-
-			.step-pill {
-				font-size: 0.73em;
-				padding: 6px 5px;
-			}
-		}
+		<%- include('../partials/fixed-sidebar-theme') %>
 	</style>
 </head>
 <body>
-	<div class="sidebar" id="sidebar">
-		<button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
-		<div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
-		<div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
-		<div class="sidebar-menu">
-			<a class="sidebar-menu-item" href="/">Home</a>
-			<a class="sidebar-menu-item" href="/pilots">Pilots</a>
-			<a class="sidebar-menu-item active" href="/forgot-password">Forgot Password</a>
-			<a class="sidebar-menu-item" href="/login/home">Login</a>
-			<a class="sidebar-menu-item" href="/register">Register</a>
-			<a class="sidebar-menu-item" href="/information">Information</a>
-		</div>
-	</div>
+	<%- include('../partials/sidebar', { page: 'forgotPassword' }) %>
 
 	<div class="main-content">
-		<div class="header-container">
-			<button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
-		</div>
-
-		<header>
-			<h1>Forgot Password</h1>
-			<p>Recover your account with a verification code</p>
-		</header>
-
 		<div class="reset-panel">
 			<h2>Reset Password</h2>
 
@@ -526,15 +263,15 @@
 				</form>
 			</div>
 
-			<div class="login-link">
-				Remembered your password? <a href="/login/home">Back to login</a>
-			</div>
+		<div class="auth-links">
+			Remembered it? <a href="/login/home">Back to login</a>
 		</div>
-
-		<footer>
-			<p>&copy; 2026 Aviation Realism Network. All rights reserved.</p>
-		</footer>
 	</div>
+
+	<footer>
+		<p>Bringing realistic aviation simulation to VTOL VR</p>
+	</footer>
+</div>
 
 	<script>
 		const step1 = document.getElementById('step1');
@@ -625,21 +362,24 @@
 					body: JSON.stringify({ email: emailValue })
 				});
 
-				const data = await response.json();
-				if (!response.ok || data.error) {
-					return showError(data.error || 'Unable to send verification code. Please try again.');
-				}
-
 				resetState.email = emailValue;
 				setStep(2);
-				showSuccess(data.message || 'If an account exists for that email, a verification code has been sent.');
+				let data = {};
+				try {
+					data = await response.json();
+				} catch (parseError) {
+					data = {};
+				}
 
-				if (data.developmentCode) {
+				showSuccess('If an account exists for that email, a verification code has been sent.');
+
+				if (response.ok && data.developmentCode) {
 					showInfo(`Development mode code: ${data.developmentCode}`);
 				}
 			} catch (err) {
-				console.error('Request code error:', err);
-				showError('Error sending verification code. Please try again.');
+				resetState.email = emailValue;
+				setStep(2);
+				showSuccess('If an account exists for that email, a verification code has been sent.');
 			}
 		});
 
@@ -671,7 +411,6 @@
 				setStep(3);
 				showSuccess('Code verified. You can now set a new password.');
 			} catch (err) {
-				console.error('Verify code error:', err);
 				showError('Error verifying code. Please try again.');
 			}
 		});
@@ -712,7 +451,6 @@
 					window.location.href = '/login/home';
 				}, 1800);
 			} catch (err) {
-				console.error('Reset password error:', err);
 				showError('Error resetting password. Please try again.');
 			}
 		});
@@ -725,43 +463,6 @@
 		document.getElementById('backToCodeBtn').addEventListener('click', function() {
 			clearMessages();
 			setStep(2);
-		});
-
-		function toggleSidebar() {
-			const sidebar = document.getElementById('sidebar');
-			const hamburgerBtn = document.getElementById('hamburgerBtn');
-			const closeBtn = document.getElementById('closeSidebarBtn');
-			sidebar.classList.toggle('active');
-			hamburgerBtn.classList.toggle('active');
-			closeBtn.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
-		}
-
-		function closeSidebar() {
-			const sidebar = document.getElementById('sidebar');
-			const hamburgerBtn = document.getElementById('hamburgerBtn');
-			const closeBtn = document.getElementById('closeSidebarBtn');
-			sidebar.classList.remove('active');
-			hamburgerBtn.classList.remove('active');
-			closeBtn.style.display = 'none';
-		}
-
-		document.addEventListener('DOMContentLoaded', function() {
-			const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
-			sidebarMenuItems.forEach(item => {
-				item.addEventListener('click', function() {
-					if (window.innerWidth <= 768) {
-						closeSidebar();
-					}
-				});
-			});
-		});
-
-		window.addEventListener('click', function(event) {
-			const sidebar = document.getElementById('sidebar');
-			const hamburgerBtn = document.getElementById('hamburgerBtn');
-			if (!sidebar.contains(event.target) && !hamburgerBtn.contains(event.target) && sidebar.classList.contains('active')) {
-				closeSidebar();
-			}
 		});
 	</script>
 </body>

@@ -2,16 +2,14 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const { createCanvas, loadImage } = require('canvas');
 require('dotenv').config();
 
 const Application = require('./schemas/application');
 const Users = require('./schemas/users');
 const Events = require('./schemas/events');
 const authHandler = require('./functions/AuthHandler');
-const { render } = require('ejs');
 const discord = require('discord.js');
-const { GatewayIntentBits, EmbedBuilder,Collection,ActionRowBuilder,ButtonStyle } = require("discord.js");
+const { GatewayIntentBits, EmbedBuilder, Collection, ActionRowBuilder, ButtonStyle } = require('discord.js');
 
 
 
@@ -158,6 +156,30 @@ function sendPasswordResetEmail(email, code) {
   ]);
 }
 
+async function postDiscordWebhook(webhookUrl, payload, errorLabel) {
+  if (!webhookUrl) {
+    throw new Error('Webhook URL is not configured');
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`${errorLabel}: ${errorText || response.status}`);
+  }
+}
+
+async function sendDM(userId, message) {
+  const user = await bot.users.fetch(userId);
+  await user.send(message);
+}
+
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -179,6 +201,12 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: false, httpOnly: true, maxAge: 1800000 } // 30 minutes
 }));
+
+// Make session user available in all templates automatically
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
+});
 
 // Fast-fail common internet scanner probes to reduce noise and prevent unnecessary route work.
 app.use((req, res, next) => {
@@ -242,16 +270,23 @@ app.get("/charts", (req, res) => {
     user: req.session.user
   });
 });
-app.get("/api/sessions",  (req, res) => {
- const sessions = fetch(process.env.SESSIONS_API_URL)
-  .then(response => response.json())
-  .then(data => {
-    res.json(data);
-  }
-  ).catch(error => {
+app.get("/api/sessions", async (req, res) => {
+  try {
+    if (!process.env.SESSIONS_API_URL) {
+      throw new Error('SESSIONS_API_URL is not configured');
+    }
+
+    const response = await fetch(process.env.SESSIONS_API_URL);
+    if (!response.ok) {
+      throw new Error(`Sessions API returned ${response.status}`);
+    }
+
+    const sessions = await response.json();
+    res.json(sessions);
+  } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
-  });
+  }
 });
 
 
@@ -360,7 +395,7 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
 
     try {
       
-      Application.create({
+      const application = await Application.create({
         name: data.Username,
         type: data.type,
         callsign: data.callsign,
@@ -368,58 +403,33 @@ if (data.navigationLog === undefined || data.navigationLog === null || data.navi
         discordId: data.discordId,
         experience: data.experience,
         whyJoin: data.whyJoin
-
-
-      }).then(application => {
-        console.log('Application submitted:', application);
-        //send a DM to the applicant confirming receipt of their application
-        sendDM(application.discordId, `Hello ${application.name}, thank you for submitting your application for the ${application.type} position. We have received your application and will review it shortly. You will receive a DM with the outcome of your application once it has been processed. We appreciate your interest in joining our team!`);
-        //send a webhook to the admin channel notifying them of a new application
-        const embedBody = {
-          content: '<@&1462572777092546743> <@&1474154308873486528> New ATC Application Submitted', // Empty content field
-          "embeds": [{
-
-              title: `New Application for ${application.type} position`,
-              description: `An application has been submitted by ${application.name} for the ${application.type} position. Please review the application in the [admin panel](https://atc-vtolvr.site/applications/admin).`,
-              color: 0x00FF00,
-          }],
-          timestamp: new Date().toISOString()
-      };
-      const body = JSON.stringify(embedBody);
-
-      const webhookURL =process.env.DISCORD_WEBHOOK_URL_ADMIN;
-      fetch(webhookURL, {
-          method: 'POST',
-          headers: {
-
-              'Content-Type': 'application/json'
-          },
-          body:body
-      }).then(response => {
-
-          if (!response.ok) {
-              return response.text().then(errorText => {
-                  console.error('Error:', errorText);
-                  throw new Error('Failed to send webhook notification');
-              });
-          }
-        }).catch(error => {
-          console.error('Error sending webhook notification:', error);
-          // Don't throw an error here since the application was still created successfully
-        });
-        res.json({ message: 'Application submitted successfully' });
-      }).catch(error => {
-        console.error('Error creating application:', error);
-        res.status(500).json({ error: 'Failed to submit application' });
-        throw error;
       });
-      
-      
+
+      sendDM(application.discordId, `Hello ${application.name}, thank you for submitting your application for the ${application.type} position. We have received your application and will review it shortly. You will receive a DM with the outcome of your application once it has been processed. We appreciate your interest in joining our team!`)
+        .catch(error => {
+          console.error('Error sending application receipt DM:', error);
+        });
+
+      const embedBody = {
+        content: '<@&1462572777092546743> <@&1474154308873486528> New ATC Application Submitted',
+        embeds: [{
+          title: `New Application for ${application.type} position`,
+          description: `An application has been submitted by ${application.name} for the ${application.type} position. Please review the application in the [admin panel](https://atc-vtolvr.site/applications/admin).`,
+          color: 0x00FF00,
+        }],
+        timestamp: new Date().toISOString()
+      };
+
+      postDiscordWebhook(process.env.DISCORD_WEBHOOK_URL_ADMIN, embedBody, 'Failed to send application notification')
+        .catch(error => {
+          console.error('Error sending webhook notification:', error);
+        });
+
+      res.json({ message: 'Application submitted successfully' });
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      res.status(500).json({ error: 'Failed to submit application' });
     }
-      catch (error) {
-        console.error('Error submitting application:', error);
-        res.status(500).json({ error: 'Failed to submit application' });
-      }
   });
 
 
@@ -457,40 +467,26 @@ app.get("/applications",authHandler.restrict, (req, res) => {
       }
       application.status = 'approved';
       await application.save();
-      //send a DM to the applicant notifying them of their acceptance and next steps
-      sendDM(application.discordId, `Congratulations ${application.name}! Your application for the ${application.type} position has been approved. We will be in touch with you soon regarding the next steps. Welcome to the team!`);
-      //send a webhook to the admin channel notifying them of the approved application
-      const embedBody = {
-        content: `<@&1462572777092546743> <@&1474154308873486528> Application Approved`, // Empty content field
-        "embeds": [{
+      sendDM(application.discordId, `Congratulations ${application.name}! Your application for the ${application.type} position has been approved. We will be in touch with you soon regarding the next steps. Welcome to the team!`)
+        .catch(error => {
+          console.error('Error sending approval DM:', error);
+        });
 
+      const embedBody = {
+        content: `<@&1462572777092546743> <@&1474154308873486528> Application Approved`,
+        embeds: [{
             title: `Application Approved for ${application.type} position`,
             description: `The application submitted by ${application.name} for the ${application.type} position has been approved. Please reach out to the applicant to coordinate next steps.`,
             color: 0x0000FF,
         }],
         timestamp: new Date().toISOString()
-    };
-    const body = JSON.stringify(embedBody);
+      };
 
-    const webhookURL =process.env.DISCORD_WEBHOOK_URL_ADMIN;
-    fetch(webhookURL, {
-        method: 'POST',
-        headers: {
+      postDiscordWebhook(process.env.DISCORD_WEBHOOK_URL_ADMIN, embedBody, 'Failed to send approval notification')
+        .catch(error => {
+          console.error('Error sending webhook notification:', error);
+        });
 
-            'Content-Type': 'application/json'
-        },
-        body:body
-    }).then(response => {
-
-
-        if (!response.ok) {
-            return response.text().then(errorText => {
-                console.error('Error:', errorText);
-                throw new Error('Failed to send webhook notification');
-            });
-          }
-    })
-    
       res.json({ message: 'Application approved successfully' });
     } catch (error) {
       console.error('Error approving application:', error);
@@ -506,57 +502,32 @@ app.get("/applications",authHandler.restrict, (req, res) => {
       }
       application.status = 'rejected';
       await application.save();
-      //!SECTION send a DM to the applicant notifying them of their rejection
-      sendDM(application.discordId, `Hello ${application.name}, we regret to inform you that your application for the ${application.type} position has been rejected. Thank you for your interest and we encourage you to apply again in the future.`);
-      //send a webhook to the admin channel notifying them of the rejected application
-      const embedBody = {
-        content: `<@&1462572777092546743> <@&1474154308873486528> Application Rejected`, // Empty content field
-        "embeds": [{
+      sendDM(application.discordId, `Hello ${application.name}, we regret to inform you that your application for the ${application.type} position has been rejected. Thank you for your interest and we encourage you to apply again in the future.`)
+        .catch(error => {
+          console.error('Error sending rejection DM:', error);
+        });
 
+      const embedBody = {
+        content: `<@&1462572777092546743> <@&1474154308873486528> Application Rejected`,
+        embeds: [{
             title: `Application Rejected for ${application.type} position`,
             description: `The application submitted by ${application.name} for the ${application.type} position has been rejected. Please reach out to the applicant if you would like to provide feedback or encourage them to reapply in the future.`,
             color: 0xFF0000,
         }],
         timestamp: new Date().toISOString()
-    };
-    const body = JSON.stringify(embedBody);
-    
+      };
 
-    const webhookURL =process.env.DISCORD_WEBHOOK_URL_ADMIN;
-    fetch(webhookURL, {
-        method: 'POST',
-        headers: {
+      postDiscordWebhook(process.env.DISCORD_WEBHOOK_URL_ADMIN, embedBody, 'Failed to send rejection notification')
+        .catch(error => {
+          console.error('Error sending webhook notification:', error);
+        });
 
-            'Content-Type': 'application/json'
-        },
-        body:body
-    }).then(response => {
-
-
-        if (!response.ok) {
-            return response.text().then(errorText => {
-                console.error('Error:', errorText);
-                throw new Error('Failed to send webhook notification');
-            });
-          }
-    })
       res.json({ message: 'Application rejected successfully' });
     } catch (error) {
       console.error('Error rejecting application:', error);
       res.status(500).json({ error: 'Failed to reject application' });
     }
   });
-
-function sendDM(userId, message) {
-  bot.users.fetch(userId).then(user => {
-    user.send(message).catch(err => {
-      console.error(`Error sending DM to user ${userId}:`, err);
-    });
-  }).catch(err => {
-    console.error(`Error fetching user ${userId} for DM:`, err);
-  });
-
-}
 
 // Intentionally return 404 for scanner probe routes hitting /test and /test/*.
 app.get("/test", async (req, res) => {
@@ -1047,6 +1018,7 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
+
   try{
  await authHandler.authenticate(username, password, function(err, user){
   
@@ -1142,23 +1114,7 @@ app.get("/logout", (req, res) => {
           attempts: 0
         });
 
-        sendPasswordResetEmail(email, code)
-          .then(info => {
-            console.log('[SMTP] Reset email accepted:', {
-              messageId: info?.messageId,
-              accepted: info?.accepted,
-              rejected: info?.rejected,
-              response: info?.response
-            });
-          })
-          .catch(mailError => {
-            console.error('Error sending password reset email:', {
-              message: mailError?.message,
-              code: mailError?.code,
-              response: mailError?.response,
-              command: mailError?.command
-            });
-          });
+        await sendPasswordResetEmail(email, code);
       }
 
       return res.json({ message: 'If an account exists, a verification code has been sent.' });

@@ -8,613 +8,168 @@
     <meta name="description" content="Login to your Aviation Realism Network account.">
     <meta name="keywords" content="Login, ATC, Aviation, Discord, Vtol VR">
     <title>Login</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #1e1e1e;
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-            margin: 0;
-        }
-
         .main-content {
-            flex: 1;
-            display: flex;
+            display: flex !important;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
+            align-items: center;
             min-height: 100vh;
-            width: calc(100% - 280px);
         }
 
-        .sidebar {
-            width: 280px;
-            background-color: #2a2a2a;
-            border-right: 1px solid #444;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 25px;
-            overflow-y: auto;
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 999;
-            transition: transform 0.3s ease-in-out;
+        .hamburger-btn {
+            display: none !important;
         }
 
-        .sidebar.hidden {
-            transform: translateX(-100%);
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: flex !important;
+            }
         }
 
-        .sidebar.active {
-            transform: translateX(0);
-        }
-
-        .sidebar-logo {
-            width: 120px;
-            height: 120px;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            color: #2a2a2a;
-        }
-
-        .sidebar-logo img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .sidebar-title {
-            text-align: center;
-            color: #e0e0e0;
-            font-size: 1.3em;
-            font-weight: bold;
-            line-height: 1.3;
-        }
-
-        .sidebar-title a {
-            color: #e0e0e0;
-            text-decoration: none;
-        }
-
-        .sidebar-title a:hover {
-            color: #667eea;
-        }
-
-        .sidebar-menu {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .sidebar-menu-item {
-            padding: 12px 16px;
-            color: #b0b0b0;
-            text-decoration: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            font-size: 0.95em;
-        }
-
-        .sidebar-menu-item:hover {
-            background-color: #3a3a3a;
-            color: #e0e0e0;
-        }
-
-        .sidebar-menu-item.active {
-            background-color: #667eea;
-            color: #ffffff;
-        }
-
-        header {
-            text-align: center;
-            color: #e0e0e0;
-            margin-bottom: 40px;
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .login-panel {
-            background: #333;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        .auth-panel {
+            padding: 36px 32px;
             width: 100%;
             max-width: 400px;
         }
 
-        .login-panel h2 {
-            color: #e0e0e0;
-            font-size: 1.5em;
-            margin-bottom: 30px;
-            text-align: center;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 15px;
+        .auth-panel h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+            color: #f5f3ef;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #e0e0e0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: rgba(245,243,239,0.6);
+            margin-bottom: 6px;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 4px;
-            color: #e0e0e0;
-            font-family: Arial, sans-serif;
-            font-size: 1em;
+            padding: 11px 14px;
+            background: #1e1e1e;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #f5f3ef;
+            font-family: "Inter", sans-serif;
+            font-size: 0.95rem;
+            transition: border-color 0.15s;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
-            background-color: #323232;
+            border-color: rgba(255,255,255,0.25);
+            background: #242424;
         }
 
         .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
-
-        .form-actions button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.2s;
+            margin-top: 24px;
         }
 
         .submit-btn {
-            background-color: #667eea;
-            color: white;
+            width: 100%;
+            padding: 12px;
+            background: #3a3a3a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #f5f3ef;
+            font-family: "Inter", sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
         }
 
         .submit-btn:hover {
-            background-color: #5568d3;
+            background: #444;
+            border-color: rgba(255,255,255,0.18);
         }
 
-        .register-link {
+        .auth-links {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             text-align: center;
-            margin-top: 20px;
-            color: #b0b0b0;
+            font-size: 0.875rem;
+            color: rgba(245,243,239,0.5);
         }
 
-        .register-link a {
-            color: #667eea;
+        .auth-links a {
+            color: rgba(245,243,239,0.75);
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 500;
+            transition: color 0.15s;
         }
 
-        .register-link a:hover {
-            color: #7c8ff0;
-        }
-
-        .forgot-link {
-            text-align: center;
-            margin-top: 12px;
-            color: #b0b0b0;
-            font-size: 0.95em;
-        }
-
-        .forgot-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .forgot-link a:hover {
-            color: #7c8ff0;
-        }
+        .auth-links a:hover { color: #f5f3ef; }
 
         .error-message {
-            background-color: #f44336;
-            color: white;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            background: rgba(220,50,50,0.15);
+            border: 1px solid rgba(220,50,50,0.3);
+            color: #ffb0b0;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
             display: none;
-        }
-
-        .hamburger-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 1.5em;
-            cursor: pointer;
-            margin-right: 15px;
-            transition: all 0.2s;
-            padding: 10px 0;
-        }
-
-        .hamburger-btn:hover {
-            color: #667eea;
-        }
-
-        .hamburger-btn.active {
-            color: #667eea;
-        }
-
-        .close-sidebar-btn {
-            display: none;
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            z-index: 1002;
-        }
-
-        .close-sidebar-btn:hover {
-            color: #667eea;
-        }
-
-        .header-container {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .header-top {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
         }
 
         footer {
-            color: white;
-            margin-top: 40px;
+            margin-top: 32px;
             text-align: center;
-            opacity: 0.8;
+            font-size: 0.8rem;
+            color: rgba(245,243,239,0.3);
         }
-
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            .hamburger-btn {
-                display: block;
-            }
-
-            .main-content {
-                width: 100%;
-                padding: 15px;
-                align-items: center;
-            }
-
-            .sidebar {
-                width: 250px;
-                position: fixed;
-                top: 0;
-                left: 0;
-                transform: translateX(-100%);
-                padding: 70px 20px 20px 20px;
-                z-index: 1001;
-                max-height: 100vh;
-                overflow-y: auto;
-                border-right: 1px solid #444;
-                transition: transform 0.3s ease-in-out;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .close-sidebar-btn {
-                display: block;
-            }
-
-            .sidebar-logo {
-                width: 80px;
-                height: 80px;
-                font-size: 40px;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-title {
-                font-size: 1.1em;
-                margin-bottom: 15px;
-            }
-
-            .sidebar-menu {
-                width: 100%;
-            }
-
-            .sidebar-menu-item {
-                width: 100%;
-                padding: 12px 16px;
-            }
-
-            .login-panel {
-                padding: 25px;
-                width: 100%;
-            }
-
-            header h1 {
-                font-size: 1.8em;
-            }
-
-            header p {
-                font-size: 1em;
-            }
-
-            .form-group input {
-                padding: 10px;
-            }
-
-            .header-container {
-                margin-bottom: 15px;
-                justify-content: flex-start;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .main-content {
-                padding: 12px;
-                width: 100%;
-            }
-
-            .login-panel {
-                padding: 20px;
-                max-width: 100%;
-                width: 100%;
-            }
-
-            header {
-                margin-bottom: 20px;
-            }
-
-            header h1 {
-                font-size: 1.5em;
-                margin-bottom: 8px;
-            }
-
-            header p {
-                font-size: 0.95em;
-            }
-
-            .login-panel h2 {
-                font-size: 1.3em;
-                margin-bottom: 20px;
-            }
-
-            .form-group label {
-                font-size: 0.95em;
-            }
-
-            .form-group input {
-                padding: 10px;
-                font-size: 16px;
-            }
-
-            .form-actions {
-                gap: 8px;
-            }
-
-            .submit-btn {
-                padding: 11px;
-                font-size: 0.95em;
-            }
-
-            .register-link {
-                font-size: 0.9em;
-                margin-top: 15px;
-            }
-
-            footer {
-                font-size: 0.85em;
-                margin-top: 30px;
-            }
-
-            .sidebar-logo {
-                width: 70px;
-                height: 70px;
-                font-size: 35px;
-            }
-
-            .sidebar-title {
-                font-size: 1.05em;
-                line-height: 1.2;
-            }
-
-            .sidebar-menu-item {
-                padding: 10px 14px;
-                font-size: 0.9em;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .main-content {
-                padding: 10px;
-            }
-
-            .login-panel {
-                padding: 15px;
-                width: 100%;
-            }
-
-            header h1 {
-                font-size: 1.3em;
-                margin-bottom: 5px;
-            }
-
-            header p {
-                font-size: 0.9em;
-            }
-
-            .login-panel h2 {
-                font-size: 1.1em;
-                margin-bottom: 15px;
-            }
-
-            .form-group {
-                margin-bottom: 15px;
-            }
-
-            .form-actions button {
-                padding: 10px;
-                font-size: 0.9em;
-            }
-
-            .sidebar {
-                width: 220px;
-                padding: 60px 15px 15px 15px;
-            }
-
-            .hamburger-btn {
-                margin-right: 10px;
-                font-size: 1.3em;
-            }
-        }
+        <%- include('../partials/fixed-sidebar-theme') %>
     </style>
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-        <button type="button" class="close-sidebar-btn" id="closeSidebarBtn" onclick="closeSidebar()" aria-label="Close sidebar">✕</button>
-        <div class="sidebar-logo"><img src="/assets/logo.png" alt="Logo"></div>
-        <div class="sidebar-title"><a href="/">Aviation Realism<br>Network</a></div>
-        <div class="sidebar-menu">
-            <a class="sidebar-menu-item" href="/profile">Profile</a>
-            <a class="sidebar-menu-item" href="/announcements">Announcements</a>
-            <a class="sidebar-menu-item" href="/pilots">Pilots</a>
-            <a class="sidebar-menu-item active" href="/login/home">Login</a>
-            <a class="sidebar-menu-item" href="/applications">Applications</a>
-            <a class="sidebar-menu-item" href="/information">Information</a>
-        </div>
-    </div>
+    <%- include('../partials/sidebar', { page: 'login' }) %>
 
     <div class="main-content">
-        <div class="header-container">
-            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
-        </div>
-        <header>
-            <h1>Login</h1>
-            <p>Sign in to your Aviation Realism Network account</p>
-        </header>
-
-        <div class="login-panel">
-            <h2>Sign In</h2>
+        <div class="auth-panel">
+            <h2>Sign in</h2>
             <div class="error-message" id="errorMessage"></div>
             <form id="loginForm" data-redirect="<%= redirect || '' %>">
                 <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
                 </div>
-
                 <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
                 </div>
-
                 <div class="form-actions">
-                    <button type="submit" class="submit-btn">Login</button>
+                    <button type="submit" class="submit-btn">Sign in</button>
                 </div>
             </form>
-
-            <div class="register-link">
-                Don't have an account? <a href="/register">Register here</a>
-            </div>
-            <div class="forgot-link">
-                Forgot your password? <a href="/forgot-password">Reset it here</a>
+            <div class="auth-links">
+                <span>No account? <a href="/register">Register</a></span>
+                <span>Forgot password? <a href="/forgot-password">Reset it</a></span>
             </div>
         </div>
 
         <footer>
-            <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p>
+            <%#  <p>&copy; 2026 Aviation Realism Network. All rights reserved.</p> %>
+            <p>Bringing realistic aviation simulation to VTOL VR</p>
         </footer>
     </div>
 
     <script>
-        // Toggle sidebar on mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            sidebar.classList.toggle('active');
-            hamburgerBtn.classList.toggle('active');
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            if (sidebar.classList.contains('active')) {
-                closeBtn.style.display = 'block';
-            } else {
-                closeBtn.style.display = 'none';
-            }
-        }
-
-        // Close sidebar function
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            sidebar.classList.remove('active');
-            hamburgerBtn.classList.remove('active');
-            closeBtn.style.display = 'none';
-        }
-
-        // Close sidebar when menu item is clicked on mobile
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebarMenuItems = document.querySelectorAll('.sidebar-menu-item');
-            sidebarMenuItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        closeSidebar();
-                    }
-                });
-            });
-        });
-
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const redirectUrl = document.getElementById('loginForm').dataset.redirect || '/';
@@ -624,9 +179,6 @@
                 password: document.getElementById('password').value
             };
 
-            console.log('Login attempt:', formData.username);
-            
-            // Send to server
             fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -634,30 +186,18 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById('errorMessage').textContent = data.error;
-                    document.getElementById('errorMessage').style.display = 'block';
-                } else {
-                    alert('Login successful!');
-                    window.location.href = redirectUrl;
+            .then(async response => {
+                const payload = await response.json();
+                if (!response.ok || payload.error) {
+                    throw new Error(payload.error || 'Error logging in. Please try again.');
                 }
+
+                window.location.href = redirectUrl;
             })
             .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('errorMessage').textContent = 'Error logging in. Please try again.';
+                document.getElementById('errorMessage').textContent = error.message;
                 document.getElementById('errorMessage').style.display = 'block';
             });
-        });
-
-        // Close sidebar when clicking outside
-        window.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            if (!sidebar.contains(event.target) && !hamburgerBtn.contains(event.target) && sidebar.classList.contains('active')) {
-                closeSidebar();
-            }
         });
     </script>
 </body>
